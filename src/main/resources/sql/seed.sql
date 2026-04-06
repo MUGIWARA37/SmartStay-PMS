@@ -22,8 +22,6 @@ CREATE TABLE IF NOT EXISTS floor_wings (
   theme TEXT NOT NULL
 );
 
-
-
 INSERT OR REPLACE INTO hotel_info
 (name, address, star_rating, total_rooms, amenities_json, check_in_time, check_out_time, currency, contact)
 VALUES
