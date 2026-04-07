@@ -16,6 +16,73 @@ CREATE TABLE users (
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+PRAGMA foreign_keys = ON;
+
+-- 10 master security questions
+CREATE TABLE security_questions (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  question_code TEXT NOT NULL UNIQUE,   -- e.g. Q01
+  question_text TEXT NOT NULL,
+  active        INTEGER NOT NULL DEFAULT 1
+);
+
+-- Each user selects answers for all 10 questions (recommended for your requirement)
+-- Store only answer_hash, never plain answer
+CREATE TABLE user_security_answers (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id         INTEGER NOT NULL,
+  question_id     INTEGER NOT NULL,
+  answer_hash     TEXT NOT NULL,        -- hashed answer (e.g. bcrypt/argon2)
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, question_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (question_id) REFERENCES security_questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_user_sec_answers_user ON user_security_answers(user_id);
+
+-- Password reset session/challenge:
+-- system picks 3 random question_ids from user's answered questions
+CREATE TABLE password_reset_challenges (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id          INTEGER NOT NULL,
+  token            TEXT NOT NULL UNIQUE,    -- random reset token/session id
+  question1_id     INTEGER NOT NULL,
+  question2_id     INTEGER NOT NULL,
+  question3_id     INTEGER NOT NULL,
+  attempts_used    INTEGER NOT NULL DEFAULT 0,
+  max_attempts     INTEGER NOT NULL DEFAULT 3,
+  verified         INTEGER NOT NULL DEFAULT 0,
+  expires_at       DATETIME NOT NULL,       -- short expiry (e.g. 15 min)
+  created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (question1_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
+  FOREIGN KEY (question2_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
+  FOREIGN KEY (question3_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
+  CHECK (question1_id <> question2_id),
+  CHECK (question1_id <> question3_id),
+  CHECK (question2_id <> question3_id)
+);
+
+CREATE INDEX idx_reset_challenges_user ON password_reset_challenges(user_id);
+CREATE INDEX idx_reset_challenges_expires ON password_reset_challenges(expires_at);
+
+-- Optional audit log for recovery attempts
+CREATE TABLE password_reset_audit (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  challenge_id   INTEGER NOT NULL,
+  user_id        INTEGER NOT NULL,
+  success        INTEGER NOT NULL,       -- 1 success, 0 fail
+  ip_address     TEXT,
+  user_agent     TEXT,
+  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (challenge_id) REFERENCES password_reset_challenges(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_reset_audit_user_time ON password_reset_audit(user_id, created_at);
+
 -- Staff profile (no payroll rates/hours here)
 CREATE TABLE staff_profiles (
   user_id    INTEGER PRIMARY KEY,
