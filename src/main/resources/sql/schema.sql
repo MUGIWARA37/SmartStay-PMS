@@ -223,8 +223,15 @@ CREATE TABLE invoice_lines (
   quantity DECIMAL(10,2) NOT NULL DEFAULT 1.00,
   unit_price DECIMAL(10,2) NOT NULL,
   line_total DECIMAL(10,2) NOT NULL,
+
   CONSTRAINT chk_invoice_lines_qty CHECK (quantity > 0),
-  CONSTRAINT chk_invoice_lines_prices CHECK (unit_price >= 0 AND line_total >= 0),
+
+  CONSTRAINT chk_invoice_lines_sign CHECK (
+    (unit_price = 0 AND line_total = 0) OR
+    (unit_price > 0 AND line_total > 0) OR
+    (unit_price < 0 AND line_total < 0)
+  ),
+
   CONSTRAINT fk_invoice_lines_invoice
     FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
