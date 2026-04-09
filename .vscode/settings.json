@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "Java_Proj",
+            "database": "Smart_Hotel_v_1_0",
+            "username": "mj23",
+            "password": "DB_Password123!"
+        }
+    ]
+}

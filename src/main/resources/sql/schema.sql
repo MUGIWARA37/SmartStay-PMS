@@ -1,265 +1,198 @@
-PRAGMA foreign_keys = ON;
+-- =========================================
+-- SmartStay PMS - FULL MySQL 8 Schema (NO DELIMITER/TRIGGERS)
+-- Compatible with Spring SQL init/JDBC runners
+-- =========================================
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- -----------------------------------------
+-- Drop views first
+-- -----------------------------------------
+DROP VIEW IF EXISTS annual_salary_with_employee;
+DROP VIEW IF EXISTS annual_salary_by_employee;
+
+-- -----------------------------------------
+-- Drop tables (reverse dependency order)
+-- -----------------------------------------
+DROP TABLE IF EXISTS reservation_services;
+DROP TABLE IF EXISTS services;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS invoice_lines;
+DROP TABLE IF EXISTS invoices;
+DROP TABLE IF EXISTS reservations;
+DROP TABLE IF EXISTS guests;
+DROP TABLE IF EXISTS rooms;
+DROP TABLE IF EXISTS room_types;
+
+DROP TABLE IF EXISTS password_reset_audit;
+DROP TABLE IF EXISTS password_reset_challenges;
+DROP TABLE IF EXISTS user_security_answers;
+DROP TABLE IF EXISTS security_questions;
+
+DROP TABLE IF EXISTS payroll;
+DROP TABLE IF EXISTS staff_attendance;
+DROP TABLE IF EXISTS staff_shift_assignments;
+DROP TABLE IF EXISTS shifts;
+DROP TABLE IF EXISTS staff_profiles;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- =========================================
 -- USERS & STAFF
 -- =========================================
 
 CREATE TABLE users (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  username      TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  role          TEXT NOT NULL CHECK (role IN ('CLIENT','STAFF','ADMIN')),
-  first_name    TEXT NOT NULL,
-  last_name     TEXT NOT NULL,
-  email         TEXT,
-  phone         TEXT,
-  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('CLIENT','STAFF','ADMIN') NOT NULL,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  email VARCHAR(255),
+  phone VARCHAR(30),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-PRAGMA foreign_keys = ON;
-
--- 10 master security questions
-CREATE TABLE security_questions (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  question_code TEXT NOT NULL UNIQUE,   -- e.g. Q01
-  question_text TEXT NOT NULL,
-  active        INTEGER NOT NULL DEFAULT 1
-);
-
--- Each user selects answers for all 10 questions (recommended for your requirement)
--- Store only answer_hash, never plain answer
-CREATE TABLE user_security_answers (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id         INTEGER NOT NULL,
-  question_id     INTEGER NOT NULL,
-  answer_hash     TEXT NOT NULL,        -- hashed answer (e.g. bcrypt/argon2)
-  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, question_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (question_id) REFERENCES security_questions(id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_user_sec_answers_user ON user_security_answers(user_id);
-
--- Password reset session/challenge:
--- system picks 3 random question_ids from user's answered questions
-CREATE TABLE password_reset_challenges (
-  id               INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id          INTEGER NOT NULL,
-  token            TEXT NOT NULL UNIQUE,    -- random reset token/session id
-  question1_id     INTEGER NOT NULL,
-  question2_id     INTEGER NOT NULL,
-  question3_id     INTEGER NOT NULL,
-  attempts_used    INTEGER NOT NULL DEFAULT 0,
-  max_attempts     INTEGER NOT NULL DEFAULT 3,
-  verified         INTEGER NOT NULL DEFAULT 0,
-  expires_at       DATETIME NOT NULL,       -- short expiry (e.g. 15 min)
-  created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (question1_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
-  FOREIGN KEY (question2_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
-  FOREIGN KEY (question3_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
-  CHECK (question1_id <> question2_id),
-  CHECK (question1_id <> question3_id),
-  CHECK (question2_id <> question3_id)
-);
-
-CREATE INDEX idx_reset_challenges_user ON password_reset_challenges(user_id);
-CREATE INDEX idx_reset_challenges_expires ON password_reset_challenges(expires_at);
-
--- Optional audit log for recovery attempts
-CREATE TABLE password_reset_audit (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  challenge_id   INTEGER NOT NULL,
-  user_id        INTEGER NOT NULL,
-  success        INTEGER NOT NULL,       -- 1 success, 0 fail
-  ip_address     TEXT,
-  user_agent     TEXT,
-  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (challenge_id) REFERENCES password_reset_challenges(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_reset_audit_user_time ON password_reset_audit(user_id, created_at);
-
--- Staff profile (no payroll rates/hours here)
 CREATE TABLE staff_profiles (
-  user_id    INTEGER PRIMARY KEY,
-  position   TEXT,
-  hire_date  DATE,
-  active     INTEGER NOT NULL DEFAULT 1,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+  user_id BIGINT PRIMARY KEY,
+  position VARCHAR(100),
+  hire_date DATE,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  CONSTRAINT fk_staff_profiles_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================================
 -- SHIFTS / ATTENDANCE
 -- =========================================
 
 CREATE TABLE shifts (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  name       TEXT NOT NULL UNIQUE CHECK (name IN ('MORNING','MIDDAY','NIGHT')),
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name ENUM('MORNING','MIDDAY','NIGHT') NOT NULL UNIQUE,
   start_time TIME NOT NULL,
-  end_time   TIME NOT NULL
-);
+  end_time TIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE staff_shift_assignments (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  staff_id       INTEGER NOT NULL,
-  shift_id       INTEGER NOT NULL,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  staff_id BIGINT NOT NULL,
+  shift_id BIGINT NOT NULL,
   effective_from DATE NOT NULL,
-  effective_to   DATE,
-  FOREIGN KEY (staff_id) REFERENCES staff_profiles(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE RESTRICT
-);
+  effective_to DATE NULL,
+  CONSTRAINT fk_shift_assign_staff
+    FOREIGN KEY (staff_id) REFERENCES staff_profiles(user_id) ON DELETE CASCADE,
+  CONSTRAINT fk_shift_assign_shift
+    FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE staff_attendance (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  staff_id   INTEGER NOT NULL,
-  shift_id   INTEGER NOT NULL,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  staff_id BIGINT NOT NULL,
+  shift_id BIGINT NOT NULL,
   shift_date DATE NOT NULL,
-  check_in   DATETIME,
-  check_out  DATETIME,
-  was_late   INTEGER NOT NULL DEFAULT 0,
-  notes      TEXT,
-  FOREIGN KEY (staff_id) REFERENCES staff_profiles(user_id) ON DELETE CASCADE,
-  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE RESTRICT
-);
+  check_in DATETIME NULL,
+  check_out DATETIME NULL,
+  was_late TINYINT(1) NOT NULL DEFAULT 0,
+  notes TEXT NULL,
+  CONSTRAINT fk_attendance_staff
+    FOREIGN KEY (staff_id) REFERENCES staff_profiles(user_id) ON DELETE CASCADE,
+  CONSTRAINT fk_attendance_shift
+    FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================================
--- MONTHLY PAYROLL (self-contained snapshot)
--- Formula:
--- total_salary = (regular_hours * hourly_rate) + (overtime_hours * overtime_rate)
+-- MONTHLY PAYROLL (no triggers)
+-- total_salary is generated automatically
 -- =========================================
 
 CREATE TABLE payroll (
-  id               INTEGER PRIMARY KEY AUTOINCREMENT,
-  staff_id         INTEGER NOT NULL,
-  year_month       TEXT NOT NULL, -- YYYY-MM (e.g., 2026-04)
-  regular_hours    DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (regular_hours >= 0),
-  overtime_hours   DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (overtime_hours >= 0),
-  hourly_rate      DECIMAL(10,2) NOT NULL CHECK (hourly_rate >= 0),
-  overtime_rate    DECIMAL(10,2) NOT NULL CHECK (overtime_rate >= 0),
-  total_salary     DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (total_salary >= 0),
-  status           TEXT NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','APPROVED','PAID')),
-  paid_at          DATETIME,
-  created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(staff_id, year_month),
-  CHECK (year_month GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]'),
-  CHECK (CAST(SUBSTR(year_month, 6, 2) AS INTEGER) BETWEEN 1 AND 12),
-  FOREIGN KEY (staff_id) REFERENCES staff_profiles(user_id) ON DELETE CASCADE
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  staff_id BIGINT NOT NULL,
+  pay_month CHAR(7) NOT NULL, -- YYYY-MM
+  regular_hours DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  overtime_hours DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  hourly_rate DECIMAL(10,2) NOT NULL,
+  overtime_rate DECIMAL(10,2) NOT NULL,
 
-CREATE INDEX idx_payroll_staff_month ON payroll(staff_id, year_month);
-CREATE INDEX idx_payroll_month ON payroll(year_month);
+  total_salary DECIMAL(12,2)
+    GENERATED ALWAYS AS (
+      (regular_hours * hourly_rate) + (overtime_hours * overtime_rate)
+    ) STORED,
 
--- Auto-calculate total_salary before insert
-CREATE TRIGGER trg_payroll_calc_before_insert
-BEFORE INSERT ON payroll
-FOR EACH ROW
-BEGIN
-  SELECT
-    NEW.total_salary =
-      ((NEW.regular_hours * NEW.hourly_rate) +
-       (NEW.overtime_hours * NEW.overtime_rate)),
-    NEW.updated_at = CURRENT_TIMESTAMP;
-END;
+  status ENUM('DRAFT','APPROVED','PAID') NOT NULL DEFAULT 'DRAFT',
+  paid_at DATETIME NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
--- Auto-calculate total_salary before relevant payroll updates
-CREATE TRIGGER trg_payroll_calc_before_update
-BEFORE UPDATE OF regular_hours, overtime_hours, hourly_rate, overtime_rate
-ON payroll
-FOR EACH ROW
-BEGIN
-  SELECT
-    NEW.total_salary =
-      ((NEW.regular_hours * NEW.hourly_rate) +
-       (NEW.overtime_hours * NEW.overtime_rate)),
-    NEW.updated_at = CURRENT_TIMESTAMP;
-END;
+  CONSTRAINT uq_payroll_staff_month UNIQUE (staff_id, pay_month),
+  CONSTRAINT chk_payroll_hours CHECK (regular_hours >= 0 AND overtime_hours >= 0),
+  CONSTRAINT chk_payroll_rates CHECK (hourly_rate >= 0 AND overtime_rate >= 0),
+  CONSTRAINT chk_pay_month_format CHECK (pay_month REGEXP '^[0-9]{4}-(0[1-9]|1[0-2])$'),
+  CONSTRAINT fk_payroll_staff
+    FOREIGN KEY (staff_id) REFERENCES staff_profiles(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Keep updated_at fresh for any other UPDATE statements
-CREATE TRIGGER trg_payroll_touch_updated_at
-AFTER UPDATE ON payroll
-FOR EACH ROW
-WHEN NEW.updated_at = OLD.updated_at
-BEGIN
-  UPDATE payroll
-  SET updated_at = CURRENT_TIMESTAMP
-  WHERE id = NEW.id;
-END;
-
--- Annual salary aggregation for admin
-CREATE VIEW annual_salary_by_employee AS
-SELECT
-  p.staff_id,
-  SUBSTR(p.year_month, 1, 4) AS year,
-  ROUND(SUM(p.total_salary), 2) AS annual_salary
-FROM payroll p
-GROUP BY p.staff_id, SUBSTR(p.year_month, 1, 4);
-
--- Optional detailed annual view with employee names
-CREATE VIEW annual_salary_with_employee AS
-SELECT
-  p.staff_id,
-  u.username,
-  u.first_name,
-  u.last_name,
-  SUBSTR(p.year_month, 1, 4) AS year,
-  ROUND(SUM(p.total_salary), 2) AS annual_salary
-FROM payroll p
-JOIN users u ON u.id = p.staff_id
-GROUP BY p.staff_id, u.username, u.first_name, u.last_name, SUBSTR(p.year_month, 1, 4);
+CREATE INDEX idx_payroll_staff_month ON payroll(staff_id, pay_month);
+CREATE INDEX idx_payroll_month ON payroll(pay_month);
 
 -- =========================================
 -- ROOMS / GUESTS / RESERVATIONS
 -- =========================================
 
 CREATE TABLE room_types (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  name          TEXT NOT NULL UNIQUE,
-  base_rate     DECIMAL(10,2) NOT NULL CHECK (base_rate >= 0),
-  max_occupancy INTEGER NOT NULL CHECK (max_occupancy > 0),
-  description   TEXT
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  base_rate DECIMAL(10,2) NOT NULL,
+  max_occupancy INT NOT NULL,
+  description TEXT NULL,
+  CONSTRAINT chk_room_types_rate CHECK (base_rate >= 0),
+  CONSTRAINT chk_room_types_occ CHECK (max_occupancy > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE rooms (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  room_number   TEXT NOT NULL UNIQUE,
-  room_type_id  INTEGER NOT NULL,
-  status        TEXT NOT NULL CHECK (status IN ('AVAILABLE','OCCUPIED','OUT_OF_SERVICE')),
-  floor         INTEGER,
-  notes         TEXT,
-  FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE RESTRICT
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  room_number VARCHAR(20) NOT NULL UNIQUE,
+  room_type_id BIGINT NOT NULL,
+  status ENUM('AVAILABLE','OCCUPIED','OUT_OF_SERVICE') NOT NULL,
+  floor INT NULL,
+  notes TEXT NULL,
+  CONSTRAINT fk_rooms_type
+    FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE guests (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id    INTEGER, -- nullable for walk-ins
-  first_name TEXT NOT NULL,
-  last_name  TEXT NOT NULL,
-  email      TEXT,
-  phone      TEXT,
-  doc_id     TEXT, -- passport / national ID / driving license
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NULL,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  email VARCHAR(255),
+  phone VARCHAR(30),
+  doc_id VARCHAR(100),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
+  CONSTRAINT fk_guests_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE reservations (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  guest_id       INTEGER NOT NULL,
-  room_id        INTEGER NOT NULL,
-  check_in_date  DATE NOT NULL,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  guest_id BIGINT NOT NULL,
+  room_id BIGINT NOT NULL,
+  check_in_date DATE NOT NULL,
   check_out_date DATE NOT NULL,
-  status         TEXT NOT NULL CHECK (status IN ('BOOKED','CHECKED_IN','CHECKED_OUT','CANCELLED')),
-  adults         INTEGER NOT NULL DEFAULT 1 CHECK (adults >= 1),
-  children       INTEGER NOT NULL DEFAULT 0 CHECK (children >= 0),
-  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-  CHECK (check_out_date > check_in_date),
-  FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE RESTRICT,
-  FOREIGN KEY (room_id)  REFERENCES rooms(id)  ON DELETE RESTRICT
-);
+  status ENUM('BOOKED','CHECKED_IN','CHECKED_OUT','CANCELLED','NO_SHOW') NOT NULL,
+  adults INT NOT NULL DEFAULT 1,
+  children INT NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_res_dates CHECK (check_out_date > check_in_date),
+  CONSTRAINT chk_res_adults CHECK (adults >= 1),
+  CONSTRAINT chk_res_children CHECK (children >= 0),
+  CONSTRAINT fk_res_guest
+    FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_res_room
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE INDEX idx_res_room_dates ON reservations(room_id, check_in_date, check_out_date);
 
@@ -268,57 +201,168 @@ CREATE INDEX idx_res_room_dates ON reservations(room_id, check_in_date, check_ou
 -- =========================================
 
 CREATE TABLE invoices (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  reservation_id INTEGER NOT NULL,
-  guest_id       INTEGER NOT NULL,
-  issue_date     DATE NOT NULL,
-  due_date       DATE,
-  total_amount   DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (total_amount >= 0),
-  currency       TEXT NOT NULL DEFAULT 'USD',
-  status         TEXT NOT NULL CHECK (status IN ('DRAFT','ISSUED','PAID','VOID')),
-  FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE RESTRICT,
-  FOREIGN KEY (guest_id)       REFERENCES guests(id)        ON DELETE RESTRICT
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  reservation_id BIGINT NOT NULL,
+  guest_id BIGINT NOT NULL,
+  issue_date DATE NOT NULL,
+  due_date DATE NULL,
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  currency CHAR(3) NOT NULL DEFAULT 'USD',
+  status ENUM('DRAFT','ISSUED','PAID','VOID') NOT NULL,
+  CONSTRAINT chk_invoices_total CHECK (total_amount >= 0),
+  CONSTRAINT fk_invoices_res
+    FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_invoices_guest
+    FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE invoice_lines (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  invoice_id  INTEGER NOT NULL,
-  description TEXT NOT NULL,
-  quantity    DECIMAL(10,2) NOT NULL DEFAULT 1 CHECK (quantity > 0),
-  unit_price  DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
-  line_total  DECIMAL(10,2) NOT NULL CHECK (line_total >= 0),
-  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  invoice_id BIGINT NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  quantity DECIMAL(10,2) NOT NULL DEFAULT 1.00,
+  unit_price DECIMAL(10,2) NOT NULL,
+  line_total DECIMAL(10,2) NOT NULL,
+  CONSTRAINT chk_invoice_lines_qty CHECK (quantity > 0),
+  CONSTRAINT chk_invoice_lines_prices CHECK (unit_price >= 0 AND line_total >= 0),
+  CONSTRAINT fk_invoice_lines_invoice
+    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE payments (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  invoice_id INTEGER NOT NULL,
-  amount     DECIMAL(10,2) NOT NULL CHECK (amount > 0),
-  method     TEXT NOT NULL CHECK (method IN ('CASH','CARD','ONLINE')),
-  paid_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  reference  TEXT, -- transaction / receipt / gateway reference
-  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  invoice_id BIGINT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  method ENUM('CASH','CARD','ONLINE','BANK_TRANSFER') NOT NULL,
+  paid_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reference VARCHAR(255),
+  CONSTRAINT chk_payments_amount CHECK (amount > 0),
+  CONSTRAINT fk_payments_invoice
+    FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =========================================
 -- SERVICES / EXTRAS
 -- =========================================
 
 CREATE TABLE services (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  name          TEXT NOT NULL UNIQUE,
-  default_price DECIMAL(10,2) NOT NULL CHECK (default_price >= 0),
-  type          TEXT NOT NULL DEFAULT 'OTHER'
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  default_price DECIMAL(10,2) NOT NULL,
+  type VARCHAR(50) NOT NULL DEFAULT 'OTHER',
+  CONSTRAINT chk_services_price CHECK (default_price >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE reservation_services (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  reservation_id INTEGER NOT NULL,
-  service_id     INTEGER NOT NULL,
-  quantity       DECIMAL(10,2) NOT NULL DEFAULT 1 CHECK (quantity > 0),
-  unit_price     DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
-  line_total     DECIMAL(10,2) NOT NULL CHECK (line_total >= 0),
-  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
-  FOREIGN KEY (service_id)     REFERENCES services(id)     ON DELETE RESTRICT
-);
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  reservation_id BIGINT NOT NULL,
+  service_id BIGINT NOT NULL,
+  quantity DECIMAL(10,2) NOT NULL DEFAULT 1.00,
+  unit_price DECIMAL(10,2) NOT NULL,
+  line_total DECIMAL(10,2) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_res_services_qty CHECK (quantity > 0),
+  CONSTRAINT chk_res_services_prices CHECK (unit_price >= 0 AND line_total >= 0),
+  CONSTRAINT fk_res_services_res
+    FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
+  CONSTRAINT fk_res_services_service
+    FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =========================================
+-- PASSWORD RECOVERY TABLES
+-- =========================================
+
+CREATE TABLE security_questions (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  question_code VARCHAR(10) NOT NULL UNIQUE,
+  question_text VARCHAR(255) NOT NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE user_security_answers (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  question_id BIGINT NOT NULL,
+  answer_hash VARCHAR(255) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT uq_user_question UNIQUE (user_id, question_id),
+  CONSTRAINT fk_user_sec_answers_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_user_sec_answers_question
+    FOREIGN KEY (question_id) REFERENCES security_questions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_user_sec_answers_user ON user_security_answers(user_id);
+
+CREATE TABLE password_reset_challenges (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  question1_id BIGINT NOT NULL,
+  question2_id BIGINT NOT NULL,
+  question3_id BIGINT NOT NULL,
+  attempts_used INT NOT NULL DEFAULT 0,
+  max_attempts INT NOT NULL DEFAULT 3,
+  verified TINYINT(1) NOT NULL DEFAULT 0,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_reset_attempts CHECK (attempts_used >= 0 AND max_attempts > 0),
+  CONSTRAINT chk_reset_questions_distinct CHECK (
+    question1_id <> question2_id AND
+    question1_id <> question3_id AND
+    question2_id <> question3_id
+  ),
+  CONSTRAINT fk_reset_challenges_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_reset_challenges_q1
+    FOREIGN KEY (question1_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_reset_challenges_q2
+    FOREIGN KEY (question2_id) REFERENCES security_questions(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_reset_challenges_q3
+    FOREIGN KEY (question3_id) REFERENCES security_questions(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_reset_challenges_user ON password_reset_challenges(user_id);
+CREATE INDEX idx_reset_challenges_expires ON password_reset_challenges(expires_at);
+
+CREATE TABLE password_reset_audit (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  challenge_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  success TINYINT(1) NOT NULL,
+  ip_address VARCHAR(64),
+  user_agent VARCHAR(512),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reset_audit_challenge
+    FOREIGN KEY (challenge_id) REFERENCES password_reset_challenges(id) ON DELETE CASCADE,
+  CONSTRAINT fk_reset_audit_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_reset_audit_user_time ON password_reset_audit(user_id, created_at);
+
+-- =========================================
+-- VIEWS (annual salary)
+-- =========================================
+
+CREATE VIEW annual_salary_by_employee AS
+SELECT
+  p.staff_id,
+  LEFT(p.pay_month, 4) AS year,
+  ROUND(SUM(p.total_salary), 2) AS annual_salary
+FROM payroll p
+GROUP BY p.staff_id, LEFT(p.pay_month, 4);
+
+CREATE VIEW annual_salary_with_employee AS
+SELECT
+  p.staff_id,
+  u.username,
+  u.first_name,
+  u.last_name,
+  LEFT(p.pay_month, 4) AS year,
+  ROUND(SUM(p.total_salary), 2) AS annual_salary
+FROM payroll p
+JOIN users u ON u.id = p.staff_id
+GROUP BY p.staff_id, u.username, u.first_name, u.last_name, LEFT(p.pay_month, 4);
