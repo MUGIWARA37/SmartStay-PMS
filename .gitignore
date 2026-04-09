@@ -1,0 +1,66 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# =========================
+# Java / Maven / Gradle
+# =========================
+target/
+build/
+out/
+.gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Maven wrapper logs/temp
+.mvn/wrapper/maven-wrapper.jar
+# (Keep this line commented if you DO commit wrapper jar)
+# !.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+hs_err_pid*
+replay_pid*
+
+# =========================
+# Spring Boot
+# =========================
+spring.log
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+
+# App config overrides (keep templates only)
+application-local.properties
+application-dev.properties
+application-prod.properties
+
+# =========================
+# Database local files / dumps
+# =========================
+*.sql.gz
+*.dump
+*.bak
+
+# If you keep schema/seed in repo, DO NOT ignore src/main/resources/*.sql
+
+# =========================
+# Node (if frontend exists later)
+# =========================
+node
