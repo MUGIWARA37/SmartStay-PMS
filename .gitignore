@@ -63,4 +63,22 @@ application-prod.properties
 # =========================
 # Node (if frontend exists later)
 # =========================
-node
+node_modules/
+dist/
+coverage/
+
+# =========================
+# Testing / Reports
+# =========================
+coverage/
+*.lcov
+surefire-reports/
+failsafe-reports/
+
+# =========================
+# Misc
+# =========================
+tmp/
+temp/
+*.swp
+*.swo
