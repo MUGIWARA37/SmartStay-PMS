@@ -13,7 +13,7 @@ import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,18 +26,20 @@ public class LoginController {
 
     @FXML
     public void onLogin(ActionEvent event) {
-        String username = usernameField.getText() == null ? "" : usernameField.getText().trim();
+        clearMessage();
+
+        String username = normalize(usernameField.getText());
         String password = passwordField.getText() == null ? "" : passwordField.getText();
 
         if (username.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("Please enter username and password.");
+            showMessage("Please enter username and password.");
             return;
         }
 
         String sql = """
                 SELECT id, username, email, password_hash, role, is_active
                 FROM users
-                WHERE username = ? AND is_active = 1
+                WHERE LOWER(username) = LOWER(?) AND is_active = 1
                 LIMIT 1
                 """;
 
@@ -48,44 +50,56 @@ public class LoginController {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
-                    messageLabel.setText("Invalid credentials.");
+                    showMessage("Invalid username or password.");
                     return;
                 }
 
                 String storedHash = rs.getString("password_hash");
-                if (storedHash == null || !BCrypt.checkpw(password, storedHash)) {
-                    messageLabel.setText("Invalid credentials.");
+                if (storedHash == null || storedHash.isBlank() || !BCrypt.checkpw(password, storedHash)) {
+                    showMessage("Invalid username or password.");
                     return;
                 }
 
-                User user = new User();
-                user.setId(rs.getLong("id"));
-                user.setUsername(rs.getString("username"));
-                user.setEmail(rs.getString("email"));
-                user.setPasswordHash(storedHash);
-                user.setRole(User.Role.valueOf(rs.getString("role")));
-                user.setActive(rs.getBoolean("is_active"));
-
+                User user = buildUser(rs);
                 SessionManager.setCurrentUser(user);
+
+                // optional: clear sensitive field as soon as auth succeeds
+                passwordField.clear();
+
                 openNextScene(user);
             }
 
         } catch (Exception e) {
-            messageLabel.setText("Login error: " + e.getMessage());
+            // Log detailed error internally, show generic message to user
+            e.printStackTrace();
+            showMessage("Unable to login right now. Please try again.");
         }
     }
 
-    private void openNextScene(User user) throws Exception {
-        String fxml;
+    private User buildUser(ResultSet rs) throws Exception {
+        User user = new User();
+        user.setId(rs.getLong("id"));
+        user.setUsername(rs.getString("username"));
+        user.setEmail(rs.getString("email"));
+        user.setPasswordHash(rs.getString("password_hash"));
+        user.setRole(User.Role.valueOf(rs.getString("role")));
+        user.setActive(rs.getBoolean("is_active"));
+        return user;
+    }
 
-        switch (user.getRole()) {
-            case ADMIN -> fxml = "/fxml/admin/admin.fxml";
-            case CLIENT -> fxml = "/fxml/home/home.fxml";
-            case STAFF -> fxml = resolveStaffFxml(user.getId());
-            default -> throw new IllegalStateException("Unexpected role: " + user.getRole());
+    private void openNextScene(User user) throws Exception {
+        String fxml = switch (user.getRole()) {
+            case ADMIN -> "/fxml/admin/admin.fxml";
+            case CLIENT -> "/fxml/home/home.fxml";
+            case STAFF -> resolveStaffFxml(user.getId());
+        };
+
+        URL resource = getClass().getResource(fxml);
+        if (resource == null) {
+            throw new IllegalStateException("FXML not found: " + fxml);
         }
 
-        Scene next = new Scene(FXMLLoader.load(getClass().getResource(fxml)), 1000, 650);
+        Scene next = new Scene(FXMLLoader.load(resource), 1000, 650);
         Stage stage = (Stage) usernameField.getScene().getWindow();
         stage.setScene(next);
         stage.show();
@@ -100,12 +114,10 @@ public class LoginController {
             ps.setLong(1, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return "/fxml/staff/reception.fxml"; // fallback
-                }
+                if (!rs.next()) return "/fxml/staff/reception.fxml";
 
                 String position = rs.getString("position");
-                if (position == null) return "/fxml/staff/reception.fxml";
+                if (position == null || position.isBlank()) return "/fxml/staff/reception.fxml";
 
                 return switch (position.trim().toLowerCase()) {
                     case "cleaning" -> "/fxml/staff/cleaning.fxml";
@@ -114,5 +126,17 @@ public class LoginController {
                 };
             }
         }
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private void showMessage(String msg) {
+        if (messageLabel != null) messageLabel.setText(msg);
+    }
+
+    private void clearMessage() {
+        showMessage("");
     }
 }
