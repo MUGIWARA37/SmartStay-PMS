@@ -1,142 +1,84 @@
 package ma.ensa.khouribga.smartstay.auth;
 
-import javafx.event.ActionEvent;
+import javafx.animation.*;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
-import javafx.stage.Stage;
-import ma.ensa.khouribga.smartstay.db.Database;
-import ma.ensa.khouribga.smartstay.model.User;
-import ma.ensa.khouribga.smartstay.session.SessionManager;
-import org.mindrot.jbcrypt.BCrypt;
-
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
+import javafx.util.Duration;
+import java.util.Random;
 
 public class LoginController {
 
+    @FXML private MediaView mediaView;
+    @FXML private StackPane mainStackPane;
+    @FXML private Pane animationPane;
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private Label messageLabel;
 
+    private MediaPlayer mediaPlayer;
+    private final Random random = new Random();
+
     @FXML
-    public void onLogin(ActionEvent event) {
-        clearMessage();
+    public void initialize() {
+        setupVideoBackground();
+        startSakuraAnimation();
+    }
 
-        String username = normalize(usernameField.getText());
-        String password = passwordField.getText() == null ? "" : passwordField.getText();
+    private void setupVideoBackground() {
+        try {
+            var resource = getClass().getResource("/videos/sakura.mp4");
+            if (resource != null) {
+                Media media = new Media(resource.toExternalForm());
+                mediaPlayer = new MediaPlayer(media);
+                mediaView.setMediaPlayer(mediaPlayer);
+                
+                // Settings for seamless loop
+                mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+                mediaPlayer.setMute(true);
+                mediaPlayer.play();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            showMessage("Please enter username and password.");
-            return;
-        }
-
-        String sql = """
-                SELECT id, username, email, password_hash, role, is_active
-                FROM users
-                WHERE LOWER(username) = LOWER(?) AND is_active = 1
-                LIMIT 1
-                """;
-
-        try (Connection con = Database.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, username);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    showMessage("Invalid username or password.");
-                    return;
-                }
-
-                String storedHash = rs.getString("password_hash");
-                if (storedHash == null || storedHash.isBlank() || !BCrypt.checkpw(password, storedHash)) {
-                    showMessage("Invalid username or password.");
-                    return;
-                }
-
-                User user = buildUser(rs);
-                SessionManager.setCurrentUser(user);
-
-                // optional: clear sensitive field as soon as auth succeeds
-                passwordField.clear();
-
-                openNextScene(user);
+                // Responsive sizing
+                mediaView.fitWidthProperty().bind(mainStackPane.widthProperty());
+                mediaView.fitHeightProperty().bind(mainStackPane.heightProperty());
             }
-
         } catch (Exception e) {
-            // Log detailed error internally, show generic message to user
-            e.printStackTrace();
-            showMessage("Unable to login right now. Please try again.");
+            System.err.println("Video failed to load: " + e.getMessage());
         }
     }
 
-    private User buildUser(ResultSet rs) throws Exception {
-        User user = new User();
-        user.setId(rs.getLong("id"));
-        user.setUsername(rs.getString("username"));
-        user.setEmail(rs.getString("email"));
-        user.setPasswordHash(rs.getString("password_hash"));
-        user.setRole(User.Role.valueOf(rs.getString("role")));
-        user.setActive(rs.getBoolean("is_active"));
-        return user;
+    private void startSakuraAnimation() {
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> spawnLeaf()));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
     }
 
-    private void openNextScene(User user) throws Exception {
-        String fxml = switch (user.getRole()) {
-            case ADMIN -> "/fxml/admin/admin.fxml";
-            case CLIENT -> "/fxml/home/home.fxml";
-            case STAFF -> resolveStaffFxml(user.getId());
-        };
+    private void spawnLeaf() {
+        Region leaf = new Region();
+        leaf.getStyleClass().add("sakura-leaf");
+        
+        double size = 8 + random.nextDouble() * 10;
+        leaf.setPrefSize(size, size);
+        leaf.setLayoutX(random.nextDouble() * mainStackPane.getWidth());
+        leaf.setLayoutY(-20);
+        animationPane.getChildren().add(leaf);
 
-        URL resource = getClass().getResource(fxml);
-        if (resource == null) {
-            throw new IllegalStateException("FXML not found: " + fxml);
+        TranslateTransition fall = new TranslateTransition(Duration.seconds(6 + random.nextDouble() * 5), leaf);
+        fall.setByY(mainStackPane.getHeight() + 60);
+        fall.setByX(random.nextDouble() * 120 - 60);
+        
+        leaf.setRotate(random.nextDouble() * 360);
+        fall.setOnFinished(e -> animationPane.getChildren().remove(leaf));
+        fall.play();
+    }
+
+    @FXML
+    private void onLogin() {
+        if (usernameField.getText().isEmpty()) {
+            messageLabel.setText("Identify yourself, warrior.");
         }
-
-        Scene next = new Scene(FXMLLoader.load(resource), 1000, 650);
-        Stage stage = (Stage) usernameField.getScene().getWindow();
-        stage.setScene(next);
-        stage.show();
-    }
-
-    private String resolveStaffFxml(long userId) throws Exception {
-        String sql = "SELECT position FROM staff_profiles WHERE user_id = ? LIMIT 1";
-
-        try (Connection con = Database.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setLong(1, userId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return "/fxml/staff/reception.fxml";
-
-                String position = rs.getString("position");
-                if (position == null || position.isBlank()) return "/fxml/staff/reception.fxml";
-
-                return switch (position.trim().toLowerCase()) {
-                    case "cleaning" -> "/fxml/staff/cleaning.fxml";
-                    case "maintenance" -> "/fxml/staff/maintenance.fxml";
-                    default -> "/fxml/staff/reception.fxml";
-                };
-            }
-        }
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim();
-    }
-
-    private void showMessage(String msg) {
-        if (messageLabel != null) messageLabel.setText(msg);
-    }
-
-    private void clearMessage() {
-        showMessage("");
     }
 }
