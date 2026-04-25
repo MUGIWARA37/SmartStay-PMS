@@ -9,8 +9,8 @@ services:
       - "3307:3306"
     volumes:
       - smartstay_data:/var/lib/mysql
-      - ./src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./src/main/resources/sql/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./src/main/resources/sql/seed.sql:/docker-entrypoint-initdb.d/seed.sql
     restart: unless-stopped
 
 volumes:
