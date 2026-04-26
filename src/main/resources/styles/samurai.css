@@ -1,75 +1,287 @@
-/* Container */
+/* ═══════════════════════════════════════════════════════════════════════════
+   samurai.css — SmartStay PMS · Khouribga Edition
+   Theme: Japanese Samurai · Cinematic Dark Glassmorphism
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root ──────────────────────────────────────────────────────────────────── */
 .samurai-root {
-    -fx-background-color: #050505;
+    -fx-background-color: #ffffff;
+    -fx-font-family: "Segoe UI", sans-serif;
 }
 
-/* Cinematic Dark Tint */
-.main-overlay {
-    -fx-background-color: linear-gradient(to bottom right, rgba(0,0,0,0.1), rgba(0,0,0,0.8));
+/* ── Video / particle layer ─────────────────────────────────────────────────── */
+.particle-pane {
+    -fx-background-color: transparent;
 }
 
-/* The Glass Box: Smooth edges & Frost effect */
+
+/* ── Left brand stripe ──────────────────────────────────────────────────────── */
+.brand-strip-inner {
+    -fx-pref-width: 72px;
+    -fx-max-width: 72px;
+    -fx-background-color:
+        linear-gradient(
+            to bottom,
+            rgba(160, 20, 20, 0.18),
+            rgba(100, 10, 10, 0.08) 50%,
+            rgba(160, 20, 20, 0.18)
+        );
+    -fx-border-color: rgba(200, 50, 50, 0.22);
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 48 0 48 0;
+    -fx-alignment: CENTER;
+}
+
+.kanji-large {
+    -fx-font-size: 28px;
+    -fx-text-fill: rgba(225, 75, 75, 0.9);
+    -fx-effect: dropshadow(gaussian, rgba(220,50,50,0.7), 14, 0.5, 0, 0);
+}
+
+.brand-divider {
+    -fx-pref-width: 32px;
+    -fx-background-color: rgba(200, 55, 55, 0.45);
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+    -fx-padding: 0;
+}
+
+.brand-vertical-text {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(180, 160, 180, 0.35);
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLASS BOX — deep glassmorphism
+   JavaFX has no backdrop-filter, so we simulate glass with:
+     1. A semi-transparent dark base
+     2. A lighter frosted inner layer
+     3. Layered border (top highlight + side/bottom subtlety)
+     4. Heavy dropshadow for depth
+   ══════════════════════════════════════════════════════════════════════════════ */
 .glass-box {
-    -fx-background-color: rgba(255, 255, 255, 0.08);
-    -fx-background-radius: 30;
-    -fx-border-radius: 30;
-    -fx-border-color: rgba(255, 255, 255, 0.2);
-    -fx-border-width: 1.5;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 40, 0, 0, 0);
-    -fx-padding: 50;
+    -fx-pref-width: 340px;
+    -fx-max-width: 340px;
+
+    /* Multi-stop background simulating frosted glass depth */
+    -fx-background-color:
+        /* outermost: very dark translucent base */
+        rgba(8, 6, 22, 0.82),
+        /* inner frosted highlight — lighter strip at top */
+        linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.06) 0%,
+            rgba(255, 255, 255, 0.02) 30%,
+            rgba(0, 0, 0, 0.0) 100%
+        );
+
+    -fx-background-radius: 6px, 6px;
+    -fx-background-insets: 0, 0;
+
+    /* Layered border: crimson top + white-glass sides */
+    -fx-border-color:
+        rgba(210, 55, 55, 0.65)   /* top — red accent */
+        rgba(255, 255, 255, 0.09) /* right — glass gleam */
+        rgba(255, 255, 255, 0.04) /* bottom — subtle */
+        rgba(255, 255, 255, 0.09); /* left — glass gleam */
+    -fx-border-width: 1.5 1 1 1;
+    -fx-border-radius: 6px;
+
+    /* Deep shadow stack for floating glass look */
+    -fx-effect:
+        dropshadow(gaussian, rgba(0, 0, 0, 0.85), 50, 0.0, 0, 18),
+        dropshadow(gaussian, rgba(180, 20, 20, 0.20), 30, 0.0, 0, 0);
 }
 
-/* Typography (Optimized for Full Screen) */
+/* Hover — glass brightens slightly */
+.glass-box:hover {
+    -fx-background-color:
+        rgba(12, 9, 28, 0.80),
+        linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.09) 0%,
+            rgba(255, 255, 255, 0.03) 30%,
+            rgba(0, 0, 0, 0.0) 100%
+        );
+    -fx-border-color:
+        rgba(230, 70, 70, 0.80)
+        rgba(255, 255, 255, 0.13)
+        rgba(255, 255, 255, 0.06)
+        rgba(255, 255, 255, 0.13);
+    -fx-effect:
+        dropshadow(gaussian, rgba(0, 0, 0, 0.90), 60, 0.0, 0, 22),
+        dropshadow(gaussian, rgba(200, 30, 30, 0.30), 40, 0.0, 0, 0);
+}
+
+/* ── Crest ──────────────────────────────────────────────────────────────────── */
+.crest-icon {
+    -fx-font-size: 38px;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-effect: dropshadow(gaussian, rgba(220,70,70,0.80), 20, 0.6, 0, 0);
+}
+
+/* ── App title / subtitle ───────────────────────────────────────────────────── */
 .app-title {
-    -fx-font-family: "Helvetica", "Arial", sans-serif;
-    -fx-font-size: 90px;
-    -fx-font-weight: 100;
-    -fx-text-fill: white;
-    -fx-letter-spacing: 5px;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ede5f8;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-padding: 10 0 2 0;
+    -fx-effect: dropshadow(gaussian, rgba(160,70,200,0.30), 10, 0.4, 0, 0);
 }
 
 .app-subtitle {
-    -fx-text-fill: rgba(255, 255, 255, 0.5);
-    -fx-letter-spacing: 6px;
-    -fx-font-size: 16px;
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(210, 75, 75, 0.95);
+    -fx-letter-spacing: 4px;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-padding: 0 0 4 0;
 }
 
-/* Glassy Inputs */
-.text-field, .password-field {
-    -fx-background-color: rgba(255, 255, 255, 0.05);
-    -fx-background-radius: 15;
-    -fx-border-radius: 15;
-    -fx-border-color: rgba(255, 255, 255, 0.2);
-    -fx-border-width: 1;
-    -fx-padding: 12 20;
-    -fx-text-fill: white;
-    -fx-prompt-text-fill: rgba(255, 255, 255, 0.3);
+/* ── Decorative rule ────────────────────────────────────────────────────────── */
+.title-rule {
+    -fx-background-color: linear-gradient(
+        to right,
+        transparent,
+        rgba(200, 55, 55, 0.65) 25%,
+        rgba(220, 80, 80, 0.85) 50%,
+        rgba(200, 55, 55, 0.65) 75%,
+        transparent
+    );
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+    -fx-pref-width: 260px;
 }
 
-.text-field:focused, .password-field:focused {
-    -fx-background-color: rgba(255, 255, 255, 0.15);
-    -fx-border-color: white;
+/* ── Field group ────────────────────────────────────────────────────────────── */
+.field-group {
+    -fx-pref-width: 260px;
+    -fx-max-width: 260px;
 }
 
-/* Pill-shaped Button */
-.samurai-button {
-    -fx-background-color: rgba(255, 255, 255, 0.1);
-    -fx-border-color: rgba(255, 255, 255, 0.8);
-    -fx-text-fill: white;
-    -fx-background-radius: 30;
-    -fx-border-radius: 30;
-    -fx-padding: 12 60;
-    -fx-cursor: hand;
+.field-label {
+    -fx-font-size: 9px;
     -fx-font-weight: bold;
+    -fx-letter-spacing: 3px;
+    -fx-text-fill: rgba(190, 75, 75, 0.90);
+}
+
+/* ── Text inputs — glass style ──────────────────────────────────────────────── */
+.text-field,
+.password-field {
+    -fx-pref-width: 260px;
+    -fx-pref-height: 42px;
+
+    /* Glassy input background */
+    -fx-background-color:
+        rgba(255, 255, 255, 0.04),
+        linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(0,0,0,0.0));
+    -fx-background-radius: 4px, 4px;
+    -fx-background-insets: 0, 0;
+
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-radius: 4px;
+    -fx-border-width: 0 0 1.5 0;
+
+    -fx-text-fill: #ede5f8;
+    -fx-prompt-text-fill: rgba(180, 165, 205, 0.32);
+    -fx-font-size: 14px;
+    -fx-padding: 0 12 0 12;
+}
+
+.text-field:focused,
+.password-field:focused {
+    -fx-background-color:
+        rgba(200, 50, 50, 0.08),
+        linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(0,0,0,0.0));
+    -fx-border-color: rgba(210, 60, 60, 0.80);
+    -fx-effect: dropshadow(gaussian, rgba(200,50,50,0.35), 12, 0.0, 0, 0);
+}
+
+.text-field:hover,
+.password-field:hover {
+    -fx-background-color:
+        rgba(255, 255, 255, 0.06),
+        linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(0,0,0,0.0));
+    -fx-border-color: rgba(255, 255, 255, 0.20);
+}
+
+.text-field:disabled,
+.password-field:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* ── Error label ────────────────────────────────────────────────────────────── */
+.error-label {
+    -fx-text-fill: #ff7070;
+    -fx-font-size: 11px;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-pref-width: 260px;
+    -fx-wrap-text: true;
+    -fx-padding: 4 0 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(255,80,80,0.4), 6, 0.0, 0, 0);
+}
+
+/* ── Login button ───────────────────────────────────────────────────────────── */
+.samurai-button {
+    -fx-pref-width: 260px;
+    -fx-pref-height: 44px;
+    -fx-background-color:
+        linear-gradient(
+            to bottom,
+            rgba(190, 35, 35, 0.92),
+            rgba(145, 15, 15, 0.97)
+        );
+    -fx-background-radius: 4px;
+    -fx-border-color: rgba(225, 65, 65, 0.65);
+    -fx-border-radius: 4px;
+    -fx-border-width: 1;
+    -fx-text-fill: #f5ecec;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 3px;
+    -fx-cursor: hand;
+    -fx-effect:
+        dropshadow(gaussian, rgba(180,15,15,0.55), 18, 0.0, 0, 5),
+        dropshadow(gaussian, rgba(255,100,100,0.10), 4, 0.0, 0, -1);
 }
 
 .samurai-button:hover {
-    -fx-background-color: white;
-    -fx-text-fill: black;
+    -fx-background-color:
+        linear-gradient(
+            to bottom,
+            rgba(230, 55, 55, 0.97),
+            rgba(190, 28, 28, 1.0)
+        );
+    -fx-border-color: rgba(255, 100, 100, 0.85);
+    -fx-effect:
+        dropshadow(gaussian, rgba(220,35,35,0.75), 26, 0.0, 0, 7),
+        dropshadow(gaussian, rgba(255,120,120,0.15), 6, 0.0, 0, -1);
 }
 
-.sakura-leaf {
-    -fx-background-color: #FFB7C5;
-    -fx-background-radius: 50% 5% 50% 5%;
-    -fx-opacity: 0.4;
+.samurai-button:pressed {
+    -fx-background-color: rgba(120, 10, 10, 0.98);
+    -fx-effect: dropshadow(gaussian, rgba(180,15,15,0.35), 10, 0.0, 0, 2);
+    -fx-translate-y: 1;
+}
+
+.samurai-button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.footer-label {
+    -fx-font-size: 9px;
+    -fx-letter-spacing: 3px;
+    -fx-text-fill: rgba(155, 135, 165, 0.28);
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
 }

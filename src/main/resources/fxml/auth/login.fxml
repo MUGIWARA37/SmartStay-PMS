@@ -1,54 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.media.MediaView?>
-<?import java.net.URL?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.geometry.Insets?>
 
-<StackPane fx:id="mainStackPane" styleClass="samurai-root" 
-           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="ma.ensa.khouribga.smartstay.auth.LoginController">
-    
-    <stylesheets>
-        <URL value="@/styles/samurai.css" />
-    </stylesheets>
+<StackPane
+    xmlns="http://javafx.com/javafx/21"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="ma.ensa.khouribga.smartstay.auth.LoginController"
+    prefWidth="1100" prefHeight="700"
+    styleClass="samurai-root"
+    stylesheets="@/styles/samurai.css">
 
-    <MediaView fx:id="mediaView" preserveRatio="false" />
-    
-    <StackPane styleClass="main-overlay">
-        
-        <Pane fx:id="animationPane" mouseTransparent="true" />
+    <!-- LAYER 1 - Video background fills entire root -->
+    <Pane fx:id="particlePane" styleClass="particle-pane"
+          maxWidth="Infinity" maxHeight="Infinity">
+        <MediaView
+            fx:id="mediaView"
+            preserveRatio="false"
+            mouseTransparent="true"/>
+    </Pane>
 
-        <AnchorPane>
-            <VBox spacing="40" alignment="CENTER_LEFT" maxWidth="400" 
-                  styleClass="glass-box" 
-                  AnchorPane.leftAnchor="100.0" 
-                  AnchorPane.topAnchor="150.0" AnchorPane.bottomAnchor="150.0">
-                
-                <Label text="SECURE ACCESS" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-letter-spacing: 3px;"/>
-                
-                <VBox spacing="20">
-                    <VBox spacing="8">
-                        <Label text="USERNAME" style="-fx-text-fill: white; -fx-font-size: 11px;"/>
-                        <TextField fx:id="usernameField" promptText="Your identity..." />
-                    </VBox>
-                    <VBox spacing="8">
-                        <Label text="PASSWORD" style="-fx-text-fill: white; -fx-font-size: 11px;"/>
-                        <PasswordField fx:id="passwordField" promptText="Your secret sign..." />
-                    </VBox>
-                </VBox>
+    <!-- LAYER 2 - Vertical brand stripe (left) -->
+    <HBox maxWidth="Infinity" maxHeight="Infinity"
+          mouseTransparent="true" alignment="CENTER_LEFT">
+        <VBox fx:id="brandStripe" alignment="CENTER" spacing="18"
+              styleClass="brand-strip-inner" maxHeight="Infinity">
+            <Label text="&#26234;" styleClass="kanji-large"/>
+            <Label text="&#23431;" styleClass="kanji-large"/>
+            <Separator styleClass="brand-divider"/>
+            <Label text="S&#10;M&#10;A&#10;R&#10;T&#10;S&#10;T&#10;A&#10;Y"
+                   styleClass="brand-vertical-text"/>
+        </VBox>
+    </HBox>
 
-                <Button text="SIGN IN" onAction="#onLogin" styleClass="samurai-button" maxWidth="Infinity"/>
-                <Label fx:id="messageLabel" style="-fx-text-fill: #FFB7C5;"/>
+    <!-- LAYER 3 - Glass login card (center-right) -->
+    <HBox alignment="CENTER_RIGHT" maxWidth="Infinity" maxHeight="Infinity">
+        <HBox.margin>
+            <Insets right="120"/>
+        </HBox.margin>
+
+        <VBox fx:id="glassCard" styleClass="glass-box" alignment="CENTER" spacing="0">
+            <padding>
+                <Insets top="52" right="50" bottom="48" left="50"/>
+            </padding>
+
+            <!-- Crest -->
+            <Label text="&#9961;" styleClass="crest-icon"/>
+
+            <!-- App title -->
+            <Label text="SmartStay PMS" styleClass="app-title"/>
+            <Label text="Khouribga Edition" styleClass="app-subtitle"/>
+
+            <!-- Decorative rule -->
+            <Pane styleClass="title-rule" prefHeight="1" prefWidth="260"/>
+
+            <!-- Username -->
+            <VBox spacing="6" styleClass="field-group">
+                <VBox.margin><Insets top="36"/></VBox.margin>
+                <Label text="USERNAME" styleClass="field-label"/>
+                <TextField
+                    fx:id="usernameField"
+                    promptText="enter username"
+                    styleClass="text-field"/>
             </VBox>
 
-            <VBox alignment="BOTTOM_RIGHT" spacing="0" 
-                  AnchorPane.bottomAnchor="80.0" AnchorPane.rightAnchor="100.0">
-                <Label text="SmartStay" styleClass="app-title"/>
-                <Label text="PROPERTY MANAGEMENT SYSTEM" styleClass="app-subtitle"/>
-                <Label text="Khouribga Edition • 2026" style="-fx-text-fill: rgba(255,255,255,0.3);"/>
+            <!-- Password -->
+            <VBox spacing="6" styleClass="field-group">
+                <VBox.margin><Insets top="20"/></VBox.margin>
+                <Label text="PASSWORD" styleClass="field-label"/>
+                <PasswordField
+                    fx:id="passwordField"
+                    promptText="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                    styleClass="password-field"
+                    onAction="#onLogin"/>
             </VBox>
-        </AnchorPane>
-    </StackPane>
+
+            <!-- Error label -->
+            <Label
+                fx:id="errorLabel"
+                text=""
+                styleClass="error-label"
+                visible="false"
+                wrapText="true"
+                maxWidth="260">
+                <VBox.margin><Insets top="14"/></VBox.margin>
+            </Label>
+
+            <!-- Login button -->
+            <Button
+                text="ENTER  &#8594;"
+                styleClass="samurai-button"
+                onAction="#onLogin"
+                defaultButton="true"
+                maxWidth="Infinity">
+                <VBox.margin><Insets top="28"/></VBox.margin>
+            </Button>
+
+            <!-- Footer -->
+            <Label text="&#20581;  Samurai Protocol  &#20581;" styleClass="footer-label">
+                <VBox.margin><Insets top="32"/></VBox.margin>
+            </Label>
+
+        </VBox>
+    </HBox>
+
 </StackPane>
