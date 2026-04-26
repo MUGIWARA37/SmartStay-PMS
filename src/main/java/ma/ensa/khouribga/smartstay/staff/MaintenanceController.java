@@ -1,71 +1,182 @@
 package ma.ensa.khouribga.smartstay.staff;
 
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.stage.Stage;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.dao.CleaningDao;
+import ma.ensa.khouribga.smartstay.dao.MaintenanceDao;
+import ma.ensa.khouribga.smartstay.dao.RoomDao;
+import ma.ensa.khouribga.smartstay.model.MaintenanceRequest;
+import ma.ensa.khouribga.smartstay.model.Room;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
-import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class MaintenanceController {
 
     @FXML private Label welcomeLabel;
-    @FXML private Label statusLabel;
+    @FXML private ComboBox<String> statusFilter;
+    @FXML private TableView<MaintenanceRequest> taskTable;
+    @FXML private TableColumn<MaintenanceRequest, String> colRoom;
+    @FXML private TableColumn<MaintenanceRequest, String> colTitle;
+    @FXML private TableColumn<MaintenanceRequest, MaintenanceRequest.Priority> colPriority;
+    @FXML private TableColumn<MaintenanceRequest, MaintenanceRequest.Status> colStatus;
+    @FXML private TableColumn<MaintenanceRequest, String> colDesc;
+    @FXML private TableColumn<MaintenanceRequest, LocalDateTime> colCreated;
+
+    // Report form
+    @FXML private ComboBox<Room> roomCombo;
+    @FXML private TextField titleField;
+    @FXML private ComboBox<MaintenanceRequest.Priority> priorityCombo;
+    @FXML private TextArea descField;
+    @FXML private Label formError;
+
+    private int staffProfileId = -1;
+    private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("dd MMM HH:mm");
 
     @FXML
     public void initialize() {
-        try {
-            SessionManager.requireRole(User.Role.STAFF);
+        try { SessionManager.requireRole(User.Role.STAFF); }
+        catch (Exception e) { Navigator.goToLogin(welcomeLabel); return; }
 
-            User user = SessionManager.getCurrentUser();
-            if (welcomeLabel != null && user != null) {
-                welcomeLabel.setText("Maintenance: " + user.getUsername());
+        User user = SessionManager.getCurrentUser();
+        welcomeLabel.setText(user.getUsername());
+
+        statusFilter.setItems(FXCollections.observableArrayList(
+                "ALL", "NEW", "ASSIGNED", "IN_PROGRESS", "RESOLVED", "CANCELLED"));
+        statusFilter.setValue("ALL");
+
+        priorityCombo.setItems(FXCollections.observableArrayList(MaintenanceRequest.Priority.values()));
+        priorityCombo.setValue(MaintenanceRequest.Priority.MEDIUM);
+
+        colRoom.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
+        colTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
+        colPriority.setCellValueFactory(new PropertyValueFactory<>("priority"));
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
+        colCreated.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+
+        colCreated.setCellFactory(c -> new TableCell<>() {
+            @Override protected void updateItem(LocalDateTime v, boolean empty) {
+                super.updateItem(v, empty);
+                setText(empty || v == null ? "—" : v.format(DT_FMT));
             }
-            if (statusLabel != null) {
-                statusLabel.setText("Ready");
+        });
+
+        roomCombo.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(Room r, boolean empty) {
+                super.updateItem(r, empty);
+                setText(empty || r == null ? null : "Room " + r.getRoomNumber() + " – " + r.getTypeName());
             }
-        } catch (Exception e) {
-            SessionManager.logout();
-            goToLogin();
-        }
+        });
+        roomCombo.setButtonCell(new ListCell<>() {
+            @Override protected void updateItem(Room r, boolean empty) {
+                super.updateItem(r, empty);
+                setText(empty || r == null ? "Select room" : "Room " + r.getRoomNumber());
+            }
+        });
+
+        new Thread(() -> {
+            try {
+                staffProfileId = CleaningDao.findStaffProfileId((int) user.getId());
+                List<Room> rooms = RoomDao.findAll();
+                Platform.runLater(() -> {
+                    roomCombo.setItems(FXCollections.observableArrayList(rooms));
+                    loadTasks();
+                });
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }, "maint-init").start();
     }
 
-    @FXML
-    public void onLogout() {
+    @FXML public void loadTasks() {
+        new Thread(() -> {
+            try {
+                List<MaintenanceRequest> all = staffProfileId > 0
+                        ? MaintenanceDao.findByStaff(staffProfileId)
+                        : MaintenanceDao.findAll();
+                Platform.runLater(() -> taskTable.setItems(FXCollections.observableArrayList(all)));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }, "maint-load").start();
+    }
+
+    @FXML public void applyFilter() {
+        String sel = statusFilter.getValue();
+        if (sel == null || sel.equals("ALL")) { loadTasks(); return; }
+        new Thread(() -> {
+            try {
+                List<MaintenanceRequest> filtered =
+                        MaintenanceDao.findByStatus(MaintenanceRequest.Status.valueOf(sel));
+                Platform.runLater(() -> taskTable.setItems(FXCollections.observableArrayList(filtered)));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }, "maint-filter").start();
+    }
+
+    @FXML public void markInProgress() { updateStatus(MaintenanceRequest.Status.IN_PROGRESS); }
+    @FXML public void markResolved()   { updateStatus(MaintenanceRequest.Status.RESOLVED); }
+
+    private void updateStatus(MaintenanceRequest.Status newStatus) {
+        MaintenanceRequest sel = taskTable.getSelectionModel().getSelectedItem();
+        if (sel == null) { showAlert("Select a task first."); return; }
+        new Thread(() -> {
+            try {
+                MaintenanceDao.updateStatus(sel.getId(), newStatus);
+                if (newStatus == MaintenanceRequest.Status.RESOLVED) {
+                    // Re-mark room as AVAILABLE after maintenance resolved
+                    ma.ensa.khouribga.smartstay.dao.RoomDao.updateStatus(sel.getRoomId(), Room.Status.AVAILABLE);
+                }
+                Platform.runLater(this::loadTasks);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> showAlert("Update failed: " + ex.getMessage()));
+            }
+        }, "maint-update").start();
+    }
+
+    @FXML public void reportIssue() {
+        formError.setText("");
+        Room room = roomCombo.getValue();
+        String title = titleField.getText().trim();
+        if (room == null)    { formError.setText("Please select a room."); return; }
+        if (title.isEmpty()) { formError.setText("Please enter an issue title."); return; }
+
+        MaintenanceRequest req = new MaintenanceRequest();
+        req.setRoomId(room.getId());
+        req.setReportedByUserId((int) SessionManager.getCurrentUser().getId());
+        req.setPriority(priorityCombo.getValue() != null ? priorityCombo.getValue() : MaintenanceRequest.Priority.MEDIUM);
+        req.setTitle(title);
+        req.setDescription(descField.getText().trim());
+        if (staffProfileId > 0) req.setAssignedToStaffId(staffProfileId);
+
+        new Thread(() -> {
+            try {
+                MaintenanceDao.create(req);
+                Platform.runLater(() -> {
+                    formError.setText("");
+                    titleField.clear();
+                    descField.clear();
+                    loadTasks();
+                    showAlert("Maintenance request created successfully.");
+                });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> formError.setText("Error: " + ex.getMessage()));
+            }
+        }, "maint-report").start();
+    }
+
+    private void showAlert(String msg) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
+        alert.showAndWait();
+    }
+
+    @FXML public void onLogout() {
         SessionManager.logout();
-        goToLogin();
-    }
-
-    private void goToLogin() {
-        try {
-            URL loginResource = getClass().getResource("/fxml/auth/login.fxml");
-            if (loginResource == null) {
-                throw new IllegalStateException("FXML not found: /fxml/auth/login.fxml");
-            }
-
-            Stage stage = resolveStage();
-            if (stage == null) return;
-
-            stage.setScene(new Scene(FXMLLoader.load(loginResource), 1000, 650));
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (statusLabel != null) {
-                statusLabel.setText("Navigation error: " + e.getMessage());
-            }
-        }
-    }
-
-    private Stage resolveStage() {
-        if (welcomeLabel != null && welcomeLabel.getScene() != null) {
-            return (Stage) welcomeLabel.getScene().getWindow();
-        }
-        if (statusLabel != null && statusLabel.getScene() != null) {
-            return (Stage) statusLabel.getScene().getWindow();
-        }
-        return null;
+        Navigator.goToLogin(welcomeLabel);
     }
 }
