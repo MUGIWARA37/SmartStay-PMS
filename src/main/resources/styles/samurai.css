@@ -1,176 +1,305 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLOODY SAMURAI EDITION — SmartStay PMS
-   "Honor in Management, Precision in Code"
+   samurai.css — SmartStay PMS · Khouribga Edition
+   Theme: Japanese Samurai · Cinematic Dark Glassmorphism
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Root: The Obsidian Path ────────────────────────────────────────────────── */
-.interior-root {
-    -fx-background-color: #050505; /* Deepest black */
-    -fx-font-family: "Segoe UI Semibold", sans-serif;
+/* ── Root ──────────────────────────────────────────────────────────────────── */
+.samurai-root {
+    -fx-background-color: #06060d;
+    -fx-font-family: "Segoe UI", sans-serif;
 }
 
-/* ── Sidebar: The Katana Sheath ─────────────────────────────────────────────── */
-.sidebar {
-    -fx-pref-width: 220px;
-    -fx-background-color: linear-gradient(to right, #000000, #0f0a0a);
-    -fx-border-color: #4a0000; /* Darker blood border */
-    -fx-border-width: 0 2 0 0;
+/* ── Video / particle layer ─────────────────────────────────────────────────── */
+.particle-pane {
+    -fx-background-color: transparent;
 }
 
-.sidebar-header {
-    /* Subtle silk-texture effect */
-    -fx-background-color: linear-gradient(to bottom, #1a0505, #0a0a0a);
-    -fx-border-color: #8b0000;
-    -fx-border-width: 0 0 2 0;
-    -fx-padding: 30 16 25 16;
+/* ── Dark cinematic overlay ─────────────────────────────────────────────────── */
+.main-overlay {
+    -fx-background-color: linear-gradient(
+        to right,
+        rgba(2, 2, 10, 0.94) 0%,
+        rgba(4, 4, 18, 0.80) 40%,
+        rgba(8, 4, 22, 0.50) 100%
+    );
 }
 
-.sidebar-logo {
-    -fx-font-size: 20px;
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: bold;
-    /* Red 'glow' like a cursed blade */
-    -fx-effect: dropshadow(gaussian, #ff0000, 15, 0.5, 0, 0);
+/* ── Left brand stripe ──────────────────────────────────────────────────────── */
+.brand-strip-inner {
+    -fx-pref-width: 72px;
+    -fx-max-width: 72px;
+    -fx-background-color:
+        linear-gradient(
+            to bottom,
+            rgba(160, 20, 20, 0.18),
+            rgba(100, 10, 10, 0.08) 50%,
+            rgba(160, 20, 20, 0.18)
+        );
+    -fx-border-color: rgba(200, 50, 50, 0.22);
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 48 0 48 0;
+    -fx-alignment: CENTER;
 }
 
-.sidebar-subtitle {
+.kanji-large {
+    -fx-font-size: 28px;
+    -fx-text-fill: rgba(225, 75, 75, 0.9);
+    -fx-effect: dropshadow(gaussian, rgba(220,50,50,0.7), 14, 0.5, 0, 0);
+}
+
+.brand-divider {
+    -fx-pref-width: 32px;
+    -fx-background-color: rgba(200, 55, 55, 0.45);
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+    -fx-padding: 0;
+}
+
+.brand-vertical-text {
     -fx-font-size: 9px;
-    -fx-text-fill: #ff3333;
-    -fx-letter-spacing: 5px;
     -fx-font-weight: bold;
+    -fx-text-fill: rgba(180, 160, 180, 0.35);
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
 }
 
-/* ── Nav Buttons: The Way of the Warrior ────────────────────────────────────── */
-.nav-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: #a0a0a0;
-    -fx-border-color: transparent;
-    -fx-border-width: 0 0 0 4;
-    -fx-transition: 0.2s;
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLASS BOX — deep glassmorphism
+   JavaFX has no backdrop-filter, so we simulate glass with:
+     1. A semi-transparent dark base
+     2. A lighter frosted inner layer
+     3. Layered border (top highlight + side/bottom subtlety)
+     4. Heavy dropshadow for depth
+   ══════════════════════════════════════════════════════════════════════════════ */
+.glass-box {
+    -fx-pref-width: 340px;
+    -fx-max-width: 340px;
+
+    /* Multi-stop background simulating frosted glass depth */
+    -fx-background-color:
+        /* outermost: very dark translucent base */
+        rgba(8, 6, 22, 0.82),
+        /* inner frosted highlight — lighter strip at top */
+        linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.06) 0%,
+            rgba(255, 255, 255, 0.02) 30%,
+            rgba(0, 0, 0, 0.0) 100%
+        );
+
+    -fx-background-radius: 6px, 6px;
+    -fx-background-insets: 0, 0;
+
+    /* Layered border: crimson top + white-glass sides */
+    -fx-border-color:
+        rgba(210, 55, 55, 0.65)   /* top — red accent */
+        rgba(255, 255, 255, 0.09) /* right — glass gleam */
+        rgba(255, 255, 255, 0.04) /* bottom — subtle */
+        rgba(255, 255, 255, 0.09); /* left — glass gleam */
+    -fx-border-width: 1.5 1 1 1;
+    -fx-border-radius: 6px;
+
+    /* Deep shadow stack for floating glass look */
+    -fx-effect:
+        dropshadow(gaussian, rgba(0, 0, 0, 0.85), 50, 0.0, 0, 18),
+        dropshadow(gaussian, rgba(180, 20, 20, 0.20), 30, 0.0, 0, 0);
 }
 
-.nav-button:hover {
-    -fx-background-color: rgba(139, 0, 0, 0.15);
-    -fx-text-fill: #ffffff;
-    -fx-border-color: #ff0000;
+/* Hover — glass brightens slightly */
+.glass-box:hover {
+    -fx-background-color:
+        rgba(12, 9, 28, 0.80),
+        linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.09) 0%,
+            rgba(255, 255, 255, 0.03) 30%,
+            rgba(0, 0, 0, 0.0) 100%
+        );
+    -fx-border-color:
+        rgba(230, 70, 70, 0.80)
+        rgba(255, 255, 255, 0.13)
+        rgba(255, 255, 255, 0.06)
+        rgba(255, 255, 255, 0.13);
+    -fx-effect:
+        dropshadow(gaussian, rgba(0, 0, 0, 0.90), 60, 0.0, 0, 22),
+        dropshadow(gaussian, rgba(200, 30, 30, 0.30), 40, 0.0, 0, 0);
 }
 
-.nav-button-active {
-    -fx-background-color: rgba(139, 0, 0, 0.25);
-    -fx-text-fill: #ffffff;
-    -fx-border-color: #ff0000; /* The Red Thread of Fate */
-    -fx-effect: dropshadow(gaussian, rgba(255, 0, 0, 0.2), 10, 0, 0, 0);
+/* ── Crest ──────────────────────────────────────────────────────────────────── */
+.crest-icon {
+    -fx-font-size: 38px;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-effect: dropshadow(gaussian, rgba(220,70,70,0.80), 20, 0.6, 0, 0);
 }
 
-.btn-logout {
-    -fx-background-color: transparent;
-    -fx-border-color: #8b0000;
-    -fx-text-fill: #ff4d4d;
-    -fx-border-radius: 0; /* Sharp corners only */
-    -fx-background-radius: 0;
-}
-
-/* ── Content Area & Header ──────────────────────────────────────────────────── */
-.header-bar {
-    -fx-background-color: #0a0a0a;
-    -fx-border-color: #8b0000;
-    -fx-border-width: 0 0 1 0;
-}
-
-.welcome-label {
-    -fx-text-fill: #ffffff;
-    -fx-effect: dropshadow(one-pass-box, #8b0000, 5, 0, 0, 0);
-}
-
-/* ── Cards: The Iron Armor ─────────────────────────────────────────────────── */
-.card {
-    -fx-background-color: #0d0d0d;
-    -fx-background-radius: 0; /* Remove rounded corners for a harsher look */
-    -fx-border-color: #4a0000;
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.8), 15, 0, 0, 5);
-}
-
-/* ── Buttons: The Lethal Strike ─────────────────────────────────────────────── */
-.btn-primary {
-    /* Solid Blood Red */
-    -fx-background-color: #8b0000;
-    -fx-text-fill: #ffffff;
-    -fx-background-radius: 0;
-    -fx-border-color: #ff0000;
-    -fx-border-width: 1;
+/* ── App title / subtitle ───────────────────────────────────────────────────── */
+.app-title {
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
+    -fx-text-fill: #ede5f8;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-padding: 10 0 2 0;
+    -fx-effect: dropshadow(gaussian, rgba(160,70,200,0.30), 10, 0.4, 0, 0);
 }
 
-.btn-primary:hover {
-    -fx-background-color: #ff0000;
-    -fx-effect: dropshadow(gaussian, #ff0000, 15, 0, 0, 0);
-}
-
-.btn-danger {
-    -fx-background-color: transparent;
-    -fx-border-color: #ff0000;
-    -fx-text-fill: #ff0000;
-}
-
-.btn-success {
-    /* Emerald Jade - a classic Japanese accent */
-    -fx-background-color: rgba(0, 255, 127, 0.05);
-    -fx-border-color: #00ff7f;
-    -fx-text-fill: #00ff7f;
-}
-
-/* ── TableView: The Scroll of Records ───────────────────────────────────────── */
-.table-view {
-    -fx-background-color: #080808;
-    -fx-border-color: #330000;
-}
-
-.table-view .column-header {
-    -fx-background-color: #1a0505;
-    -fx-border-color: #8b0000;
-}
-
-.table-view .column-header .label {
-    -fx-text-fill: #ff3333;
+.app-subtitle {
     -fx-font-size: 10px;
-    -fx-letter-spacing: 3px;
+    -fx-text-fill: rgba(210, 75, 75, 0.95);
+    -fx-letter-spacing: 4px;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-padding: 0 0 4 0;
 }
 
-.table-view .table-row-cell:selected {
-    -fx-background-color: #4a0000;
-    -fx-text-fill: white;
+/* ── Decorative rule ────────────────────────────────────────────────────────── */
+.title-rule {
+    -fx-background-color: linear-gradient(
+        to right,
+        transparent,
+        rgba(200, 55, 55, 0.65) 25%,
+        rgba(220, 80, 80, 0.85) 50%,
+        rgba(200, 55, 55, 0.65) 75%,
+        transparent
+    );
+    -fx-pref-height: 1px;
+    -fx-max-height: 1px;
+    -fx-pref-width: 260px;
 }
 
-/* ── Badges: Martial Status ─────────────────────────────────────────────────── */
-.badge {
-    -fx-background-radius: 0;
-    -fx-border-width: 1;
+/* ── Field group ────────────────────────────────────────────────────────────── */
+.field-group {
+    -fx-pref-width: 260px;
+    -fx-max-width: 260px;
 }
 
-.badge-urgent {
-    -fx-background-color: #ff0000;
-    -fx-text-fill: white;
+.field-label {
+    -fx-font-size: 9px;
     -fx-font-weight: bold;
-    -fx-effect: dropshadow(gaussian, #ff0000, 10, 0, 0, 0);
+    -fx-letter-spacing: 3px;
+    -fx-text-fill: rgba(190, 75, 75, 0.90);
 }
 
-.badge-available {
-    -fx-border-color: #00ff7f;
-    -fx-text-fill: #00ff7f;
+/* ── Text inputs — glass style ──────────────────────────────────────────────── */
+.text-field,
+.password-field {
+    -fx-pref-width: 260px;
+    -fx-pref-height: 42px;
+
+    /* Glassy input background */
+    -fx-background-color:
+        rgba(255, 255, 255, 0.04),
+        linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(0,0,0,0.0));
+    -fx-background-radius: 4px, 4px;
+    -fx-background-insets: 0, 0;
+
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-radius: 4px;
+    -fx-border-width: 0 0 1.5 0;
+
+    -fx-text-fill: #ede5f8;
+    -fx-prompt-text-fill: rgba(180, 165, 205, 0.32);
+    -fx-font-size: 14px;
+    -fx-padding: 0 12 0 12;
 }
 
-/* ── ScrollBar: The Blood Flow ─────────────────────────────────────────────── */
-.scroll-bar .thumb {
-    -fx-background-color: #8b0000;
-    -fx-background-radius: 0;
+.text-field:focused,
+.password-field:focused {
+    -fx-background-color:
+        rgba(200, 50, 50, 0.08),
+        linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(0,0,0,0.0));
+    -fx-border-color: rgba(210, 60, 60, 0.80);
+    -fx-effect: dropshadow(gaussian, rgba(200,50,50,0.35), 12, 0.0, 0, 0);
 }
 
-.scroll-bar .thumb:hover {
-    -fx-background-color: #ff0000;
+.text-field:hover,
+.password-field:hover {
+    -fx-background-color:
+        rgba(255, 255, 255, 0.06),
+        linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(0,0,0,0.0));
+    -fx-border-color: rgba(255, 255, 255, 0.20);
 }
 
-/* ── Charts: War Room Strategy ─────────────────────────────────────────────── */
-.default-color0.chart-bar { -fx-bar-fill: #8b0000; } /* Blood */
-.default-color1.chart-bar { -fx-bar-fill: #404040; } /* Steel */
-.default-color2.chart-bar { -fx-bar-fill: #000000; -fx-border-color: #8b0000; } /* Shadow */
+.text-field:disabled,
+.password-field:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* ── Error label ────────────────────────────────────────────────────────────── */
+.error-label {
+    -fx-text-fill: #ff7070;
+    -fx-font-size: 11px;
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+    -fx-pref-width: 260px;
+    -fx-wrap-text: true;
+    -fx-padding: 4 0 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(255,80,80,0.4), 6, 0.0, 0, 0);
+}
+
+/* ── Login button ───────────────────────────────────────────────────────────── */
+.samurai-button {
+    -fx-pref-width: 260px;
+    -fx-pref-height: 44px;
+    -fx-background-color:
+        linear-gradient(
+            to bottom,
+            rgba(190, 35, 35, 0.92),
+            rgba(145, 15, 15, 0.97)
+        );
+    -fx-background-radius: 4px;
+    -fx-border-color: rgba(225, 65, 65, 0.65);
+    -fx-border-radius: 4px;
+    -fx-border-width: 1;
+    -fx-text-fill: #f5ecec;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 3px;
+    -fx-cursor: hand;
+    -fx-effect:
+        dropshadow(gaussian, rgba(180,15,15,0.55), 18, 0.0, 0, 5),
+        dropshadow(gaussian, rgba(255,100,100,0.10), 4, 0.0, 0, -1);
+}
+
+.samurai-button:hover {
+    -fx-background-color:
+        linear-gradient(
+            to bottom,
+            rgba(230, 55, 55, 0.97),
+            rgba(190, 28, 28, 1.0)
+        );
+    -fx-border-color: rgba(255, 100, 100, 0.85);
+    -fx-effect:
+        dropshadow(gaussian, rgba(220,35,35,0.75), 26, 0.0, 0, 7),
+        dropshadow(gaussian, rgba(255,120,120,0.15), 6, 0.0, 0, -1);
+}
+
+.samurai-button:pressed {
+    -fx-background-color: rgba(120, 10, 10, 0.98);
+    -fx-effect: dropshadow(gaussian, rgba(180,15,15,0.35), 10, 0.0, 0, 2);
+    -fx-translate-y: 1;
+}
+
+.samurai-button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.footer-label {
+    -fx-font-size: 9px;
+    -fx-letter-spacing: 3px;
+    -fx-text-fill: rgba(155, 135, 165, 0.28);
+    -fx-text-alignment: CENTER;
+    -fx-alignment: CENTER;
+}
+
+/* ── Sakura leaf ─────────────────────────────────────────────────────────────── */
+.sakura-leaf {
+    -fx-background-color: rgba(255, 155, 175, 0.72);
+    -fx-pref-width: 11px;
+    -fx-pref-height: 9px;
+    -fx-background-radius: 50% 8% 50% 8%;
+    -fx-effect: dropshadow(gaussian, rgba(255,110,150,0.45), 5, 0.3, 0, 0);
+}
