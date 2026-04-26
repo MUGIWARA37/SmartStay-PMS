@@ -9,14 +9,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-/**
- * Central navigation utility for SmartStay PMS.
- *
- * FILE LOCATION:
- *   src/main/java/ma/ensa/khouribga/smartstay/Navigator.java
- *
- * (Previously mis-placed one level up with wrong package. Move/replace accordingly.)
- */
 public class Navigator {
 
     // ── FXML route constants ──────────────────────────────────────────────────
