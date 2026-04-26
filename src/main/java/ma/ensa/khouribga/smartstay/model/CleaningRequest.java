@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * Maps to the {@code cleaning_requests} table.
  * Carries joined display fields from rooms and users.
  */
-public class CleaningRequest {
+public class CleaningRequest{
 
     public enum Priority { LOW, MEDIUM, HIGH, URGENT }
 
