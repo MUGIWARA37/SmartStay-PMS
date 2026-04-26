@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.guest.RoomDetailController"
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
+    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="14">
+            <Button text="Back" styleClass="btn-secondary,btn-small" onAction="#onBack"/>
+            <Label text="ROOM BOOKING" styleClass="welcome-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="welcomeLabel" styleClass="label-muted"/>
+        </HBox>
+    </top>
+    <center>
+        <HBox spacing="24" styleClass="content-area">
+            <!-- Left: Room info -->
+            <VBox spacing="14" prefWidth="380" minWidth="320">
+                <VBox styleClass="section-box" spacing="12">
+                    <Label fx:id="roomNumberLabel" text="Room ---" styleClass="title-label"/>
+                    <Label fx:id="roomTypeLabel" text="Type" styleClass="label-gold"/>
+                    <HBox spacing="8">
+                        <Label text="Floor:" styleClass="label-muted"/>
+                        <Label fx:id="roomFloorLabel" text="-" styleClass="label-gold"/>
+                        <Label text="  Max:" styleClass="label-muted"/>
+                        <Label fx:id="roomMaxLabel" text="-" styleClass="label-gold"/>
+                    </HBox>
+                    <Region prefHeight="4"/>
+                    <Label text="PRICE PER NIGHT" styleClass="section-title"/>
+                    <Label fx:id="roomPriceLabel" text="0.00 MAD" styleClass="payment-total"/>
+                    <Region prefHeight="4"/>
+                    <Label text="AMENITIES" styleClass="section-title"/>
+                    <Label fx:id="amenitiesLabel" text="" styleClass="label-muted" wrapText="true"/>
+                    <Region prefHeight="4"/>
+                    <Label text="DESCRIPTION" styleClass="section-title"/>
+                    <Label fx:id="descLabel" text="" styleClass="label-muted" wrapText="true"/>
+                </VBox>
+            </VBox>
+
+            <!-- Right: Booking form -->
+            <VBox spacing="14" HBox.hgrow="ALWAYS">
+                <VBox styleClass="section-box" spacing="14">
+                    <Label text="BOOKING DETAILS" styleClass="section-title"/>
+                    <HBox spacing="16">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="CHECK-IN DATE" styleClass="form-label"/>
+                            <DatePicker fx:id="checkInPicker" maxWidth="Infinity" styleClass="date-picker"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="CHECK-OUT DATE" styleClass="form-label"/>
+                            <DatePicker fx:id="checkOutPicker" maxWidth="Infinity" styleClass="date-picker"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="16">
+                        <VBox spacing="4">
+                            <Label text="ADULTS" styleClass="form-label"/>
+                            <Spinner fx:id="adultsSpinner" prefWidth="80" styleClass="spinner"/>
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label text="CHILDREN" styleClass="form-label"/>
+                            <Spinner fx:id="childrenSpinner" prefWidth="80" styleClass="spinner"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="TOTAL (estimated)" styleClass="form-label"/>
+                            <Label fx:id="totalLabel" text="0.00 MAD" styleClass="stat-value"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+                <VBox styleClass="section-box" spacing="14">
+                    <Label text="GUEST INFORMATION" styleClass="section-title"/>
+                    <HBox spacing="12">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="FIRST NAME" styleClass="form-label"/>
+                            <TextField fx:id="firstNameField" styleClass="form-field" promptText="First name" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="LAST NAME" styleClass="form-label"/>
+                            <TextField fx:id="lastNameField" styleClass="form-field" promptText="Last name" maxWidth="Infinity"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="12">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="EMAIL" styleClass="form-label"/>
+                            <TextField fx:id="emailField" styleClass="form-field" promptText="email@example.com" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="PHONE" styleClass="form-label"/>
+                            <TextField fx:id="phoneField" styleClass="form-field" promptText="+212..." maxWidth="Infinity"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="12">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="PASSPORT / ID NUMBER" styleClass="form-label"/>
+                            <TextField fx:id="passportField" styleClass="form-field" promptText="Passport or ID" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="NATIONALITY" styleClass="form-label"/>
+                            <TextField fx:id="nationalityField" styleClass="form-field" promptText="Moroccan" maxWidth="Infinity"/>
+                        </VBox>
+                    </HBox>
+                    <VBox spacing="4">
+                        <Label text="SPECIAL REQUESTS" styleClass="form-label"/>
+                        <TextArea fx:id="specialRequests" prefHeight="60" wrapText="true" promptText="Any special requests..." styleClass="text-area"/>
+                    </VBox>
+                </VBox>
+                <Label fx:id="errorLabel" text="" styleClass="label-red" wrapText="true"/>
+                <Button text="Proceed to Payment" styleClass="btn-primary" onAction="#onBookNow" maxWidth="Infinity" prefHeight="44"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

@@ -1,6 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.control.Label?>
-<StackPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml">
-    <Label text="Home (CLIENT)"/>
-</StackPane>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.home.HomeController"
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
+    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
+    <left>
+        <VBox styleClass="sidebar">
+            <VBox styleClass="sidebar-header">
+                <Label text="&#x26E9; SmartStay" styleClass="sidebar-logo"/>
+                <Label text="GUEST PORTAL" styleClass="sidebar-subtitle"/>
+            </VBox>
+            <VBox spacing="2" VBox.vgrow="ALWAYS">
+                <VBox.margin><Insets top="10"/></VBox.margin>
+                <Button text="Browse Rooms" styleClass="nav-button,nav-button-active" fx:id="btnRooms" onAction="#showRooms" maxWidth="Infinity"/>
+                <Button text="My Reservations" styleClass="nav-button" fx:id="btnMyRes" onAction="#showReservations" maxWidth="Infinity"/>
+            </VBox>
+            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout" maxWidth="Infinity">
+                <VBox.margin><Insets bottom="8" left="8" right="8"/></VBox.margin>
+            </Button>
+        </VBox>
+    </left>
+    <center>
+        <VBox>
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
+                <Label fx:id="welcomeLabel" text="Welcome!" styleClass="welcome-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="dateLabel" styleClass="label-muted"/>
+            </HBox>
+            <StackPane VBox.vgrow="ALWAYS">
+                <VBox fx:id="roomsPanel" spacing="16" styleClass="content-area">
+                    <HBox styleClass="card" spacing="14" alignment="CENTER_LEFT">
+                        <Label text="Check-In:" styleClass="form-label"/>
+                        <DatePicker fx:id="checkInPicker" styleClass="date-picker"/>
+                        <Label text="Check-Out:" styleClass="form-label"/>
+                        <DatePicker fx:id="checkOutPicker" styleClass="date-picker"/>
+                        <Label text="Adults:" styleClass="form-label"/>
+                        <Spinner fx:id="adultSpinner" prefWidth="70" styleClass="spinner"/>
+                        <Button text="Search" styleClass="btn-primary" onAction="#onSearch"/>
+                        <Button text="Show All" styleClass="btn-secondary" onAction="#onShowAll"/>
+                    </HBox>
+                    <Label text="AVAILABLE ROOMS" styleClass="section-title"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                        <FlowPane fx:id="roomGrid" hgap="16" vgap="16" prefWrapLength="800">
+                            <padding><Insets top="4" bottom="4"/></padding>
+                        </FlowPane>
+                    </ScrollPane>
+                </VBox>
+                <VBox fx:id="reservationsPanel" spacing="16" styleClass="content-area" visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="MY RESERVATIONS" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Refresh" styleClass="btn-secondary" onAction="#refreshReservations"/>
+                    </HBox>
+                    <TableView fx:id="reservationTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                        <columns>
+                            <TableColumn fx:id="colCode" text="Code" prefWidth="140"/>
+                            <TableColumn fx:id="colRoom" text="Room" prefWidth="80"/>
+                            <TableColumn fx:id="colType" text="Type" prefWidth="100"/>
+                            <TableColumn fx:id="colCheckIn" text="Check-In" prefWidth="110"/>
+                            <TableColumn fx:id="colCheckOut" text="Check-Out" prefWidth="110"/>
+                            <TableColumn fx:id="colNights" text="Nights" prefWidth="70"/>
+                            <TableColumn fx:id="colTotal" text="Total (MAD)" prefWidth="110"/>
+                            <TableColumn fx:id="colResStatus" text="Status" prefWidth="110"/>
+                        </columns>
+                        <placeholder><Label text="No reservations found." styleClass="label-muted"/></placeholder>
+                    </TableView>
+                </VBox>
+            </StackPane>
+        </VBox>
+    </center>
+</BorderPane>

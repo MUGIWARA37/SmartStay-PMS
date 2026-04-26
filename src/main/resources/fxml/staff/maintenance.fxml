@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.staff.MaintenanceController"
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
+    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
+            <Label text="MAINTENANCE DASHBOARD" styleClass="welcome-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="welcomeLabel" styleClass="label-muted"/>
+            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
+        </HBox>
+    </top>
+    <center>
+        <HBox spacing="20" styleClass="content-area">
+            <VBox spacing="14" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="MY MAINTENANCE TASKS" styleClass="section-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <ComboBox fx:id="statusFilter" promptText="Filter" styleClass="combo-box"/>
+                    <Button text="Apply" styleClass="btn-secondary,btn-small" onAction="#applyFilter"/>
+                    <Button text="Refresh" styleClass="btn-secondary,btn-small" onAction="#loadTasks"/>
+                </HBox>
+                <TableView fx:id="taskTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                    <columns>
+                        <TableColumn fx:id="colRoom" text="Room" prefWidth="80"/>
+                        <TableColumn fx:id="colTitle" text="Title" prefWidth="180"/>
+                        <TableColumn fx:id="colPriority" text="Priority" prefWidth="100"/>
+                        <TableColumn fx:id="colStatus" text="Status" prefWidth="130"/>
+                        <TableColumn fx:id="colDesc" text="Description" prefWidth="220"/>
+                        <TableColumn fx:id="colCreated" text="Created" prefWidth="150"/>
+                    </columns>
+                    <placeholder><Label text="No maintenance tasks assigned." styleClass="label-muted"/></placeholder>
+                </TableView>
+                <HBox spacing="10">
+                    <Button text="Mark IN PROGRESS" styleClass="btn-secondary,btn-small" onAction="#markInProgress"/>
+                    <Button text="Mark RESOLVED" styleClass="btn-primary,btn-small" onAction="#markResolved"/>
+                </HBox>
+            </VBox>
+            <VBox spacing="14" prefWidth="300">
+                <VBox styleClass="section-box" spacing="10">
+                    <Label text="REPORT NEW ISSUE" styleClass="section-title"/>
+                    <Label text="ROOM" styleClass="form-label"/>
+                    <ComboBox fx:id="roomCombo" maxWidth="Infinity" styleClass="combo-box" promptText="Select room"/>
+                    <Label text="TITLE" styleClass="form-label"/>
+                    <TextField fx:id="titleField" styleClass="form-field" promptText="Issue title" maxWidth="Infinity"/>
+                    <Label text="PRIORITY" styleClass="form-label"/>
+                    <ComboBox fx:id="priorityCombo" maxWidth="Infinity" styleClass="combo-box"/>
+                    <Label text="DESCRIPTION" styleClass="form-label"/>
+                    <TextArea fx:id="descField" prefHeight="80" wrapText="true" promptText="Describe the issue..." styleClass="text-area"/>
+                    <Label fx:id="formError" text="" styleClass="label-red" wrapText="true"/>
+                    <Button text="Report Issue" styleClass="btn-primary" onAction="#reportIssue" maxWidth="Infinity"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

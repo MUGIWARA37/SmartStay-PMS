@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.guest.PaymentController"
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
+    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="14">
+            <Button text="Back" styleClass="btn-secondary,btn-small" onAction="#onBack"/>
+            <Label text="PAYMENT" styleClass="welcome-label"/>
+        </HBox>
+    </top>
+    <center>
+        <HBox spacing="24" styleClass="content-area">
+            <!-- Left: Reservation summary -->
+            <VBox spacing="14" prefWidth="360">
+                <VBox styleClass="payment-summary" spacing="10">
+                    <Label text="RESERVATION SUMMARY" styleClass="section-title"/>
+                    <Region styleClass="divider-gold"/>
+                    <HBox spacing="8">
+                        <Label text="Room:" styleClass="label-muted"/>
+                        <Label fx:id="summaryRoom" text="---" styleClass="label-gold"/>
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Type:" styleClass="label-muted"/>
+                        <Label fx:id="summaryType" text="---" styleClass="label-muted"/>
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Check-In:" styleClass="label-muted"/>
+                        <Label fx:id="summaryCheckIn" text="---" styleClass="label-muted"/>
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Check-Out:" styleClass="label-muted"/>
+                        <Label fx:id="summaryCheckOut" text="---" styleClass="label-muted"/>
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Nights:" styleClass="label-muted"/>
+                        <Label fx:id="summaryNights" text="---" styleClass="label-gold"/>
+                    </HBox>
+                    <HBox spacing="8">
+                        <Label text="Guest:" styleClass="label-muted"/>
+                        <Label fx:id="summaryGuest" text="---" styleClass="label-muted"/>
+                    </HBox>
+                    <Region styleClass="divider-red"/>
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="Room Subtotal:" styleClass="label-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="summaryRoomTotal" text="0.00 MAD" styleClass="label-gold"/>
+                    </HBox>
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="Services:" styleClass="label-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="summaryServicesTotal" text="0.00 MAD" styleClass="label-muted"/>
+                    </HBox>
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <Label text="Tax (10%):" styleClass="label-muted"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="summaryTax" text="0.00 MAD" styleClass="label-muted"/>
+                    </HBox>
+                    <Region styleClass="divider-gold"/>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="TOTAL" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="summaryTotal" text="0.00 MAD" styleClass="payment-total"/>
+                    </HBox>
+                </VBox>
+                <!-- Payment method -->
+                <VBox styleClass="section-box" spacing="10">
+                    <Label text="PAYMENT METHOD" styleClass="section-title"/>
+                    <HBox spacing="8">
+                        <Button fx:id="btnCash" text="CASH" styleClass="payment-method-btn,payment-method-selected" onAction="#selectCash"/>
+                        <Button fx:id="btnCard" text="CARD" styleClass="payment-method-btn" onAction="#selectCard"/>
+                        <Button fx:id="btnTransfer" text="TRANSFER" styleClass="payment-method-btn" onAction="#selectTransfer"/>
+                    </HBox>
+                    <VBox fx:id="cardForm" spacing="6">
+                        <Label text="TRANSACTION REF (optional)" styleClass="form-label"/>
+                        <TextField fx:id="transactionRef" styleClass="form-field" promptText="REF-XXXXXXXX" maxWidth="Infinity"/>
+                    </VBox>
+                </VBox>
+            </VBox>
+
+            <!-- Right: Services selection -->
+            <VBox spacing="14" HBox.hgrow="ALWAYS">
+                <VBox styleClass="section-box" spacing="10" VBox.vgrow="ALWAYS">
+                    <Label text="ADD-ON SERVICES" styleClass="section-title"/>
+                    <Label text="Select optional services to add to your stay" styleClass="label-muted"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                        <VBox fx:id="servicesBox" spacing="8">
+                            <padding><Insets top="4" bottom="4"/></padding>
+                        </VBox>
+                    </ScrollPane>
+                </VBox>
+                <Label fx:id="errorLabel" text="" styleClass="label-red" wrapText="true"/>
+                <Button text="Confirm &amp; Pay" styleClass="btn-primary" onAction="#onPay" maxWidth="Infinity" prefHeight="48"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

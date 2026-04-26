@@ -96,7 +96,7 @@
 
             <!-- Login button -->
             <Button
-                text="ENTER  &#8594;"
+                text="ENTER THE DOJO  &#8594;"
                 styleClass="samurai-button"
                 onAction="#onLogin"
                 defaultButton="true"

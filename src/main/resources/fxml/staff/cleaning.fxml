@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.staff.CleaningController"
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
+    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
+            <Label text="CLEANING DASHBOARD" styleClass="welcome-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="welcomeLabel" styleClass="label-muted"/>
+            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
+        </HBox>
+    </top>
+    <center>
+        <VBox spacing="16" styleClass="content-area">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label text="MY CLEANING TASKS" styleClass="section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="statusFilter" promptText="Filter by status" styleClass="combo-box"/>
+                <Button text="Apply" styleClass="btn-secondary,btn-small" onAction="#applyFilter"/>
+                <Button text="Refresh" styleClass="btn-secondary,btn-small" onAction="#loadTasks"/>
+            </HBox>
+            <TableView fx:id="taskTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colRoom" text="Room" prefWidth="90"/>
+                    <TableColumn fx:id="colPriority" text="Priority" prefWidth="100"/>
+                    <TableColumn fx:id="colStatus" text="Status" prefWidth="130"/>
+                    <TableColumn fx:id="colNote" text="Note" prefWidth="280"/>
+                    <TableColumn fx:id="colCreated" text="Created" prefWidth="160"/>
+                    <TableColumn fx:id="colCompleted" text="Completed" prefWidth="160"/>
+                </columns>
+                <placeholder><Label text="No cleaning tasks assigned." styleClass="label-muted"/></placeholder>
+            </TableView>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Update selected task:" styleClass="form-label"/>
+                <Button text="Start (IN PROGRESS)" styleClass="btn-secondary,btn-small" onAction="#markInProgress"/>
+                <Button text="Mark DONE" styleClass="btn-primary,btn-small" onAction="#markDone"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>
