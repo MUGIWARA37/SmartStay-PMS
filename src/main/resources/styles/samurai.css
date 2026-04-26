@@ -1,75 +1,75 @@
+/* Container */
 .samurai-root {
-    -fx-background-color: black;
+    -fx-background-color: #050505;
 }
 
-/* App Title */
+/* Cinematic Dark Tint */
+.main-overlay {
+    -fx-background-color: linear-gradient(to bottom right, rgba(0,0,0,0.1), rgba(0,0,0,0.8));
+}
+
+/* The Glass Box: Smooth edges & Frost effect */
+.glass-box {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 30;
+    -fx-border-radius: 30;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 40, 0, 0, 0);
+    -fx-padding: 50;
+}
+
+/* Typography (Optimized for Full Screen) */
 .app-title {
-    -fx-font-family: "Serif";
-    -fx-font-size: 68px;
-    -fx-font-weight: bold;
+    -fx-font-family: "Helvetica", "Arial", sans-serif;
+    -fx-font-size: 90px;
+    -fx-font-weight: 100;
     -fx-text-fill: white;
-    -fx-letter-spacing: 12px;
-    -fx-effect: dropshadow(gaussian, #D86477, 20, 0.5, 0, 0);
+    -fx-letter-spacing: 5px;
 }
 
 .app-subtitle {
-    -fx-text-fill: #FFB7C5;
-    -fx-letter-spacing: 8px;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
+    -fx-text-fill: rgba(255, 255, 255, 0.5);
+    -fx-letter-spacing: 6px;
+    -fx-font-size: 16px;
 }
 
-.input-label {
-    -fx-text-fill: white;
-    -fx-font-family: 'Serif';
-    -fx-font-size: 13px;
-    -fx-opacity: 0.9;
-}
-
-/* Floating Input Boxes */
+/* Glassy Inputs */
 .text-field, .password-field {
-    -fx-background-color: rgba(255, 255, 255, 0.85); 
-    -fx-background-radius: 0;
-    -fx-border-color: #FFB7C5; 
-    -fx-border-width: 0 0 5 0;
-    -fx-padding: 15;
-    -fx-font-family: "Serif";
-    -fx-font-size: 18px;
-    -fx-text-fill: #5D4037;
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 15;
+    -fx-border-radius: 15;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-border-width: 1;
+    -fx-padding: 12 20;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: rgba(255, 255, 255, 0.3);
 }
 
 .text-field:focused, .password-field:focused {
-    -fx-border-color: #D86477;
-    -fx-background-color: white;
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-border-color: white;
 }
 
-/* Sakura Button */
+/* Pill-shaped Button */
 .samurai-button {
-    -fx-background-color: transparent;
-    -fx-border-color: #D86477;
-    -fx-border-width: 2;
-    -fx-text-fill: #D86477;
-    -fx-font-family: "Serif";
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 0;
-    -fx-padding: 12 0; /* Vertical padding only, width controlled by VBox */
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-border-color: rgba(255, 255, 255, 0.8);
+    -fx-text-fill: white;
+    -fx-background-radius: 30;
+    -fx-border-radius: 30;
+    -fx-padding: 12 60;
     -fx-cursor: hand;
+    -fx-font-weight: bold;
 }
 
 .samurai-button:hover {
-    -fx-background-color: #D86477;
-    -fx-text-fill: white;
-    -fx-effect: dropshadow(gaussian, #FFB7C5, 15, 0, 0, 0);
+    -fx-background-color: white;
+    -fx-text-fill: black;
 }
 
 .sakura-leaf {
     -fx-background-color: #FFB7C5;
-    -fx-background-radius: 45% 5% 45% 5%;
-    -fx-opacity: 0.7;
-}
-
-.message-label {
-    -fx-text-fill: #FFB7C5;
-    -fx-font-size: 14px;
+    -fx-background-radius: 50% 5% 50% 5%;
+    -fx-opacity: 0.4;
 }

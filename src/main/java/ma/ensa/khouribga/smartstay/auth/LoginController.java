@@ -35,23 +35,23 @@ public class LoginController {
                 Media media = new Media(resource.toExternalForm());
                 mediaPlayer = new MediaPlayer(media);
                 mediaView.setMediaPlayer(mediaPlayer);
-                
-                // Settings for seamless loop
                 mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
                 mediaPlayer.setMute(true);
                 mediaPlayer.play();
 
-                // Responsive sizing
-                mediaView.fitWidthProperty().bind(mainStackPane.widthProperty());
-                mediaView.fitHeightProperty().bind(mainStackPane.heightProperty());
+                // FIX: Force video to scale when window size changes (Full Screen)
+                mainStackPane.widthProperty().addListener((obs, oldV, newV) -> 
+                    mediaView.setFitWidth(newV.doubleValue()));
+                mainStackPane.heightProperty().addListener((obs, oldV, newV) -> 
+                    mediaView.setFitHeight(newV.doubleValue()));
             }
         } catch (Exception e) {
-            System.err.println("Video failed to load: " + e.getMessage());
+            System.err.println("Scaling Error: " + e.getMessage());
         }
     }
 
     private void startSakuraAnimation() {
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> spawnLeaf()));
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(600), e -> spawnLeaf()));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
     }
@@ -59,17 +59,15 @@ public class LoginController {
     private void spawnLeaf() {
         Region leaf = new Region();
         leaf.getStyleClass().add("sakura-leaf");
-        
-        double size = 8 + random.nextDouble() * 10;
+        double size = 6 + random.nextDouble() * 10;
         leaf.setPrefSize(size, size);
         leaf.setLayoutX(random.nextDouble() * mainStackPane.getWidth());
-        leaf.setLayoutY(-20);
+        leaf.setLayoutY(-30);
         animationPane.getChildren().add(leaf);
 
-        TranslateTransition fall = new TranslateTransition(Duration.seconds(6 + random.nextDouble() * 5), leaf);
-        fall.setByY(mainStackPane.getHeight() + 60);
+        TranslateTransition fall = new TranslateTransition(Duration.seconds(8 + random.nextDouble() * 5), leaf);
+        fall.setByY(mainStackPane.getHeight() + 100);
         fall.setByX(random.nextDouble() * 120 - 60);
-        
         leaf.setRotate(random.nextDouble() * 360);
         fall.setOnFinished(e -> animationPane.getChildren().remove(leaf));
         fall.play();
@@ -77,8 +75,6 @@ public class LoginController {
 
     @FXML
     private void onLogin() {
-        if (usernameField.getText().isEmpty()) {
-            messageLabel.setText("Identify yourself, warrior.");
-        }
+        if(usernameField.getText().isEmpty()) messageLabel.setText("Identity is required.");
     }
 }

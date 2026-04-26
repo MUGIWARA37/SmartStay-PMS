@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.media.MediaView?>
@@ -6,41 +7,48 @@
 <?import javafx.geometry.Insets?>
 
 <StackPane fx:id="mainStackPane" styleClass="samurai-root" 
-           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="ma.ensa.khouribga.smartstay.auth.LoginController">
+    
     <stylesheets>
         <URL value="@/styles/samurai.css" />
     </stylesheets>
 
     <MediaView fx:id="mediaView" preserveRatio="false" />
-
-    <Pane style="-fx-background-color: rgba(0,0,0,0.3);" mouseTransparent="true" />
-
-    <Pane fx:id="animationPane" mouseTransparent="true" />
-
-    <VBox alignment="CENTER" spacing="0">
+    
+    <StackPane styleClass="main-overlay">
         
-        <VBox alignment="CENTER" spacing="5">
-            <Label text="SMARTSTAY" styleClass="app-title"/>
-            <Label text="PROPERTY MANAGEMENT SYSTEM" styleClass="app-subtitle"/>
-            <VBox.margin>
-                <Insets bottom="60" /> </VBox.margin>
-        </VBox>
+        <Pane fx:id="animationPane" mouseTransparent="true" />
 
-        <VBox spacing="30" alignment="CENTER" maxWidth="380">
-            <VBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="USER IDENTIFIER" styleClass="input-label"/>
-                <TextField fx:id="usernameField" promptText="Enter Spirit Name" />
+        <AnchorPane>
+            <VBox spacing="40" alignment="CENTER_LEFT" maxWidth="400" 
+                  styleClass="glass-box" 
+                  AnchorPane.leftAnchor="100.0" 
+                  AnchorPane.topAnchor="150.0" AnchorPane.bottomAnchor="150.0">
+                
+                <Label text="SECURE ACCESS" style="-fx-text-fill: rgba(255,255,255,0.6); -fx-letter-spacing: 3px;"/>
+                
+                <VBox spacing="20">
+                    <VBox spacing="8">
+                        <Label text="USERNAME" style="-fx-text-fill: white; -fx-font-size: 11px;"/>
+                        <TextField fx:id="usernameField" promptText="Your identity..." />
+                    </VBox>
+                    <VBox spacing="8">
+                        <Label text="PASSWORD" style="-fx-text-fill: white; -fx-font-size: 11px;"/>
+                        <PasswordField fx:id="passwordField" promptText="Your secret sign..." />
+                    </VBox>
+                </VBox>
+
+                <Button text="SIGN IN" onAction="#onLogin" styleClass="samurai-button" maxWidth="Infinity"/>
+                <Label fx:id="messageLabel" style="-fx-text-fill: #FFB7C5;"/>
             </VBox>
 
-            <VBox spacing="8" alignment="CENTER_LEFT">
-                <Label text="SECRET SIGN" styleClass="input-label"/>
-                <PasswordField fx:id="passwordField" promptText="********" />
+            <VBox alignment="BOTTOM_RIGHT" spacing="0" 
+                  AnchorPane.bottomAnchor="80.0" AnchorPane.rightAnchor="100.0">
+                <Label text="SmartStay" styleClass="app-title"/>
+                <Label text="PROPERTY MANAGEMENT SYSTEM" styleClass="app-subtitle"/>
+                <Label text="Khouribga Edition • 2026" style="-fx-text-fill: rgba(255,255,255,0.3);"/>
             </VBox>
-
-            <Button text="ENTER DOJO" onAction="#onLogin" styleClass="samurai-button" maxWidth="Infinity" />
-            
-            <Label fx:id="messageLabel" styleClass="message-label" />
-        </VBox>
-    </VBox>
+        </AnchorPane>
+    </StackPane>
 </StackPane>
