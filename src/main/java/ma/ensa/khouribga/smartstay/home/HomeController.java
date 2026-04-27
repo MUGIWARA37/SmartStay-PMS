@@ -1,186 +1,238 @@
 package ma.ensa.khouribga.smartstay.home;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import ma.ensa.khouribga.smartstay.Navigator;
-import ma.ensa.khouribga.smartstay.dao.ReservationDao;
 import ma.ensa.khouribga.smartstay.dao.RoomDao;
-import ma.ensa.khouribga.smartstay.guest.RoomDetailController;
-import ma.ensa.khouribga.smartstay.model.Reservation;
 import ma.ensa.khouribga.smartstay.model.Room;
-import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
+import java.net.URL;
 import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
-public class HomeController {
+/**
+ * Controller for home.fxml — the client-facing room browser.
+ *
+ * Layout:
+ *  Sidebar (nav) | Header bar | Content:
+ *      filter bar → FlowPane of .room-card tiles
+ *
+ * Threading: all DB calls on background Task, UI updates via Platform.runLater.
+ */
+public class HomeController implements Initializable {
 
+    // ── Sidebar ──────────────────────────────────────────────────────────────
     @FXML private Label welcomeLabel;
-    @FXML private Label dateLabel;
-    @FXML private VBox roomsPanel;
-    @FXML private VBox reservationsPanel;
-    @FXML private Button btnRooms;
-    @FXML private Button btnMyRes;
-    @FXML private DatePicker checkInPicker;
-    @FXML private DatePicker checkOutPicker;
-    @FXML private Spinner<Integer> adultSpinner;
-    @FXML private FlowPane roomGrid;
-    @FXML private TableView<Reservation> reservationTable;
-    @FXML private TableColumn<Reservation, String> colCode;
-    @FXML private TableColumn<Reservation, String> colRoom;
-    @FXML private TableColumn<Reservation, String> colType;
-    @FXML private TableColumn<Reservation, LocalDate> colCheckIn;
-    @FXML private TableColumn<Reservation, LocalDate> colCheckOut;
-    @FXML private TableColumn<Reservation, Long> colNights;
-    @FXML private TableColumn<Reservation, Double> colTotal;
-    @FXML private TableColumn<Reservation, String> colResStatus;
+    @FXML private Button btnLogout;
 
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
+    // ── Filters ──────────────────────────────────────────────────────────────
+    @FXML private ComboBox<String> cbRoomType;
+    @FXML private Slider priceSlider;
+    @FXML private Label priceLabel;
+    @FXML private DatePicker dpCheckIn;
+    @FXML private DatePicker dpCheckOut;
+    @FXML private Button btnSearch;
+
+    // ── Room grid ────────────────────────────────────────────────────────────
+    @FXML private FlowPane roomGrid;
+    @FXML private Label lblStatus;
+    @FXML private ProgressIndicator spinner;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private List<Room> allRooms;
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // Greet the logged-in user
+        String name = SessionManager.getInstance().getCurrentUser().getUsername();
+        welcomeLabel.setText("Welcome back, " + name);
+
+        // Price slider wiring
+        priceSlider.setMin(0);
+        priceSlider.setMax(5000);
+        priceSlider.setValue(5000);
+        priceSlider.setShowTickMarks(true);
+        priceSlider.setMajorTickUnit(1000);
+        priceLabel.setText("Up to: " + (int) priceSlider.getValue() + " MAD / night");
+        priceSlider.valueProperty().addListener((obs, old, val) ->
+                priceLabel.setText("Up to: " + val.intValue() + " MAD / night"));
+
+        // Room type filter — populated after rooms load
+        cbRoomType.getItems().add("All Types");
+        cbRoomType.setValue("All Types");
+
+        // Wire search button
+        btnSearch.setOnAction(e -> applyFilters());
+
+        // Initial load
+        loadRooms();
+    }
+
+    // ── Data loading ──────────────────────────────────────────────────────────
+
+    private void loadRooms() {
+        spinner.setVisible(true);
+        lblStatus.setText("Loading available rooms…");
+        roomGrid.getChildren().clear();
+
+        Task<List<Room>> task = new Task<>() {
+            @Override
+            protected List<Room> call() {
+                return RoomDao.findAvailable();
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            allRooms = task.getValue();
+            spinner.setVisible(false);
+            populateTypeFilter(allRooms);
+            renderCards(allRooms);
+            lblStatus.setText(allRooms.size() + " room(s) available");
+        });
+
+        task.setOnFailed(e -> {
+            spinner.setVisible(false);
+            lblStatus.setText("Failed to load rooms. Please try again.");
+        });
+
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void populateTypeFilter(List<Room> rooms) {
+        rooms.stream()
+                .map(Room::getRoomTypeName)
+                .distinct()
+                .sorted()
+                .forEach(type -> {
+                    if (!cbRoomType.getItems().contains(type))
+                        cbRoomType.getItems().add(type);
+                });
+    }
+
+    // ── Filtering ─────────────────────────────────────────────────────────────
 
     @FXML
-    public void initialize() {
-        try { SessionManager.requireLoggedIn(); }
-        catch (Exception e) { Navigator.goToLogin(welcomeLabel); return; }
+    private void applyFilters() {
+        if (allRooms == null) return;
 
-        User user = SessionManager.getCurrentUser();
-        welcomeLabel.setText("Welcome, " + user.getUsername() + "!");
-        dateLabel.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy")));
+        String selectedType = cbRoomType.getValue();
+        double maxPrice = priceSlider.getValue();
 
-        adultSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2));
+        List<Room> filtered = allRooms.stream()
+                .filter(r -> "All Types".equals(selectedType) || selectedType.equals(r.getRoomTypeName()))
+                .filter(r -> r.getPricePerNight() != null
+                        && r.getPricePerNight().doubleValue() <= maxPrice)
+                .collect(Collectors.toList());
 
-        colCode.setCellValueFactory(new PropertyValueFactory<>("reservationCode"));
-        colRoom.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
-        colType.setCellValueFactory(new PropertyValueFactory<>("roomTypeName"));
-        colCheckIn.setCellValueFactory(new PropertyValueFactory<>("checkInDate"));
-        colCheckOut.setCellValueFactory(new PropertyValueFactory<>("checkOutDate"));
-        colResStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colNights.setCellValueFactory(cd -> new SimpleLongProperty(cd.getValue().getNights()).asObject());
-        colTotal.setCellValueFactory(cd -> new SimpleDoubleProperty(cd.getValue().getBaseTotal()).asObject());
-
-        colCheckIn.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(LocalDate d, boolean empty) {
-                super.updateItem(d, empty);
-                setText(empty || d == null ? null : d.format(DATE_FMT));
-            }
-        });
-        colCheckOut.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(LocalDate d, boolean empty) {
-                super.updateItem(d, empty);
-                setText(empty || d == null ? null : d.format(DATE_FMT));
-            }
-        });
-        colTotal.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(Double v, boolean empty) {
-                super.updateItem(v, empty);
-                setText(empty || v == null ? null : String.format("%.2f MAD", v));
-            }
-        });
-
-        loadAllRooms();
+        renderCards(filtered);
+        lblStatus.setText(filtered.size() + " room(s) match your filters");
     }
 
-    @FXML public void showRooms() {
-        roomsPanel.setVisible(true); roomsPanel.setManaged(true);
-        reservationsPanel.setVisible(false); reservationsPanel.setManaged(false);
-        btnRooms.getStyleClass().remove("nav-button-active");
-        btnRooms.getStyleClass().add("nav-button-active");
-        btnMyRes.getStyleClass().remove("nav-button-active");
-        loadAllRooms();
-    }
+    // ── Card rendering ────────────────────────────────────────────────────────
 
-    @FXML public void showReservations() {
-        roomsPanel.setVisible(false); roomsPanel.setManaged(false);
-        reservationsPanel.setVisible(true); reservationsPanel.setManaged(true);
-        btnMyRes.getStyleClass().remove("nav-button-active");
-        btnMyRes.getStyleClass().add("nav-button-active");
-        btnRooms.getStyleClass().remove("nav-button-active");
-        loadUserReservations();
-    }
-
-    @FXML public void onSearch()  { loadAllRooms(); }
-    @FXML public void onShowAll() { checkInPicker.setValue(null); checkOutPicker.setValue(null); loadAllRooms(); }
-
-    private void loadAllRooms() {
-        new Thread(() -> {
-            try {
-                List<Room> rooms = RoomDao.findAvailable();
-                Platform.runLater(() -> populateRoomGrid(rooms));
-            } catch (Exception ex) { ex.printStackTrace(); }
-        }, "home-room-loader").start();
-    }
-
-    private void populateRoomGrid(List<Room> rooms) {
+    private void renderCards(List<Room> rooms) {
         roomGrid.getChildren().clear();
+
         if (rooms.isEmpty()) {
-            Label empty = new Label("No available rooms found.");
+            Label empty = new Label("No rooms match your search.");
             empty.getStyleClass().add("label-muted");
             roomGrid.getChildren().add(empty);
             return;
         }
-        for (Room room : rooms) roomGrid.getChildren().add(buildRoomCard(room));
+
+        for (Room room : rooms) {
+            VBox card = buildRoomCard(room);
+            roomGrid.getChildren().add(card);
+        }
     }
 
     private VBox buildRoomCard(Room room) {
         VBox card = new VBox(8);
         card.getStyleClass().add("room-card");
+        card.setPrefWidth(220);
+        card.setPadding(new Insets(16));
 
         Label title = new Label("Room " + room.getRoomNumber());
         title.getStyleClass().add("room-card-title");
 
-        Label type = new Label(room.getTypeName().toUpperCase());
-        type.getStyleClass().add("room-card-type");
+        Label type = new Label(room.getRoomTypeName());
+        type.getStyleClass().add("room-card-detail");
 
-        Region divider = new Region();
-        divider.getStyleClass().add("room-card-divider");
-        divider.setMaxWidth(Double.MAX_VALUE);
+        Label floor = new Label("Floor " + room.getFloor());
+        floor.getStyleClass().add("room-card-detail");
 
-        HBox priceRow = new HBox(4);
-        Label price = new Label(String.format("%.0f", room.getPricePerNight()));
+        Label occupancy = new Label("Max " + room.getMaxOccupancy() + " guests");
+        occupancy.getStyleClass().add("room-card-detail");
+
+        Label price = new Label(room.getPricePerNight().toPlainString() + " MAD / night");
         price.getStyleClass().add("room-card-price");
-        Label unit = new Label("MAD / night");
-        unit.getStyleClass().add("room-card-price-unit");
-        priceRow.getChildren().addAll(price, unit);
 
-        Label details = new Label("Floor " + room.getFloor() + "  •  Max " + room.getMaxOccupancy() + " guests");
-        details.getStyleClass().add("room-card-detail");
+        Button btnBook = new Button("View & Book");
+        btnBook.getStyleClass().add("btn-primary");
+        btnBook.setMaxWidth(Double.MAX_VALUE);
+        btnBook.setOnAction(e -> openRoomDetail(room));
 
-        Label amenities = new Label(room.getAmenities() == null ? "" : room.getAmenities());
-        amenities.getStyleClass().add("room-card-detail");
-        amenities.setWrapText(true);
-
-        card.getChildren().addAll(title, type, divider, priceRow, details, amenities);
-        card.setOnMouseClicked(e -> Navigator.navigateTo(welcomeLabel, Navigator.ROOM_DETAIL,
-                ctrl -> ((RoomDetailController) ctrl).setRoom(room)));
+        card.getChildren().addAll(title, type, floor, occupancy, price, btnBook);
         return card;
     }
 
-    @FXML public void refreshReservations() { loadUserReservations(); }
+    // ── Navigation ────────────────────────────────────────────────────────────
 
-    private void loadUserReservations() {
-        int userId = (int) SessionManager.getCurrentUser().getId();
-        new Thread(() -> {
-            try {
-                ObservableList<Reservation> items =
-                    FXCollections.observableArrayList(ReservationDao.findByGuest(userId));
-                Platform.runLater(() -> reservationTable.setItems(items));
-            } catch (Exception ex) { ex.printStackTrace(); }
-        }, "home-res-loader").start();
+    private void openRoomDetail(Room room) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/guest/room_detail.fxml"));
+            Scene scene = new Scene(loader.load());
+            scene.getStylesheets().add(
+                    getClass().getResource("/styles/samurai.css").toExternalForm());
+
+            RoomDetailController ctrl = loader.getController();
+            ctrl.initData(room,
+                    dpCheckIn.getValue(),
+                    dpCheckOut.getValue());
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Room " + room.getRoomNumber() + " — Details");
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setScene(scene);
+            dialog.setResizable(false);
+            dialog.showAndWait();
+
+            // Refresh grid after booking (room may now be unavailable)
+            loadRooms();
+
+        } catch (IOException ex) {
+            showError("Could not open room details: " + ex.getMessage());
+        }
     }
 
-    @FXML public void onLogout() {
-        SessionManager.logout();
-        Navigator.goToLogin(welcomeLabel);
+    @FXML
+    private void handleLogout() {
+        SessionManager.getInstance().clear();
+        Stage stage = (Stage) btnLogout.getScene().getWindow();
+        Navigator.navigateTo("/fxml/auth/login.fxml", stage);
+    }
+
+    // ── Utility ───────────────────────────────────────────────────────────────
+
+    private void showError(String msg) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
+        alert.setHeaderText(null);
+        alert.showAndWait();
     }
 }

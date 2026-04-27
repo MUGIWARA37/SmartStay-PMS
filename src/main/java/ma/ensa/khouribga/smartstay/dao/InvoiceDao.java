@@ -3,174 +3,294 @@ package ma.ensa.khouribga.smartstay.dao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.db.TxManager;
 import ma.ensa.khouribga.smartstay.model.Invoice;
-import ma.ensa.khouribga.smartstay.model.Service;
+import ma.ensa.khouribga.smartstay.model.Invoice.InvoiceLine;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO for `invoices` and `invoice_lines`.
+ *
+ * Key design decisions:
+ *  - create()         inserts header + all lines atomically, then refreshes totals
+ *  - addLine()        appends one line, recalculates total
+ *  - calculateTotals()  SUM(line_total) → updates invoices.total_amount
+ *  - updateStatus()   status transition guard (DRAFT → ISSUED → PAID)
+ */
 public class InvoiceDao {
 
-    private static Invoice mapRow(ResultSet rs) throws SQLException {
+    // ─── Mapping ──────────────────────────────────────────────────────────────
+
+    private static Invoice mapHeader(ResultSet rs) throws SQLException {
         Invoice inv = new Invoice();
-        inv.setId(rs.getInt("id"));
-        inv.setReservationId(rs.getInt("reservation_id"));
+        inv.setId(rs.getLong("id"));
+        inv.setReservationId(rs.getLong("reservation_id"));
         inv.setInvoiceNumber(rs.getString("invoice_number"));
-        Timestamp issued = rs.getTimestamp("issued_at");
-        if (issued != null) inv.setIssuedAt(issued.toLocalDateTime());
-        inv.setSubtotalAmount(rs.getDouble("subtotal_amount"));
-        inv.setTaxAmount(rs.getDouble("tax_amount"));
-        inv.setTotalAmount(rs.getDouble("total_amount"));
+        inv.setTotalAmount(rs.getBigDecimal("total_amount"));
         inv.setStatus(Invoice.Status.valueOf(rs.getString("status")));
-        inv.setNotes(rs.getString("notes"));
+        Timestamp issuedAt = rs.getTimestamp("issued_at");
+        if (issuedAt != null) inv.setIssuedAt(issuedAt.toLocalDateTime());
+        Timestamp paidAt = rs.getTimestamp("paid_at");
+        if (paidAt != null) inv.setPaidAt(paidAt.toLocalDateTime());
+        // joined columns (may be null for bare queries)
+        inv.setGuestName(rs.getString("guest_name"));
+        inv.setRoomNumber(rs.getString("room_number"));
         return inv;
     }
 
-    public static Optional<Invoice> findByReservation(int reservationId) throws SQLException {
-        String sql = """
-                SELECT id, reservation_id, invoice_number, issued_at,
-                       subtotal_amount, tax_amount, total_amount, status, notes
-                FROM invoices WHERE reservation_id = ? LIMIT 1
-                """;
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, reservationId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return Optional.empty();
-                Invoice inv = mapRow(rs);
-                // load lines
-                inv.getLines().addAll(findLines(conn, inv.getId()));
-                return Optional.of(inv);
-            }
-        }
+    private static InvoiceLine mapLine(ResultSet rs) throws SQLException {
+        InvoiceLine line = new InvoiceLine();
+        line.setId(rs.getLong("id"));
+        line.setInvoiceId(rs.getLong("invoice_id"));
+        line.setLineType(InvoiceLine.LineType.valueOf(rs.getString("line_type")));
+        line.setReferenceId(rs.getLong("reference_id"));
+        line.setDescription(rs.getString("description"));
+        line.setQuantity(rs.getInt("quantity"));
+        line.setUnitPrice(rs.getBigDecimal("unit_price"));
+        line.setLineTotal(rs.getBigDecimal("line_total"));
+        return line;
     }
 
-    private static List<Invoice.InvoiceLine> findLines(Connection conn, int invoiceId) throws SQLException {
-        List<Invoice.InvoiceLine> lines = new ArrayList<>();
-        String sql = """
-                SELECT id, invoice_id, line_type, reference_id, description, quantity, unit_price, line_total
-                FROM invoice_lines WHERE invoice_id = ?
-                """;
+    // ─── SQL helpers ─────────────────────────────────────────────────────────
+
+    private static final String SELECT_INVOICE = """
+            SELECT i.*,
+                   CONCAT(g.first_name, ' ', g.last_name) AS guest_name,
+                   r.room_number
+            FROM invoices i
+            JOIN reservations res ON res.id = i.reservation_id
+            JOIN guests g         ON g.id   = res.guest_id
+            JOIN rooms r          ON r.id   = res.room_id
+            """;
+
+    private static List<InvoiceLine> loadLines(Connection conn, long invoiceId) throws SQLException {
+        String sql = "SELECT * FROM invoice_lines WHERE invoice_id = ? ORDER BY id";
+        List<InvoiceLine> lines = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, invoiceId);
+            ps.setLong(1, invoiceId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Invoice.InvoiceLine line = new Invoice.InvoiceLine();
-                    line.setId(rs.getInt("id"));
-                    line.setInvoiceId(rs.getInt("invoice_id"));
-                    line.setLineType(Invoice.InvoiceLine.LineType.valueOf(rs.getString("line_type")));
-                    int refId = rs.getInt("reference_id");
-                    line.setReferenceId(rs.wasNull() ? null : refId);
-                    line.setDescription(rs.getString("description"));
-                    line.setQuantity(rs.getInt("quantity"));
-                    line.setUnitPrice(rs.getDouble("unit_price"));
-                    line.setLineTotal(rs.getDouble("line_total"));
-                    lines.add(line);
-                }
+                while (rs.next()) lines.add(mapLine(rs));
             }
         }
         return lines;
     }
 
+    // ─── Queries ─────────────────────────────────────────────────────────────
+
+    public static List<Invoice> findAll() {
+        String sql = SELECT_INVOICE + " ORDER BY i.id DESC";
+        List<Invoice> list = new ArrayList<>();
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Invoice inv = mapHeader(rs);
+                inv.setLines(loadLines(c, inv.getId()));
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("InvoiceDao.findAll failed", e);
+        }
+        return list;
+    }
+
+    public static Optional<Invoice> findById(long id) {
+        String sql = SELECT_INVOICE + " WHERE i.id = ?";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                Invoice inv = mapHeader(rs);
+                inv.setLines(loadLines(c, inv.getId()));
+                return Optional.of(inv);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("InvoiceDao.findById failed", e);
+        }
+    }
+
+    public static Optional<Invoice> findByReservation(long reservationId) {
+        String sql = SELECT_INVOICE + " WHERE i.reservation_id = ?";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, reservationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+                Invoice inv = mapHeader(rs);
+                inv.setLines(loadLines(c, inv.getId()));
+                return Optional.of(inv);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("InvoiceDao.findByReservation failed", e);
+        }
+    }
+
+    public static List<Invoice> findByStatus(Invoice.Status status) {
+        String sql = SELECT_INVOICE + " WHERE i.status = ? ORDER BY i.id DESC";
+        List<Invoice> list = new ArrayList<>();
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Invoice inv = mapHeader(rs);
+                    inv.setLines(loadLines(c, inv.getId()));
+                    list.add(inv);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("InvoiceDao.findByStatus failed", e);
+        }
+        return list;
+    }
+
+    // ─── Mutations ────────────────────────────────────────────────────────────
+
     /**
-     * Creates an invoice with its lines and a payment record atomically.
-     * @param reservationId  the reservation being paid
-     * @param roomDescription  e.g. "Room 101 – 3 nights"
-     * @param roomSubtotal   nights × pricePerNight
-     * @param services       list of selected services (quantity > 0)
-     * @param paymentMethod  CASH / CARD / TRANSFER
-     * @param transactionRef optional transaction reference string
+     * Create a full invoice (header + lines) in one transaction.
+     * Automatically:
+     *  - generates invoice_number: INV-YYYYMMDD-{reservationId}
+     *  - inserts all lines
+     *  - calls calculateTotals() to set total_amount
+     *
      * @return the generated invoice id
      */
-    public static int createWithPayment(int reservationId,
-                                        String roomDescription,
-                                        double roomSubtotal,
-                                        List<Service> services,
-                                        String paymentMethod,
-                                        String transactionRef) throws SQLException {
+    public static long create(Invoice invoice) {
         return TxManager.runInTransaction(conn -> {
-            // 1. Calculate totals
-            double serviceSubtotal = services.stream().mapToDouble(Service::getLineTotal).sum();
-            double subtotal = roomSubtotal + serviceSubtotal;
-            double tax      = subtotal * 0.10;
-            double total    = subtotal + tax;
-            String invNumber = "INV-" + System.currentTimeMillis();
-
-            // 2. Insert invoice
-            String invSql = """
-                    INSERT INTO invoices
-                      (reservation_id, invoice_number, issued_at,
-                       subtotal_amount, tax_amount, total_amount, status)
-                    VALUES (?, ?, NOW(), ?, ?, ?, 'PAID')
+            // 1. Insert header
+            String invoiceNumber = "INV-" + LocalDate.now().toString().replace("-", "")
+                    + "-" + invoice.getReservationId();
+            String insertHeader = """
+                    INSERT INTO invoices (reservation_id, invoice_number, total_amount, status, issued_at)
+                    VALUES (?, ?, 0.00, 'DRAFT', NOW())
                     """;
-            int invoiceId;
-            try (PreparedStatement ps = conn.prepareStatement(invSql, Statement.RETURN_GENERATED_KEYS)) {
-                ps.setInt(1, reservationId);
-                ps.setString(2, invNumber);
-                ps.setDouble(3, subtotal);
-                ps.setDouble(4, tax);
-                ps.setDouble(5, total);
+            long invoiceId;
+            try (PreparedStatement ps = conn.prepareStatement(insertHeader, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setLong(1, invoice.getReservationId());
+                ps.setString(2, invoiceNumber);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (!keys.next()) throw new SQLException("No key for invoice insert");
-                    invoiceId = keys.getInt(1);
+                    invoiceId = keys.getLong(1);
                 }
             }
 
-            // 3. Insert room line
-            insertLine(conn, invoiceId, Invoice.InvoiceLine.LineType.ROOM,
-                    reservationId, roomDescription, 1, roomSubtotal);
-
-            // 4. Insert service lines
-            for (Service s : services) {
-                if (s.getQuantity() <= 0) continue;
-                insertLine(conn, invoiceId, Invoice.InvoiceLine.LineType.SERVICE,
-                        s.getId(), s.getName(), s.getQuantity(), s.getUnitPrice());
+            // 2. Insert all lines
+            if (invoice.getLines() != null) {
+                for (InvoiceLine line : invoice.getLines()) {
+                    insertLineInternal(conn, invoiceId, line);
+                }
             }
 
-            // 5. Insert payment record
-            String paySQL = """
-                    INSERT INTO payments
-                      (invoice_id, amount, method, paid_at, transaction_ref, status)
-                    VALUES (?, ?, ?, NOW(), ?, 'SUCCESS')
-                    """;
-            try (PreparedStatement ps = conn.prepareStatement(paySQL)) {
-                ps.setInt(1, invoiceId);
-                ps.setDouble(2, total);
-                ps.setString(3, paymentMethod);
-                ps.setString(4, transactionRef == null || transactionRef.isBlank() ? null : transactionRef);
-                ps.executeUpdate();
-            }
-
-            // 6. Mark reservation as CONFIRMED
-            String updRes = "UPDATE reservations SET status='CONFIRMED', updated_at=NOW() WHERE id=?";
-            try (PreparedStatement ps = conn.prepareStatement(updRes)) {
-                ps.setInt(1, reservationId);
-                ps.executeUpdate();
-            }
-
+            // 3. Recalculate total
+            recalculateTotalInternal(conn, invoiceId);
             return invoiceId;
         });
     }
 
-    private static void insertLine(Connection conn, int invoiceId,
-                                   Invoice.InvoiceLine.LineType type,
-                                   int referenceId, String description,
-                                   int quantity, double unitPrice) throws SQLException {
+    /**
+     * Append a single line to an existing invoice and refresh total_amount.
+     */
+    public static boolean addLine(long invoiceId, InvoiceLine line) {
+        return TxManager.runInTransaction(conn -> {
+            insertLineInternal(conn, invoiceId, line);
+            recalculateTotalInternal(conn, invoiceId);
+            return true;
+        });
+    }
+
+    /**
+     * Recalculates total_amount from sum of invoice_lines.
+     * Safe to call any time; also called internally after mutations.
+     */
+    public static boolean calculateTotals(long invoiceId) {
+        String sql = """
+                UPDATE invoices i
+                SET    i.total_amount = (
+                    SELECT COALESCE(SUM(il.line_total), 0)
+                    FROM   invoice_lines il
+                    WHERE  il.invoice_id = i.id
+                )
+                WHERE i.id = ?
+                """;
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, invoiceId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("InvoiceDao.calculateTotals failed", e);
+        }
+    }
+
+    /**
+     * Status transition:
+     *  DRAFT → ISSUED  (sets issued_at = NOW())
+     *  ISSUED → PAID   (sets paid_at = NOW())
+     *  DRAFT → CANCELLED
+     */
+    public static boolean updateStatus(long invoiceId, Invoice.Status newStatus) {
+        String sql = switch (newStatus) {
+            case ISSUED     -> "UPDATE invoices SET status='ISSUED', issued_at=NOW() WHERE id=?";
+            case PAID       -> "UPDATE invoices SET status='PAID',   paid_at=NOW()   WHERE id=?";
+            case CANCELLED  -> "UPDATE invoices SET status='CANCELLED'               WHERE id=?";
+            default         -> "UPDATE invoices SET status=?                          WHERE id=?";
+        };
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            if (newStatus == Invoice.Status.DRAFT) {
+                // generic fallback — sets status only
+                ps.setString(1, newStatus.name());
+                ps.setLong(2, invoiceId);
+            } else {
+                ps.setLong(1, invoiceId);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("InvoiceDao.updateStatus failed", e);
+        }
+    }
+
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
+    private static void insertLineInternal(Connection conn, long invoiceId, InvoiceLine line) throws SQLException {
+        BigDecimal lineTotal = line.getUnitPrice()
+                .multiply(BigDecimal.valueOf(line.getQuantity()));
         String sql = """
                 INSERT INTO invoice_lines
-                  (invoice_id, line_type, reference_id, description, quantity, unit_price, line_total)
+                    (invoice_id, line_type, reference_id, description, quantity, unit_price, line_total)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, invoiceId);
-            ps.setString(2, type.name());
-            ps.setInt(3, referenceId);
-            ps.setString(4, description);
-            ps.setInt(5, quantity);
-            ps.setDouble(6, unitPrice);
-            ps.setDouble(7, unitPrice * quantity);
+            ps.setLong(1, invoiceId);
+            ps.setString(2, line.getLineType().name());
+            if (line.getReferenceId() > 0) ps.setLong(3, line.getReferenceId());
+            else ps.setNull(3, Types.BIGINT);
+            ps.setString(4, line.getDescription());
+            ps.setInt(5, line.getQuantity());
+            ps.setBigDecimal(6, line.getUnitPrice());
+            ps.setBigDecimal(7, lineTotal);
+            ps.executeUpdate();
+        }
+    }
+
+    private static void recalculateTotalInternal(Connection conn, long invoiceId) throws SQLException {
+        String sql = """
+                UPDATE invoices
+                SET    total_amount = (
+                    SELECT COALESCE(SUM(line_total), 0)
+                    FROM   invoice_lines
+                    WHERE  invoice_id = ?
+                )
+                WHERE id = ?
+                """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, invoiceId);
+            ps.setLong(2, invoiceId);
             ps.executeUpdate();
         }
     }

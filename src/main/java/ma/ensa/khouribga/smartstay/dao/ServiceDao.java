@@ -8,99 +8,135 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DAO for the `services` table.
+ * Static methods only — get a pooled connection per call.
+ */
 public class ServiceDao {
 
-    private static final String SELECT_ALL =
-            "SELECT id, code, name, description, unit_price, is_active FROM services";
+    // ─── Mapping ─────────────────────────────────────────────────────────────
 
-    private static Service mapRow(ResultSet rs) throws SQLException {
+    private static Service map(ResultSet rs) throws SQLException {
         Service s = new Service();
-        s.setId(rs.getInt("id"));
+        s.setId(rs.getLong("id"));
         s.setCode(rs.getString("code"));
         s.setName(rs.getString("name"));
-        s.setDescription(rs.getString("description"));
-        s.setUnitPrice(rs.getDouble("unit_price"));
+        s.setUnitPrice(rs.getBigDecimal("unit_price"));
         s.setActive(rs.getBoolean("is_active"));
         return s;
     }
 
-    public static List<Service> findAll() throws SQLException {
+    // ─── Queries ──────────────────────────────────────────────────────────────
+
+    /** All services (active + inactive). */
+    public static List<Service> findAll() {
+        String sql = "SELECT * FROM services ORDER BY name";
         List<Service> list = new ArrayList<>();
-        String sql = SELECT_ALL + " ORDER BY name";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(mapRow(rs));
+            while (rs.next()) list.add(map(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.findAll failed", e);
         }
         return list;
     }
 
-    public static List<Service> findAllActive() throws SQLException {
+    /** Only active services — used in booking / invoice line pickers. */
+    public static List<Service> findActive() {
+        String sql = "SELECT * FROM services WHERE is_active = TRUE ORDER BY name";
         List<Service> list = new ArrayList<>();
-        String sql = SELECT_ALL + " WHERE is_active = TRUE ORDER BY name";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(mapRow(rs));
+            while (rs.next()) list.add(map(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.findActive failed", e);
         }
         return list;
     }
 
-    public static Optional<Service> findById(int id) throws SQLException {
-        String sql = SELECT_ALL + " WHERE id = ? LIMIT 1";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
+    public static Optional<Service> findById(long id) {
+        String sql = "SELECT * FROM services WHERE id = ?";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+                return rs.next() ? Optional.of(map(rs)) : Optional.empty();
             }
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.findById failed", e);
         }
     }
 
-    public static int insert(Service service) throws SQLException {
+    public static Optional<Service> findByCode(String code) {
+        String sql = "SELECT * FROM services WHERE code = ?";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, code);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(map(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.findByCode failed", e);
+        }
+    }
+
+    // ─── Mutations ────────────────────────────────────────────────────────────
+
+    /**
+     * Insert a new service. Returns the generated id.
+     */
+    public static long create(Service s) {
         String sql = """
-                INSERT INTO services (code, name, description, unit_price, is_active)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO services (code, name, unit_price, is_active)
+                VALUES (?, ?, ?, ?)
                 """;
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, service.getCode());
-            ps.setString(2, service.getName());
-            ps.setString(3, service.getDescription());
-            ps.setDouble(4, service.getUnitPrice());
-            ps.setBoolean(5, service.isActive());
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, s.getCode());
+            ps.setString(2, s.getName());
+            ps.setBigDecimal(3, s.getUnitPrice());
+            ps.setBoolean(4, s.isActive());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) return keys.getInt(1);
-                throw new SQLException("No generated key for service insert");
+                if (keys.next()) return keys.getLong(1);
+                throw new SQLException("No generated key returned");
             }
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.create failed", e);
         }
     }
 
-    public static boolean update(Service service) throws SQLException {
-        String sql = """
-                UPDATE services SET code=?, name=?, description=?, unit_price=?, is_active=?
-                WHERE id=?
-                """;
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, service.getCode());
-            ps.setString(2, service.getName());
-            ps.setString(3, service.getDescription());
-            ps.setDouble(4, service.getUnitPrice());
-            ps.setBoolean(5, service.isActive());
-            ps.setInt(6, service.getId());
+    /**
+     * Update name, unit_price on an existing service.
+     * Returns true if a row was affected.
+     */
+    public static boolean update(Service s) {
+        String sql = "UPDATE services SET name = ?, unit_price = ? WHERE id = ?";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, s.getName());
+            ps.setBigDecimal(2, s.getUnitPrice());
+            ps.setLong(3, s.getId());
             return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.update failed", e);
         }
     }
 
-    public static boolean setActive(int id, boolean active) throws SQLException {
-        String sql = "UPDATE services SET is_active=? WHERE id=?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    /**
+     * Soft-delete / reactivate a service.
+     */
+    public static boolean setActive(long id, boolean active) {
+        String sql = "UPDATE services SET is_active = ? WHERE id = ?";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setBoolean(1, active);
-            ps.setInt(2, id);
+            ps.setLong(2, id);
             return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("ServiceDao.setActive failed", e);
         }
     }
 }
