@@ -173,8 +173,11 @@ public class PaymentController {
         task.setOnSucceeded(e -> {
             bookingConfirmed = true;
             String code = task.getValue();
-            lblSuccess.setText("✓ Booking confirmed! Code: " + code);
+            lblSuccess.setText("✓ Booking confirmed! Reservation Code: " + code);
+            lblSuccess.setVisible(true);
+            lblSuccess.setManaged(true);
             btnConfirm.setVisible(false);
+            btnConfirm.setManaged(false);
             btnCancel.setText("Close");
         });
 
@@ -227,10 +230,10 @@ public class PaymentController {
         res.setStatus(Reservation.Status.CONFIRMED);
 
         long reservationId = ReservationDao.create(res);
-        // Fetch to get the generated code
-        Reservation created = ReservationDao.findByCode(
-                ReservationDao.findById(reservationId).get().getReservationCode()
-        ).get();
+        // Fetch generated reservation code
+        String reservationCode = ReservationDao.findById(reservationId)
+                .map(Reservation::getReservationCode)
+                .orElse("SS-UNKNOWN");
 
         // 3. Invoice — build lines
         List<InvoiceLine> lines = new ArrayList<>();
@@ -264,7 +267,7 @@ public class PaymentController {
         long invoiceId = InvoiceDao.create(invoice);
         InvoiceDao.updateStatus(invoiceId, Invoice.Status.ISSUED);
 
-        return created.getReservationCode();
+        return reservationCode;
     }
 
     @FXML

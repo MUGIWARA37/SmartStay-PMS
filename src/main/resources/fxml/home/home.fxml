@@ -1,74 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+
 <?import javafx.geometry.Insets?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ma.ensa.khouribga.smartstay.home.HomeController"
-            styleClass="interior-root" prefWidth="1100" prefHeight="700">
-    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
+            styleClass="interior-root"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- ═══════════════════════════════════════════════════════ SIDEBAR -->
     <left>
-        <VBox styleClass="sidebar">
-            <VBox styleClass="sidebar-header">
-                <Label text="&#x26E9; SmartStay" styleClass="sidebar-logo"/>
-                <Label text="GUEST PORTAL" styleClass="sidebar-subtitle"/>
+        <VBox styleClass="sidebar" prefWidth="220" spacing="4">
+            <padding><Insets top="0" right="0" bottom="0" left="0"/></padding>
+
+            <!-- Brand -->
+            <VBox styleClass="sidebar-header" alignment="CENTER">
+                <padding><Insets top="28" right="16" bottom="24" left="16"/></padding>
+                <Label text="智" styleClass="sidebar-logo"/>
+                <Label text="SmartStay" style="-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill: #e2c97e;"/>
+                <Label text="GUEST PORTAL" style="-fx-font-size:9px; -fx-text-fill:#888; -fx-letter-spacing:2;"/>
             </VBox>
-            <VBox spacing="2" VBox.vgrow="ALWAYS">
-                <VBox.margin><Insets top="10"/></VBox.margin>
-                <Button text="Browse Rooms" styleClass="nav-button,nav-button-active" fx:id="btnRooms" onAction="#showRooms" maxWidth="Infinity"/>
-                <Button text="My Reservations" styleClass="nav-button" fx:id="btnMyRes" onAction="#showReservations" maxWidth="Infinity"/>
-            </VBox>
-            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout" maxWidth="Infinity">
-                <VBox.margin><Insets bottom="8" left="8" right="8"/></VBox.margin>
-            </Button>
+
+            <!-- Nav items (guest has just one active screen) -->
+            <Button text="🏠  Browse Rooms" styleClass="nav-button-active" maxWidth="Infinity"/>
+            <Button text="📋  My Bookings"  styleClass="nav-button"        maxWidth="Infinity"/>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Logout -->
+            <Button fx:id="btnLogout" text="⬅  Sign Out" styleClass="btn-logout"
+                    maxWidth="Infinity" onAction="#handleLogout"/>
+            <padding><Insets bottom="16"/></padding>
         </VBox>
     </left>
+
+    <!-- ═══════════════════════════════════════════════════════ CENTER -->
     <center>
         <VBox>
+
+            <!-- ── Header bar ── -->
             <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
-                <Label fx:id="welcomeLabel" text="Welcome!" styleClass="welcome-label"/>
+                <padding><Insets top="0" right="24" bottom="0" left="24"/></padding>
+                <VBox spacing="2">
+                    <Label fx:id="welcomeLabel" text="Welcome back" styleClass="welcome-label"/>
+                    <Label text="Find and book your perfect room" styleClass="label-muted"/>
+                </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="dateLabel" styleClass="label-muted"/>
+                <ProgressIndicator fx:id="spinner" prefWidth="24" prefHeight="24" visible="false"/>
+                <Label fx:id="lblStatus" styleClass="label-muted"/>
             </HBox>
-            <StackPane VBox.vgrow="ALWAYS">
-                <VBox fx:id="roomsPanel" spacing="16" styleClass="content-area">
-                    <HBox styleClass="card" spacing="14" alignment="CENTER_LEFT">
-                        <Label text="Check-In:" styleClass="form-label"/>
-                        <DatePicker fx:id="checkInPicker" styleClass="date-picker"/>
-                        <Label text="Check-Out:" styleClass="form-label"/>
-                        <DatePicker fx:id="checkOutPicker" styleClass="date-picker"/>
-                        <Label text="Adults:" styleClass="form-label"/>
-                        <Spinner fx:id="adultSpinner" prefWidth="70" styleClass="spinner"/>
-                        <Button text="Search" styleClass="btn-primary" onAction="#onSearch"/>
-                        <Button text="Show All" styleClass="btn-secondary" onAction="#onShowAll"/>
-                    </HBox>
-                    <Label text="AVAILABLE ROOMS" styleClass="section-title"/>
-                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
-                        <FlowPane fx:id="roomGrid" hgap="16" vgap="16" prefWrapLength="800">
-                            <padding><Insets top="4" bottom="4"/></padding>
-                        </FlowPane>
-                    </ScrollPane>
-                </VBox>
-                <VBox fx:id="reservationsPanel" spacing="16" styleClass="content-area" visible="false" managed="false">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="MY RESERVATIONS" styleClass="section-title"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Refresh" styleClass="btn-secondary" onAction="#refreshReservations"/>
-                    </HBox>
-                    <TableView fx:id="reservationTable" VBox.vgrow="ALWAYS" styleClass="table-view">
-                        <columns>
-                            <TableColumn fx:id="colCode" text="Code" prefWidth="140"/>
-                            <TableColumn fx:id="colRoom" text="Room" prefWidth="80"/>
-                            <TableColumn fx:id="colType" text="Type" prefWidth="100"/>
-                            <TableColumn fx:id="colCheckIn" text="Check-In" prefWidth="110"/>
-                            <TableColumn fx:id="colCheckOut" text="Check-Out" prefWidth="110"/>
-                            <TableColumn fx:id="colNights" text="Nights" prefWidth="70"/>
-                            <TableColumn fx:id="colTotal" text="Total (MAD)" prefWidth="110"/>
-                            <TableColumn fx:id="colResStatus" text="Status" prefWidth="110"/>
-                        </columns>
-                        <placeholder><Label text="No reservations found." styleClass="label-muted"/></placeholder>
-                    </TableView>
-                </VBox>
-            </StackPane>
+
+            <!-- ── Filter bar ── -->
+            <HBox styleClass="card" spacing="16" alignment="CENTER_LEFT">
+                <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+                <margin><Insets top="16" right="20" bottom="0" left="20"/></margin>
+
+                <Label text="Type:" styleClass="form-label"/>
+                <ComboBox fx:id="cbRoomType" prefWidth="160" styleClass="combo-box"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <Label text="Max price / night:" styleClass="form-label"/>
+                <Slider fx:id="priceSlider" prefWidth="180"/>
+                <Label fx:id="priceLabel" styleClass="label-muted" prefWidth="180"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <Label text="Check-in:" styleClass="form-label"/>
+                <DatePicker fx:id="dpCheckIn" prefWidth="140" styleClass="date-picker"/>
+
+                <Label text="Check-out:" styleClass="form-label"/>
+                <DatePicker fx:id="dpCheckOut" prefWidth="140" styleClass="date-picker"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnSearch" text="🔍  Search" styleClass="btn-primary" onAction="#applyFilters"/>
+            </HBox>
+
+            <!-- ── Section title ── -->
+            <HBox>
+                <padding><Insets top="20" right="20" bottom="8" left="20"/></padding>
+                <Label text="Available Rooms" styleClass="section-title"/>
+            </HBox>
+
+            <!-- ── Room grid ── -->
+            <ScrollPane styleClass="scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <FlowPane fx:id="roomGrid" styleClass="content-area"
+                          hgap="18" vgap="18" prefWrapLength="900">
+                    <padding><Insets top="8" right="20" bottom="20" left="20"/></padding>
+                </FlowPane>
+            </ScrollPane>
+
         </VBox>
     </center>
+
 </BorderPane>

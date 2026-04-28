@@ -1,100 +1,150 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
+
 <?import javafx.geometry.Insets?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ma.ensa.khouribga.smartstay.guest.PaymentController"
-            styleClass="interior-root" prefWidth="1100" prefHeight="700">
-    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
-    <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="14">
-            <Button text="Back" styleClass="btn-secondary,btn-small" onAction="#onBack"/>
-            <Label text="PAYMENT" styleClass="welcome-label"/>
-        </HBox>
-    </top>
-    <center>
-        <HBox spacing="24" styleClass="content-area">
-            <!-- Left: Reservation summary -->
-            <VBox spacing="14" prefWidth="360">
-                <VBox styleClass="payment-summary" spacing="10">
-                    <Label text="RESERVATION SUMMARY" styleClass="section-title"/>
-                    <Region styleClass="divider-gold"/>
-                    <HBox spacing="8">
-                        <Label text="Room:" styleClass="label-muted"/>
-                        <Label fx:id="summaryRoom" text="---" styleClass="label-gold"/>
-                    </HBox>
-                    <HBox spacing="8">
-                        <Label text="Type:" styleClass="label-muted"/>
-                        <Label fx:id="summaryType" text="---" styleClass="label-muted"/>
-                    </HBox>
-                    <HBox spacing="8">
-                        <Label text="Check-In:" styleClass="label-muted"/>
-                        <Label fx:id="summaryCheckIn" text="---" styleClass="label-muted"/>
-                    </HBox>
-                    <HBox spacing="8">
-                        <Label text="Check-Out:" styleClass="label-muted"/>
-                        <Label fx:id="summaryCheckOut" text="---" styleClass="label-muted"/>
-                    </HBox>
-                    <HBox spacing="8">
-                        <Label text="Nights:" styleClass="label-muted"/>
-                        <Label fx:id="summaryNights" text="---" styleClass="label-gold"/>
-                    </HBox>
-                    <HBox spacing="8">
-                        <Label text="Guest:" styleClass="label-muted"/>
-                        <Label fx:id="summaryGuest" text="---" styleClass="label-muted"/>
-                    </HBox>
-                    <Region styleClass="divider-red"/>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Room Subtotal:" styleClass="label-muted"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="summaryRoomTotal" text="0.00 MAD" styleClass="label-gold"/>
-                    </HBox>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Services:" styleClass="label-muted"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="summaryServicesTotal" text="0.00 MAD" styleClass="label-muted"/>
-                    </HBox>
-                    <HBox spacing="8" alignment="CENTER_LEFT">
-                        <Label text="Tax (10%):" styleClass="label-muted"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="summaryTax" text="0.00 MAD" styleClass="label-muted"/>
-                    </HBox>
-                    <Region styleClass="divider-gold"/>
-                    <HBox alignment="CENTER_LEFT">
-                        <Label text="TOTAL" styleClass="section-title"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="summaryTotal" text="0.00 MAD" styleClass="payment-total"/>
-                    </HBox>
-                </VBox>
-                <!-- Payment method -->
-                <VBox styleClass="section-box" spacing="10">
-                    <Label text="PAYMENT METHOD" styleClass="section-title"/>
-                    <HBox spacing="8">
-                        <Button fx:id="btnCash" text="CASH" styleClass="payment-method-btn,payment-method-selected" onAction="#selectCash"/>
-                        <Button fx:id="btnCard" text="CARD" styleClass="payment-method-btn" onAction="#selectCard"/>
-                        <Button fx:id="btnTransfer" text="TRANSFER" styleClass="payment-method-btn" onAction="#selectTransfer"/>
-                    </HBox>
-                    <VBox fx:id="cardForm" spacing="6">
-                        <Label text="TRANSACTION REF (optional)" styleClass="form-label"/>
-                        <TextField fx:id="transactionRef" styleClass="form-field" promptText="REF-XXXXXXXX" maxWidth="Infinity"/>
-                    </VBox>
-                </VBox>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ma.ensa.khouribga.smartstay.guest.PaymentController"
+      styleClass="interior-root"
+      spacing="0"
+      prefWidth="780">
+
+    <!-- ── Header ── -->
+    <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="10">
+        <padding><Insets top="0" right="24" bottom="0" left="24"/></padding>
+        <Label text="Confirm Booking &amp; Pay" styleClass="welcome-label"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Step 2 of 2" styleClass="label-muted"/>
+    </HBox>
+
+    <!-- ── Main body ── -->
+    <HBox spacing="20" VBox.vgrow="ALWAYS">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+        <!-- ═══ LEFT: Guest + Booking summary ═══ -->
+        <VBox spacing="16" HBox.hgrow="ALWAYS">
+
+            <!-- Guest information -->
+            <VBox styleClass="card" spacing="10">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Guest Information" styleClass="section-title"/>
+
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints prefWidth="110"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                        <ColumnConstraints prefWidth="110"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                    <Label text="First Name *" styleClass="form-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="tfFirstName" styleClass="interior-text-field"
+                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                    <Label text="Last Name *" styleClass="form-label"
+                           GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                    <TextField fx:id="tfLastName" styleClass="interior-text-field"
+                               GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+                    <Label text="Passport / ID *" styleClass="form-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="tfPassport" styleClass="interior-text-field"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                    <Label text="Email" styleClass="form-label"
+                           GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                    <TextField fx:id="tfEmail" styleClass="interior-text-field"
+                               GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+
+                    <Label text="Phone" styleClass="form-label"
+                           GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="tfPhone" styleClass="interior-text-field"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                </GridPane>
             </VBox>
 
-            <!-- Right: Services selection -->
-            <VBox spacing="14" HBox.hgrow="ALWAYS">
-                <VBox styleClass="section-box" spacing="10" VBox.vgrow="ALWAYS">
-                    <Label text="ADD-ON SERVICES" styleClass="section-title"/>
-                    <Label text="Select optional services to add to your stay" styleClass="label-muted"/>
-                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
-                        <VBox fx:id="servicesBox" spacing="8">
-                            <padding><Insets top="4" bottom="4"/></padding>
-                        </VBox>
-                    </ScrollPane>
-                </VBox>
-                <Label fx:id="errorLabel" text="" styleClass="label-red" wrapText="true"/>
-                <Button text="Confirm &amp; Pay" styleClass="btn-primary" onAction="#onPay" maxWidth="Infinity" prefHeight="48"/>
+            <!-- Booking summary -->
+            <VBox styleClass="card" spacing="10">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Booking Summary" styleClass="section-title"/>
+
+                <GridPane hgap="12" vgap="8">
+                    <Label text="Room:"       GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="form-label"/>
+                    <Label fx:id="lblRoom"    GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-text-fill:#ddd;"/>
+
+                    <Label text="Dates:"      GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="form-label"/>
+                    <Label fx:id="lblDates"   GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-text-fill:#ddd;"/>
+
+                    <Label text="Duration:"   GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="form-label"/>
+                    <Label fx:id="lblNights"  GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-text-fill:#ddd;"/>
+
+                    <Label text="Room total:" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="form-label"/>
+                    <Label fx:id="lblRoomTotal" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                           style="-fx-text-fill:#e2c97e; -fx-font-weight:bold;"/>
+                </GridPane>
             </VBox>
-        </HBox>
-    </center>
-</BorderPane>
+
+        </VBox>
+
+        <!-- ═══ RIGHT: Services + Total + Actions ═══ -->
+        <VBox spacing="16" prefWidth="340">
+
+            <!-- Optional services -->
+            <VBox styleClass="card" spacing="10" VBox.vgrow="ALWAYS">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Add-on Services" styleClass="section-title"/>
+                <Label text="Select optional services (quantity 0 = skip)"
+                       styleClass="label-muted" wrapText="true"/>
+
+                <TableView fx:id="tblServices" styleClass="table-view" VBox.vgrow="ALWAYS"
+                           prefHeight="200" editable="true">
+                    <columns>
+                        <TableColumn fx:id="colSvcName"  text="Service" prefWidth="120"/>
+                        <TableColumn fx:id="colSvcPrice" text="Rate"    prefWidth="80"/>
+                        <TableColumn fx:id="colSvcQty"   text="Qty"     prefWidth="70"/>
+                        <TableColumn fx:id="colSvcTotal" text="Total"   prefWidth="80"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="Loading services…" styleClass="label-muted"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+
+            <!-- Grand total -->
+            <VBox styleClass="card" spacing="8">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label text="TOTAL TO PAY" styleClass="form-label"
+                           style="-fx-font-size:13px; -fx-letter-spacing:1;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="lblGrandTotal" text="— MAD"
+                           style="-fx-font-size:22px; -fx-font-weight:bold; -fx-text-fill:#e2c97e;"/>
+                </HBox>
+
+                <Label text="Payment is collected at check-in."
+                       styleClass="label-muted" wrapText="true"/>
+            </VBox>
+
+            <!-- Feedback labels -->
+            <Label fx:id="lblError"   styleClass="error-label"   wrapText="true"/>
+            <Label fx:id="lblSuccess" styleClass="badge-confirmed"
+                   style="-fx-padding:10 14; -fx-font-size:13px;"
+                   wrapText="true" visible="false" managed="false"/>
+
+            <!-- Action buttons -->
+            <Button fx:id="btnConfirm" text="✓  Confirm Booking"
+                    styleClass="btn-success" maxWidth="Infinity"
+                    onAction="#handleConfirm"/>
+            <Button fx:id="btnCancel"  text="← Go Back"
+                    styleClass="btn-secondary" maxWidth="Infinity"
+                    onAction="#handleCancel"/>
+
+        </VBox>
+    </HBox>
+
+</VBox>
