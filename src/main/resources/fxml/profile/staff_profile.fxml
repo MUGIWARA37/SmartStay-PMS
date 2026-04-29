@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.profile.StaffProfileController"
+            styleClass="interior-root" stylesheets="@/styles/samurai.css"
+            prefWidth="1100" prefHeight="760">
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
+            <Label text="⚔  MY PROFILE" styleClass="welcome-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="← Back" styleClass="btn-secondary" onAction="#goBack"/>
+            <Button text="Logout" styleClass="btn-logout" onAction="#onLogout"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="20" styleClass="content-area">
+                <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
+
+                <!-- PROFILE HEADER CARD -->
+                <HBox styleClass="section-box" spacing="28" alignment="CENTER_LEFT">
+                    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+                    <!-- Avatar circle -->
+                    <StackPane>
+                        <Circle fx:id="avatarCircle" radius="54" styleClass="avatar-circle"/>
+                        <Label fx:id="avatarInitials" styleClass="avatar-initials" text="?"/>
+                    </StackPane>
+                    <VBox spacing="6">
+                        <Label fx:id="fullNameLabel" text="Loading..." styleClass="section-title"/>
+                        <Label fx:id="positionLabel" text="" styleClass="label-muted"/>
+                        <Label fx:id="employeeCodeLabel" text="" styleClass="label-muted"/>
+                        <Label fx:id="departmentLabel" text="" styleClass="label-muted"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <VBox spacing="6" alignment="CENTER_RIGHT">
+                        <Label fx:id="hireDateLabel" text="" styleClass="label-muted"/>
+                        <Label fx:id="salaryLabel" text="" styleClass="label-muted"/>
+                    </VBox>
+                </HBox>
+
+                <!-- TWO COLUMN ROW: Contact Info + Change Password -->
+                <HBox spacing="20">
+                    <!-- Contact Info -->
+                    <VBox styleClass="section-box" spacing="14" HBox.hgrow="ALWAYS">
+                        <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
+                        <Label text="📋  Contact Information" styleClass="section-title"/>
+                        <Separator/>
+                        <Label text="EMAIL" styleClass="form-label"/>
+                        <TextField fx:id="emailField" styleClass="interior-text-field" promptText="email@example.com"/>
+                        <Label text="PHONE" styleClass="form-label"/>
+                        <TextField fx:id="phoneField" styleClass="interior-text-field" promptText="+212 600 000 000"/>
+                        <Label text="EMERGENCY CONTACT" styleClass="form-label"/>
+                        <TextField fx:id="emergencyField" styleClass="interior-text-field" promptText="Name — +212 ..."/>
+                        <Label fx:id="contactMsg" text="" styleClass="error-label" wrapText="true"/>
+                        <Button text="💾  Save Contact Info" styleClass="btn-primary" onAction="#saveContactInfo" maxWidth="Infinity"/>
+                    </VBox>
+
+                    <!-- Change Password -->
+                    <VBox styleClass="section-box" spacing="14" HBox.hgrow="ALWAYS">
+                        <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
+                        <Label text="🔐  Change Password" styleClass="section-title"/>
+                        <Separator/>
+                        <Label text="CURRENT PASSWORD" styleClass="form-label"/>
+                        <PasswordField fx:id="oldPassField" styleClass="interior-text-field" promptText="Current password"/>
+                        <Label text="NEW PASSWORD" styleClass="form-label"/>
+                        <PasswordField fx:id="newPassField" styleClass="interior-text-field" promptText="New password (min 8 chars)"/>
+                        <Label text="CONFIRM NEW PASSWORD" styleClass="form-label"/>
+                        <PasswordField fx:id="confirmPassField" styleClass="interior-text-field" promptText="Repeat new password"/>
+                        <Label fx:id="passMsg" text="" styleClass="error-label" wrapText="true"/>
+                        <Button text="🔒  Update Password" styleClass="btn-primary" onAction="#changePassword" maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
+
+                <!-- WEEKLY SHIFT SCHEDULE -->
+                <VBox styleClass="section-box" spacing="14">
+                    <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label text="🗓  This Week's Shifts" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="weekRangeLabel" text="" styleClass="label-muted"/>
+                    </HBox>
+                    <Separator/>
+                    <HBox fx:id="shiftWeekRow" spacing="8" alignment="CENTER">
+                        <!-- Day cards injected by controller -->
+                    </HBox>
+                    <HBox alignment="CENTER_RIGHT">
+                        <Label fx:id="hoursLoggedLabel" text="Hours logged this week: 0 h" styleClass="label-muted"/>
+                    </HBox>
+                </VBox>
+
+                <!-- REPORT ISSUE -->
+                <VBox styleClass="section-box" spacing="14">
+                    <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
+                    <Label text="🚨  Report an App Issue" styleClass="section-title"/>
+                    <Separator/>
+                    <Label text="ISSUE TITLE" styleClass="form-label"/>
+                    <TextField fx:id="issueTitleField" styleClass="interior-text-field" promptText="Brief title of the issue"/>
+                    <Label text="DESCRIPTION" styleClass="form-label"/>
+                    <TextArea fx:id="issueDescField" styleClass="text-area" promptText="Describe what went wrong, steps to reproduce, etc."
+                              prefRowCount="4" wrapText="true"/>
+                    <Label fx:id="issueMsg" text="" styleClass="error-label" wrapText="true"/>
+                    <Button text="📨  Submit Report" styleClass="btn-primary" onAction="#submitIssue" maxWidth="Infinity"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

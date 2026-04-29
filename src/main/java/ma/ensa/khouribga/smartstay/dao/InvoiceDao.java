@@ -5,7 +5,6 @@ import ma.ensa.khouribga.smartstay.db.TxManager;
 import ma.ensa.khouribga.smartstay.model.Invoice;
 import ma.ensa.khouribga.smartstay.model.Invoice.InvoiceLine;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,13 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DAO for `invoices` and `invoice_lines`.
- *
- * Key design decisions:
- *  - create()         inserts header + all lines atomically, then refreshes totals
- *  - addLine()        appends one line, recalculates total
- *  - calculateTotals()  SUM(line_total) → updates invoices.total_amount
- *  - updateStatus()   status transition guard (DRAFT → ISSUED → PAID)
+ * DAO for invoices and invoice_lines.
+ * Uses double for money and int for IDs — matching the model classes.
  */
 public class InvoiceDao {
 
@@ -27,44 +21,35 @@ public class InvoiceDao {
 
     private static Invoice mapHeader(ResultSet rs) throws SQLException {
         Invoice inv = new Invoice();
-        inv.setId(rs.getLong("id"));
-        inv.setReservationId(rs.getLong("reservation_id"));
+        inv.setId((int) rs.getLong("id"));
+        inv.setReservationId((int) rs.getLong("reservation_id"));
         inv.setInvoiceNumber(rs.getString("invoice_number"));
-        inv.setTotalAmount(rs.getBigDecimal("total_amount"));
+        inv.setTotalAmount(rs.getDouble("total_amount"));
         inv.setStatus(Invoice.Status.valueOf(rs.getString("status")));
         Timestamp issuedAt = rs.getTimestamp("issued_at");
         if (issuedAt != null) inv.setIssuedAt(issuedAt.toLocalDateTime());
-        Timestamp paidAt = rs.getTimestamp("paid_at");
-        if (paidAt != null) inv.setPaidAt(paidAt.toLocalDateTime());
-        // joined columns (may be null for bare queries)
-        inv.setGuestName(rs.getString("guest_name"));
-        inv.setRoomNumber(rs.getString("room_number"));
         return inv;
     }
 
     private static InvoiceLine mapLine(ResultSet rs) throws SQLException {
         InvoiceLine line = new InvoiceLine();
-        line.setId(rs.getLong("id"));
-        line.setInvoiceId(rs.getLong("invoice_id"));
+        line.setId((int) rs.getLong("id"));
+        line.setInvoiceId((int) rs.getLong("invoice_id"));
         line.setLineType(InvoiceLine.LineType.valueOf(rs.getString("line_type")));
-        line.setReferenceId(rs.getLong("reference_id"));
+        long refId = rs.getLong("reference_id");
+        line.setReferenceId(rs.wasNull() ? null : (int) refId);
         line.setDescription(rs.getString("description"));
         line.setQuantity(rs.getInt("quantity"));
-        line.setUnitPrice(rs.getBigDecimal("unit_price"));
-        line.setLineTotal(rs.getBigDecimal("line_total"));
+        line.setUnitPrice(rs.getDouble("unit_price"));
+        line.setLineTotal(rs.getDouble("line_total"));
         return line;
     }
 
-    // ─── SQL helpers ─────────────────────────────────────────────────────────
+    // ─── SQL ─────────────────────────────────────────────────────────────────
 
     private static final String SELECT_INVOICE = """
-            SELECT i.*,
-                   CONCAT(g.first_name, ' ', g.last_name) AS guest_name,
-                   r.room_number
+            SELECT i.*
             FROM invoices i
-            JOIN reservations res ON res.id = i.reservation_id
-            JOIN guests g         ON g.id   = res.guest_id
-            JOIN rooms r          ON r.id   = res.room_id
             """;
 
     private static List<InvoiceLine> loadLines(Connection conn, long invoiceId) throws SQLException {
@@ -151,18 +136,8 @@ public class InvoiceDao {
 
     // ─── Mutations ────────────────────────────────────────────────────────────
 
-    /**
-     * Create a full invoice (header + lines) in one transaction.
-     * Automatically:
-     *  - generates invoice_number: INV-YYYYMMDD-{reservationId}
-     *  - inserts all lines
-     *  - calls calculateTotals() to set total_amount
-     *
-     * @return the generated invoice id
-     */
     public static long create(Invoice invoice) {
         return TxManager.runInTransaction(conn -> {
-            // 1. Insert header
             String invoiceNumber = "INV-" + LocalDate.now().toString().replace("-", "")
                     + "-" + invoice.getReservationId();
             String insertHeader = """
@@ -171,7 +146,7 @@ public class InvoiceDao {
                     """;
             long invoiceId;
             try (PreparedStatement ps = conn.prepareStatement(insertHeader, Statement.RETURN_GENERATED_KEYS)) {
-                ps.setLong(1, invoice.getReservationId());
+                ps.setInt(1, invoice.getReservationId());
                 ps.setString(2, invoiceNumber);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -180,22 +155,17 @@ public class InvoiceDao {
                 }
             }
 
-            // 2. Insert all lines
             if (invoice.getLines() != null) {
                 for (InvoiceLine line : invoice.getLines()) {
                     insertLineInternal(conn, invoiceId, line);
                 }
             }
 
-            // 3. Recalculate total
             recalculateTotalInternal(conn, invoiceId);
             return invoiceId;
         });
     }
 
-    /**
-     * Append a single line to an existing invoice and refresh total_amount.
-     */
     public static boolean addLine(long invoiceId, InvoiceLine line) {
         return TxManager.runInTransaction(conn -> {
             insertLineInternal(conn, invoiceId, line);
@@ -204,10 +174,6 @@ public class InvoiceDao {
         });
     }
 
-    /**
-     * Recalculates total_amount from sum of invoice_lines.
-     * Safe to call any time; also called internally after mutations.
-     */
     public static boolean calculateTotals(long invoiceId) {
         String sql = """
                 UPDATE invoices i
@@ -227,28 +193,16 @@ public class InvoiceDao {
         }
     }
 
-    /**
-     * Status transition:
-     *  DRAFT → ISSUED  (sets issued_at = NOW())
-     *  ISSUED → PAID   (sets paid_at = NOW())
-     *  DRAFT → CANCELLED
-     */
     public static boolean updateStatus(long invoiceId, Invoice.Status newStatus) {
         String sql = switch (newStatus) {
-            case ISSUED     -> "UPDATE invoices SET status='ISSUED', issued_at=NOW() WHERE id=?";
-            case PAID       -> "UPDATE invoices SET status='PAID',   paid_at=NOW()   WHERE id=?";
-            case CANCELLED  -> "UPDATE invoices SET status='CANCELLED'               WHERE id=?";
-            default         -> "UPDATE invoices SET status=?                          WHERE id=?";
+            case ISSUED    -> "UPDATE invoices SET status='ISSUED', issued_at=NOW() WHERE id=?";
+            case PAID      -> "UPDATE invoices SET status='PAID',   paid_at=NOW()   WHERE id=?";
+            case CANCELLED -> "UPDATE invoices SET status='CANCELLED'               WHERE id=?";
+            default        -> "UPDATE invoices SET status='DRAFT'                   WHERE id=?";
         };
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            if (newStatus == Invoice.Status.DRAFT) {
-                // generic fallback — sets status only
-                ps.setString(1, newStatus.name());
-                ps.setLong(2, invoiceId);
-            } else {
-                ps.setLong(1, invoiceId);
-            }
+            ps.setLong(1, invoiceId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("InvoiceDao.updateStatus failed", e);
@@ -258,8 +212,7 @@ public class InvoiceDao {
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     private static void insertLineInternal(Connection conn, long invoiceId, InvoiceLine line) throws SQLException {
-        BigDecimal lineTotal = line.getUnitPrice()
-                .multiply(BigDecimal.valueOf(line.getQuantity()));
+        double lineTotal = line.getUnitPrice() * line.getQuantity();
         String sql = """
                 INSERT INTO invoice_lines
                     (invoice_id, line_type, reference_id, description, quantity, unit_price, line_total)
@@ -268,12 +221,14 @@ public class InvoiceDao {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, invoiceId);
             ps.setString(2, line.getLineType().name());
-            if (line.getReferenceId() > 0) ps.setLong(3, line.getReferenceId());
-            else ps.setNull(3, Types.BIGINT);
+            if (line.getReferenceId() != null && line.getReferenceId() > 0)
+                ps.setInt(3, line.getReferenceId());
+            else
+                ps.setNull(3, Types.INTEGER);
             ps.setString(4, line.getDescription());
             ps.setInt(5, line.getQuantity());
-            ps.setBigDecimal(6, line.getUnitPrice());
-            ps.setBigDecimal(7, lineTotal);
+            ps.setDouble(6, line.getUnitPrice());
+            ps.setDouble(7, lineTotal);
             ps.executeUpdate();
         }
     }

@@ -26,6 +26,7 @@
             <!-- Nav items (guest has just one active screen) -->
             <Button text="🏠  Browse Rooms" styleClass="nav-button-active" maxWidth="Infinity"/>
             <Button text="📋  My Bookings"  styleClass="nav-button"        maxWidth="Infinity"/>
+            <Button text="👤  My Profile"   styleClass="nav-button" maxWidth="Infinity" onAction="#goToProfile"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 

@@ -19,97 +19,135 @@
     styleClass="samurai-root"
     stylesheets="@/styles/samurai.css">
 
-    <!-- LAYER 1 - Video background fills entire root -->
+    <!-- LAYER 1 - Video background -->
     <Pane fx:id="particlePane" styleClass="particle-pane"
           maxWidth="Infinity" maxHeight="Infinity">
-        <MediaView
-            fx:id="mediaView"
-            preserveRatio="false"
-            mouseTransparent="true"/>
+        <MediaView fx:id="mediaView" preserveRatio="false" mouseTransparent="true"/>
     </Pane>
 
-    <!-- LAYER 2 - Vertical brand stripe (left) -->
-    <HBox maxWidth="Infinity" maxHeight="Infinity"
-          mouseTransparent="true" alignment="CENTER_LEFT">
+    <!-- LAYER 2 - Brand stripe -->
+    <HBox maxWidth="Infinity" maxHeight="Infinity" mouseTransparent="true" alignment="CENTER_LEFT">
         <VBox fx:id="brandStripe" alignment="CENTER" spacing="18"
               styleClass="brand-strip-inner" maxHeight="Infinity">
             <Label text="&#26234;" styleClass="kanji-large"/>
             <Label text="&#23431;" styleClass="kanji-large"/>
             <Separator styleClass="brand-divider"/>
-            <Label text="S&#10;M&#10;A&#10;R&#10;T&#10;S&#10;T&#10;A&#10;Y"
-                   styleClass="brand-vertical-text"/>
+            <Label text="S&#10;M&#10;A&#10;R&#10;T&#10;S&#10;T&#10;A&#10;Y" styleClass="brand-vertical-text"/>
         </VBox>
     </HBox>
 
-    <!-- LAYER 3 - Glass login card (center-right) -->
+    <!-- LAYER 3 - Glass card -->
     <HBox alignment="CENTER_RIGHT" maxWidth="Infinity" maxHeight="Infinity">
-        <HBox.margin>
-            <Insets right="120"/>
-        </HBox.margin>
+        <HBox.margin><Insets right="120"/></HBox.margin>
 
-        <VBox fx:id="glassCard" styleClass="glass-box" alignment="CENTER" spacing="0">
-            <padding>
-                <Insets top="52" right="50" bottom="48" left="50"/>
-            </padding>
+        <StackPane>
 
-            <!-- Crest -->
-            <Label text="&#9961;" styleClass="crest-icon"/>
+            <!-- LOGIN PANEL -->
+            <VBox fx:id="loginPanel" styleClass="glass-box" alignment="CENTER" spacing="0" visible="true">
+                <padding><Insets top="52" right="50" bottom="48" left="50"/></padding>
 
-            <!-- App title -->
-            <Label text="SmartStay PMS" styleClass="app-title"/>
-            <Label text="Khouribga Edition" styleClass="app-subtitle"/>
+                <Label text="&#9961;" styleClass="crest-icon"/>
+                <Label text="SmartStay PMS" styleClass="app-title"/>
+                <Label text="Khouribga Edition" styleClass="app-subtitle"/>
+                <Pane styleClass="title-rule" prefHeight="1" prefWidth="260"/>
 
-            <!-- Decorative rule -->
-            <Pane styleClass="title-rule" prefHeight="1" prefWidth="260"/>
+                <VBox spacing="6" styleClass="field-group">
+                    <VBox.margin><Insets top="36"/></VBox.margin>
+                    <Label text="USERNAME" styleClass="field-label"/>
+                    <TextField fx:id="usernameField" promptText="enter username" styleClass="text-field"/>
+                </VBox>
 
-            <!-- Username -->
-            <VBox spacing="6" styleClass="field-group">
-                <VBox.margin><Insets top="36"/></VBox.margin>
-                <Label text="USERNAME" styleClass="field-label"/>
-                <TextField
-                    fx:id="usernameField"
-                    promptText="enter username"
-                    styleClass="text-field"/>
+                <VBox spacing="6" styleClass="field-group">
+                    <VBox.margin><Insets top="20"/></VBox.margin>
+                    <Label text="PASSWORD" styleClass="field-label"/>
+                    <PasswordField fx:id="passwordField" promptText="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                                  styleClass="password-field" onAction="#onLogin"/>
+                </VBox>
+
+                <Label fx:id="errorLabel" text="" styleClass="error-label"
+                       visible="false" wrapText="true" maxWidth="260">
+                    <VBox.margin><Insets top="14"/></VBox.margin>
+                </Label>
+
+                <Button text="ENTER THE DOJO  &#8594;" styleClass="samurai-button"
+                        onAction="#onLogin" defaultButton="true" maxWidth="Infinity">
+                    <VBox.margin><Insets top="28"/></VBox.margin>
+                </Button>
+
+                <HBox alignment="CENTER" spacing="8">
+                    <VBox.margin><Insets top="20"/></VBox.margin>
+                    <Label text="New guest?" styleClass="footer-label"/>
+                    <Button text="Create Account" styleClass="btn-link" onAction="#showRegister"/>
+                </HBox>
+
+                <Label text="&#20581;  Samurai Protocol  &#20581;" styleClass="footer-label">
+                    <VBox.margin><Insets top="12"/></VBox.margin>
+                </Label>
             </VBox>
 
-            <!-- Password -->
-            <VBox spacing="6" styleClass="field-group">
-                <VBox.margin><Insets top="20"/></VBox.margin>
-                <Label text="PASSWORD" styleClass="field-label"/>
-                <PasswordField
-                    fx:id="passwordField"
-                    promptText="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
-                    styleClass="password-field"
-                    onAction="#onLogin"/>
+            <!-- REGISTER PANEL -->
+            <VBox fx:id="registerPanel" styleClass="glass-box" alignment="CENTER" spacing="0" visible="false" managed="false">
+                <padding><Insets top="32" right="50" bottom="32" left="50"/></padding>
+
+                <Label text="&#9961;" styleClass="crest-icon"/>
+                <Label text="New Account" styleClass="app-title"/>
+                <Label text="Guest Registration" styleClass="app-subtitle"/>
+                <Pane styleClass="title-rule" prefHeight="1" prefWidth="260"/>
+
+                <HBox spacing="10">
+                    <VBox.margin><Insets top="22"/></VBox.margin>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="FIRST NAME" styleClass="field-label"/>
+                        <TextField fx:id="regFirstName" promptText="Yuki" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="LAST NAME" styleClass="field-label"/>
+                        <TextField fx:id="regLastName" promptText="Tanaka" styleClass="text-field"/>
+                    </VBox>
+                </HBox>
+
+                <VBox spacing="5" styleClass="field-group">
+                    <VBox.margin><Insets top="12"/></VBox.margin>
+                    <Label text="USERNAME" styleClass="field-label"/>
+                    <TextField fx:id="regUsername" promptText="choose a username" styleClass="text-field"/>
+                </VBox>
+
+                <VBox spacing="5" styleClass="field-group">
+                    <VBox.margin><Insets top="12"/></VBox.margin>
+                    <Label text="EMAIL" styleClass="field-label"/>
+                    <TextField fx:id="regEmail" promptText="your@email.com" styleClass="text-field"/>
+                </VBox>
+
+                <VBox spacing="5" styleClass="field-group">
+                    <VBox.margin><Insets top="12"/></VBox.margin>
+                    <Label text="PASSWORD" styleClass="field-label"/>
+                    <PasswordField fx:id="regPassword" promptText="min 8 characters" styleClass="password-field"/>
+                </VBox>
+
+                <VBox spacing="5" styleClass="field-group">
+                    <VBox.margin><Insets top="12"/></VBox.margin>
+                    <Label text="CONFIRM PASSWORD" styleClass="field-label"/>
+                    <PasswordField fx:id="regConfirm" promptText="repeat password" styleClass="password-field"/>
+                </VBox>
+
+                <Label fx:id="regErrorLabel" text="" styleClass="error-label"
+                       visible="false" wrapText="true" maxWidth="260">
+                    <VBox.margin><Insets top="10"/></VBox.margin>
+                </Label>
+
+                <Button text="Become a Gakusei  &#8594;" styleClass="samurai-button"
+                        onAction="#onRegister" maxWidth="Infinity">
+                    <VBox.margin><Insets top="18"/></VBox.margin>
+                </Button>
+
+                <HBox alignment="CENTER" spacing="8">
+                    <VBox.margin><Insets top="14"/></VBox.margin>
+                    <Label text="Already a member?" styleClass="footer-label"/>
+                    <Button text="Sign in" styleClass="btn-link" onAction="#showLogin"/>
+                </HBox>
             </VBox>
 
-            <!-- Error label -->
-            <Label
-                fx:id="errorLabel"
-                text=""
-                styleClass="error-label"
-                visible="false"
-                wrapText="true"
-                maxWidth="260">
-                <VBox.margin><Insets top="14"/></VBox.margin>
-            </Label>
-
-            <!-- Login button -->
-            <Button
-                text="ENTER THE DOJO  &#8594;"
-                styleClass="samurai-button"
-                onAction="#onLogin"
-                defaultButton="true"
-                maxWidth="Infinity">
-                <VBox.margin><Insets top="28"/></VBox.margin>
-            </Button>
-
-            <!-- Footer -->
-            <Label text="&#20581;  Samurai Protocol  &#20581;" styleClass="footer-label">
-                <VBox.margin><Insets top="32"/></VBox.margin>
-            </Label>
-
-        </VBox>
+        </StackPane>
     </HBox>
 
 </StackPane>
