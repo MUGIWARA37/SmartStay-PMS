@@ -18,7 +18,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import ma.ensa.khouribga.smartstay.Navigator;
-import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
@@ -34,27 +33,19 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Random;
 
+/**
+ * Controller for login.fxml.
+ * FILE LOCATION: src/main/java/ma/ensa/khouribga/smartstay/auth/LoginController.java
+ */
 public class LoginController {
 
-    // ── Login FXML bindings ───────────────────────────────────────────────────
+    // ── FXML bindings ─────────────────────────────────────────────────────────
     @FXML private MediaView     mediaView;
     @FXML private Pane          particlePane;
-    @FXML private VBox          brandStripe;
-    @FXML private VBox          loginPanel;
     @FXML private VBox          glassCard;
     @FXML private TextField     usernameField;
     @FXML private PasswordField passwordField;
     @FXML private Label         errorLabel;
-
-    // ── Register FXML bindings ────────────────────────────────────────────────
-    @FXML private VBox          registerPanel;
-    @FXML private TextField     regFirstName;
-    @FXML private TextField     regLastName;
-    @FXML private TextField     regUsername;
-    @FXML private TextField     regEmail;
-    @FXML private PasswordField regPassword;
-    @FXML private PasswordField regConfirm;
-    @FXML private Label         regErrorLabel;
 
     private static final Random RNG = new Random();
     private Timeline particleTimeline;
@@ -69,53 +60,42 @@ public class LoginController {
         clearError();
     }
 
-    // ── Panel switching ───────────────────────────────────────────────────────
+    // ── Responsive layout bindings ────────────────────────────────────────────
 
-    @FXML
-    public void showRegister() {
-        loginPanel.setVisible(false);
-        loginPanel.setManaged(false);
-        registerPanel.setVisible(true);
-        registerPanel.setManaged(true);
-        clearRegError();
-    }
-
-    @FXML
-    public void showLogin() {
-        registerPanel.setVisible(false);
-        registerPanel.setManaged(false);
-        loginPanel.setVisible(true);
-        loginPanel.setManaged(true);
-        clearError();
-    }
-
-    // ── Responsive layout ─────────────────────────────────────────────────────
-
+    /**
+     * Binds the video and glass card to the scene size so everything
+     * scales correctly when the window is maximised or resized.
+     */
     private void bindResponsiveLayout() {
+        // Wait until the scene is attached, then bind
         particlePane.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (newScene == null) return;
 
+            // Bind video to full scene size
             mediaView.fitWidthProperty().bind(newScene.widthProperty());
             mediaView.fitHeightProperty().bind(newScene.heightProperty());
+
+            // Bind particle pane to full scene size
             particlePane.prefWidthProperty().bind(newScene.widthProperty());
             particlePane.prefHeightProperty().bind(newScene.heightProperty());
 
+            // Scale the glass card proportionally: base 340px at 1100px wide
+            // clamp between 300 and 480
             newScene.widthProperty().addListener((o, oldW, newW) -> {
                 double scale = newW.doubleValue() / 1100.0;
                 double cardWidth = Math.min(480, Math.max(300, 340 * scale));
-                for (VBox panel : new VBox[]{loginPanel, registerPanel}) {
-                    panel.setPrefWidth(cardWidth);
-                    panel.setMaxWidth(cardWidth);
-                    double fontScale = Math.min(1.4, Math.max(0.85, scale));
-                    panel.setStyle("-fx-font-size: " + (14 * fontScale) + "px;");
-                }
+                glassCard.setPrefWidth(cardWidth);
+                glassCard.setMaxWidth(cardWidth);
+
+                // Scale font sizes via inline style on the card root
+                double fontScale = Math.min(1.4, Math.max(0.85, scale));
+                glassCard.setStyle("-fx-font-size: " + (14 * fontScale) + "px;");
             });
 
             newScene.heightProperty().addListener((o, oldH, newH) -> {
                 double scale = newH.doubleValue() / 700.0;
-                double topBot = Math.min(72, Math.max(28, 52 * scale));
-                loginPanel.setPadding(new javafx.geometry.Insets(topBot, 50, topBot - 4, 50));
-                registerPanel.setPadding(new javafx.geometry.Insets(topBot - 16, 50, topBot - 16, 50));
+                double topBot = Math.min(72, Math.max(32, 52 * scale));
+                glassCard.setPadding(new javafx.geometry.Insets(topBot, 50, topBot - 4, 50));
             });
         });
     }
@@ -125,11 +105,13 @@ public class LoginController {
     private void startVideoBackground() {
         URL videoUrl = getClass().getResource("/videos/sakura.mp4");
         if (videoUrl == null) return;
+
         Media media = new Media(videoUrl.toExternalForm());
         MediaPlayer player = new MediaPlayer(media);
         player.setAutoPlay(true);
         player.setMute(true);
         player.setCycleCount(MediaPlayer.INDEFINITE);
+
         mediaView.setMediaPlayer(player);
         mediaView.setPreserveRatio(false);
     }
@@ -144,8 +126,10 @@ public class LoginController {
 
     private void spawnLeaf() {
         Region leaf = new Region();
+
         double paneWidth = particlePane.getWidth();
         if (paneWidth <= 0) paneWidth = 1100;
+
         double startX = RNG.nextDouble() * paneWidth;
         leaf.setLayoutX(startX);
         leaf.setLayoutY(-20);
@@ -178,8 +162,10 @@ public class LoginController {
     @FXML
     public void onLogin() {
         clearError();
+
         String username = usernameField.getText().trim();
         String password = passwordField.getText();
+
         if (username.isEmpty()) { showError("Please enter your username."); return; }
         if (password.isEmpty()) { showError("Please enter your password."); return; }
 
@@ -201,67 +187,9 @@ public class LoginController {
                 Platform.runLater(() -> { showError("Connection error. Please try again."); resetFields(); });
             }
         }, "auth-thread");
+
         authThread.setDaemon(true);
         authThread.start();
-    }
-
-    // ── Register action ───────────────────────────────────────────────────────
-
-    @FXML
-    public void onRegister() {
-        clearRegError();
-        String firstName = regFirstName.getText().trim();
-        String lastName  = regLastName.getText().trim();
-        String username  = regUsername.getText().trim();
-        String email     = regEmail.getText().trim();
-        String password  = regPassword.getText();
-        String confirm   = regConfirm.getText();
-
-        if (firstName.isEmpty())            { showRegError("First name is required.");           return; }
-        if (lastName.isEmpty())             { showRegError("Last name is required.");            return; }
-        if (username.isEmpty())             { showRegError("Username is required.");             return; }
-        if (username.length() < 3)          { showRegError("Username must be at least 3 characters."); return; }
-        if (email.isEmpty() || !email.contains("@")) { showRegError("Please enter a valid email."); return; }
-        if (password.length() < 8)          { showRegError("Password must be at least 8 characters."); return; }
-        if (!password.equals(confirm))      { showRegError("Passwords do not match.");          return; }
-
-        regFirstName.setDisable(true);
-        regLastName.setDisable(true);
-        regUsername.setDisable(true);
-        regEmail.setDisable(true);
-        regPassword.setDisable(true);
-        regConfirm.setDisable(true);
-
-        String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
-
-        Thread t = new Thread(() -> {
-            try {
-                // Check username availability
-                boolean taken = checkUsernameTaken(username);
-                if (taken) {
-                    Platform.runLater(() -> { showRegError("Username already taken. Try another."); resetRegFields(); });
-                    return;
-                }
-                // Insert user
-                long userId = UserDao.insert(username, email, hash, User.Role.CLIENT);
-                // Insert guest record
-                insertGuest(userId, firstName, lastName, email);
-                // Auto-login
-                User user = findActiveUser(username);
-                if (user != null) {
-                    SessionManager.setCurrentUser(user);
-                    Platform.runLater(() -> {
-                        if (particleTimeline != null) particleTimeline.stop();
-                        Navigator.navigateTo(regUsername, Navigator.HOME);
-                    });
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Platform.runLater(() -> { showRegError("Registration failed. Please try again."); resetRegFields(); });
-            }
-        }, "register-thread");
-        t.setDaemon(true);
-        t.start();
     }
 
     // ── DB helpers ────────────────────────────────────────────────────────────
@@ -287,31 +215,6 @@ public class LoginController {
                 user.setActive(rs.getBoolean("is_active"));
                 return user;
             }
-        }
-    }
-
-    private boolean checkUsernameTaken(String username) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
-            }
-        }
-    }
-
-    private void insertGuest(long userId, String firstName, String lastName, String email) throws SQLException {
-        String sql = """
-                INSERT INTO guests (first_name, last_name, email, created_at)
-                VALUES (?, ?, ?, NOW())
-                """;
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, firstName);
-            ps.setString(2, lastName);
-            ps.setString(3, email);
-            ps.executeUpdate();
         }
     }
 
@@ -366,21 +269,12 @@ public class LoginController {
 
     // ── UI helpers ────────────────────────────────────────────────────────────
 
-    private void showError(String msg)    { errorLabel.setText(msg);    errorLabel.setVisible(true); }
-    private void clearError()             { errorLabel.setText("");      errorLabel.setVisible(false); }
-    private void showRegError(String msg) { regErrorLabel.setText(msg); regErrorLabel.setVisible(true); }
-    private void clearRegError()          { regErrorLabel.setText("");   regErrorLabel.setVisible(false); }
-
+    private void showError(String msg) { errorLabel.setText(msg); errorLabel.setVisible(true); }
+    private void clearError()          { errorLabel.setText("");  errorLabel.setVisible(false); }
     private void resetFields() {
         usernameField.setDisable(false);
         passwordField.setDisable(false);
         passwordField.clear();
         usernameField.requestFocus();
-    }
-
-    private void resetRegFields() {
-        regFirstName.setDisable(false); regLastName.setDisable(false);
-        regUsername.setDisable(false);  regEmail.setDisable(false);
-        regPassword.setDisable(false);  regConfirm.setDisable(false);
     }
 }

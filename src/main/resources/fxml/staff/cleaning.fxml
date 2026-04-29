@@ -4,14 +4,13 @@
 <?import javafx.geometry.Insets?>
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
             fx:controller="ma.ensa.khouribga.smartstay.staff.CleaningController"
-            styleClass="interior-root" stylesheets="@/styles/samurai.css" prefWidth="1100" prefHeight="700">
-    
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
+    <stylesheets><URL value="@/styles/samurai.css"/></stylesheets>
     <top>
         <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
             <Label text="CLEANING DASHBOARD" styleClass="welcome-label"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="welcomeLabel" styleClass="label-muted"/>
-            <Button text="👤  Profile" styleClass="btn-secondary" onAction="#goToProfile"/>
             <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
         </HBox>
     </top>
