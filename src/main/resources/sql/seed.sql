@@ -9,10 +9,10 @@
 --    client123  → all clients
 --
 --  Run:
---    docker exec -i smartstay-db mysql -u root -pDB_Password123! Smart_Hotel_v_1_0 < seed.sql
+--    docker exec -i smartstay-db mysql -u root -pDB_Password123! smartstay < seed.sql
 -- ═══════════════════════════════════════════════════════════════════════════════
 
-USE Smart_Hotel_v_1_0;
+USE smartstay;
 SET FOREIGN_KEY_CHECKS = 0;
 
 TRUNCATE TABLE reservation_services;

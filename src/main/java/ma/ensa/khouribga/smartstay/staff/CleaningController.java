@@ -119,4 +119,9 @@ public class CleaningController {
         SessionManager.logout();
         Navigator.goToLogin(welcomeLabel);
     }
+    @FXML public void goToProfile() {
+        Navigator.navigateTo(welcomeLabel, Navigator.STAFF_PROFILE,
+            ctrl -> ((ma.ensa.khouribga.smartstay.profile.StaffProfileController) ctrl)
+                        .setPreviousRoute(Navigator.CLEANING));
+    }
 }

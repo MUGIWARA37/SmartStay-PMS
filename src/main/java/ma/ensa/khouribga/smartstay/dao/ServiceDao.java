@@ -8,27 +8,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * DAO for the `services` table.
- * Static methods only — get a pooled connection per call.
- */
 public class ServiceDao {
-
-    // ─── Mapping ─────────────────────────────────────────────────────────────
 
     private static Service map(ResultSet rs) throws SQLException {
         Service s = new Service();
-        s.setId(rs.getLong("id"));
+        s.setId((int) rs.getLong("id"));
         s.setCode(rs.getString("code"));
         s.setName(rs.getString("name"));
-        s.setUnitPrice(rs.getBigDecimal("unit_price"));
+        s.setUnitPrice(rs.getDouble("unit_price"));
         s.setActive(rs.getBoolean("is_active"));
         return s;
     }
 
-    // ─── Queries ──────────────────────────────────────────────────────────────
-
-    /** All services (active + inactive). */
     public static List<Service> findAll() {
         String sql = "SELECT * FROM services ORDER BY name";
         List<Service> list = new ArrayList<>();
@@ -42,7 +33,6 @@ public class ServiceDao {
         return list;
     }
 
-    /** Only active services — used in booking / invoice line pickers. */
     public static List<Service> findActive() {
         String sql = "SELECT * FROM services WHERE is_active = TRUE ORDER BY name";
         List<Service> list = new ArrayList<>();
@@ -82,21 +72,13 @@ public class ServiceDao {
         }
     }
 
-    // ─── Mutations ────────────────────────────────────────────────────────────
-
-    /**
-     * Insert a new service. Returns the generated id.
-     */
     public static long create(Service s) {
-        String sql = """
-                INSERT INTO services (code, name, unit_price, is_active)
-                VALUES (?, ?, ?, ?)
-                """;
+        String sql = "INSERT INTO services (code, name, unit_price, is_active) VALUES (?, ?, ?, ?)";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, s.getCode());
             ps.setString(2, s.getName());
-            ps.setBigDecimal(3, s.getUnitPrice());
+            ps.setDouble(3, s.getUnitPrice());
             ps.setBoolean(4, s.isActive());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -108,26 +90,19 @@ public class ServiceDao {
         }
     }
 
-    /**
-     * Update name, unit_price on an existing service.
-     * Returns true if a row was affected.
-     */
     public static boolean update(Service s) {
         String sql = "UPDATE services SET name = ?, unit_price = ? WHERE id = ?";
         try (Connection c = Database.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, s.getName());
-            ps.setBigDecimal(2, s.getUnitPrice());
-            ps.setLong(3, s.getId());
+            ps.setDouble(2, s.getUnitPrice());
+            ps.setInt(3, s.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("ServiceDao.update failed", e);
         }
     }
 
-    /**
-     * Soft-delete / reactivate a service.
-     */
     public static boolean setActive(long id, boolean active) {
         String sql = "UPDATE services SET is_active = ? WHERE id = ?";
         try (Connection c = Database.getConnection();

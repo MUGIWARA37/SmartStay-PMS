@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ma.ensa.khouribga.smartstay.profile.ClientProfileController"
+            styleClass="interior-root" stylesheets="@/styles/samurai.css"
+            prefWidth="1100" prefHeight="760">
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
+            <Label text="⚔  MY PROFILE" styleClass="welcome-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="← Back" styleClass="btn-secondary" onAction="#goBack"/>
+            <Button text="Logout" styleClass="btn-logout" onAction="#onLogout"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="20" styleClass="content-area">
+                <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
+
+                <!-- PROFILE HEADER CARD -->
+                <HBox styleClass="section-box" spacing="28" alignment="CENTER_LEFT">
+                    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
+                    <StackPane>
+                        <Circle fx:id="avatarCircle" radius="54" styleClass="avatar-circle"/>
+                        <Label fx:id="avatarInitials" styleClass="avatar-initials" text="?"/>
+                    </StackPane>
+                    <VBox spacing="6">
+                        <Label fx:id="fullNameLabel" text="Loading..." styleClass="section-title"/>
+                        <Label fx:id="roleLabel" text="Guest" styleClass="label-muted"/>
+                        <Label fx:id="memberSinceLabel" text="" styleClass="label-muted"/>
+                    </VBox>
+                </HBox>
+
+                <!-- TWO COLUMN ROW: Contact Info + Change Password -->
+                <HBox spacing="20">
+                    <!-- Contact Info -->
+                    <VBox styleClass="section-box" spacing="14" HBox.hgrow="ALWAYS">
+                        <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
+                        <Label text="📋  Contact Information" styleClass="section-title"/>
+                        <Separator/>
+                        <Label text="EMAIL" styleClass="form-label"/>
+                        <TextField fx:id="emailField" styleClass="interior-text-field" promptText="email@example.com"/>
+                        <Label text="PHONE" styleClass="form-label"/>
+                        <TextField fx:id="phoneField" styleClass="interior-text-field" promptText="+212 600 000 000"/>
+                        <Label text="NATIONALITY" styleClass="form-label"/>
+                        <TextField fx:id="nationalityField" styleClass="interior-text-field" promptText="e.g. Moroccan"/>
+                        <Label fx:id="contactMsg" text="" styleClass="error-label" wrapText="true"/>
+                        <Button text="💾  Save Contact Info" styleClass="btn-primary" onAction="#saveContactInfo" maxWidth="Infinity"/>
+                    </VBox>
+
+                    <!-- Change Password -->
+                    <VBox styleClass="section-box" spacing="14" HBox.hgrow="ALWAYS">
+                        <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
+                        <Label text="🔐  Change Password" styleClass="section-title"/>
+                        <Separator/>
+                        <Label text="CURRENT PASSWORD" styleClass="form-label"/>
+                        <PasswordField fx:id="oldPassField" styleClass="interior-text-field" promptText="Current password"/>
+                        <Label text="NEW PASSWORD" styleClass="form-label"/>
+                        <PasswordField fx:id="newPassField" styleClass="interior-text-field" promptText="New password (min 8 chars)"/>
+                        <Label text="CONFIRM NEW PASSWORD" styleClass="form-label"/>
+                        <PasswordField fx:id="confirmPassField" styleClass="interior-text-field" promptText="Repeat new password"/>
+                        <Label fx:id="passMsg" text="" styleClass="error-label" wrapText="true"/>
+                        <Button text="🔒  Update Password" styleClass="btn-primary" onAction="#changePassword" maxWidth="Infinity"/>
+                    </VBox>
+                </HBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

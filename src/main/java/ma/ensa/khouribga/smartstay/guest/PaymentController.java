@@ -15,63 +15,50 @@ import ma.ensa.khouribga.smartstay.model.Invoice.InvoiceLine;
 import ma.ensa.khouribga.smartstay.model.Invoice.InvoiceLine.LineType;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Payment + booking confirmation dialog.
- *
- * Steps shown on one screen:
- *  [1] Guest info (first name, last name, passport, email, phone)
- *  [2] Booking summary  (room, dates, nights, rate)
- *  [3] Optional services  (ListView of active services with qty spinners)
- *  [4] Grand total preview
- *  [5] "Confirm Booking" → creates Guest (or finds existing) + Reservation + Invoice
- */
 public class PaymentController {
 
-    // ── Guest info ────────────────────────────────────────────────────────────
+    // Guest info
     @FXML private TextField tfFirstName;
     @FXML private TextField tfLastName;
     @FXML private TextField tfPassport;
     @FXML private TextField tfEmail;
     @FXML private TextField tfPhone;
 
-    // ── Booking summary ───────────────────────────────────────────────────────
+    // Booking summary
     @FXML private Label lblRoom;
     @FXML private Label lblDates;
     @FXML private Label lblNights;
     @FXML private Label lblRoomTotal;
 
-    // ── Services ──────────────────────────────────────────────────────────────
+    // Services
     @FXML private TableView<ServiceLineItem> tblServices;
     @FXML private TableColumn<ServiceLineItem, String>  colSvcName;
     @FXML private TableColumn<ServiceLineItem, String>  colSvcPrice;
     @FXML private TableColumn<ServiceLineItem, Integer> colSvcQty;
     @FXML private TableColumn<ServiceLineItem, String>  colSvcTotal;
 
-    // ── Grand total ───────────────────────────────────────────────────────────
+    // Grand total
     @FXML private Label lblGrandTotal;
 
-    // ── Feedback ─────────────────────────────────────────────────────────────
+    // Feedback
     @FXML private Label lblError;
     @FXML private Label lblSuccess;
     @FXML private Button btnConfirm;
     @FXML private Button btnCancel;
 
-    // ── State ─────────────────────────────────────────────────────────────────
-    private Room     room;
+    // State
+    private Room room;
     private LocalDate checkIn;
     private LocalDate checkOut;
     private long nights;
     private boolean bookingConfirmed = false;
     private List<ServiceLineItem> serviceItems = new ArrayList<>();
-
-    // ── Init ──────────────────────────────────────────────────────────────────
 
     public void initData(Room room, LocalDate checkIn, LocalDate checkOut) {
         this.room     = room;
@@ -79,45 +66,36 @@ public class PaymentController {
         this.checkOut = checkOut;
         this.nights   = ChronoUnit.DAYS.between(checkIn, checkOut);
 
-        // Summary labels
-        lblRoom.setText("Room " + room.getRoomNumber() + " (" + room.getRoomTypeName() + ")");
+        lblRoom.setText("Room " + room.getRoomNumber() + " (" + room.getTypeName() + ")");
         lblDates.setText(checkIn + "  →  " + checkOut);
-        lblNights.setText(nights + " night(s) × " + room.getPricePerNight() + " MAD");
-        BigDecimal roomTotal = room.getPricePerNight().multiply(BigDecimal.valueOf(nights));
-        lblRoomTotal.setText(roomTotal.toPlainString() + " MAD");
+        lblNights.setText(nights + " night(s) × " + String.format("%.2f", room.getPricePerNight()) + " MAD");
+        lblRoomTotal.setText(String.format("%.2f MAD", room.getPricePerNight() * nights));
 
-        // Wire table
         setupServicesTable();
-
-        // Load services on background thread
         loadServices();
     }
-
-    // ── Services table setup ──────────────────────────────────────────────────
 
     private void setupServicesTable() {
         colSvcName.setCellValueFactory(new PropertyValueFactory<>("serviceName"));
         colSvcPrice.setCellValueFactory(new PropertyValueFactory<>("unitPriceDisplay"));
         colSvcTotal.setCellValueFactory(new PropertyValueFactory<>("lineTotalDisplay"));
 
-        // Spinner column for quantity
         colSvcQty.setCellFactory(col -> new TableCell<>() {
             private final Spinner<Integer> spinner = new Spinner<>(0, 20, 0);
-
             {
                 spinner.setEditable(true);
                 spinner.setPrefWidth(75);
                 spinner.valueProperty().addListener((obs, old, qty) -> {
-                    ServiceLineItem item = getTableView().getItems().get(getIndex());
-                    item.setQuantity(qty);
-                    refreshGrandTotal();
+                    if (getIndex() >= 0 && getIndex() < getTableView().getItems().size()) {
+                        getTableView().getItems().get(getIndex()).setQuantity(qty);
+                        refreshGrandTotal();
+                    }
                 });
             }
-
             @Override
             protected void updateItem(Integer value, boolean empty) {
                 super.updateItem(value, empty);
-                if (empty) { setGraphic(null); return; }
+                if (empty || getIndex() < 0) { setGraphic(null); return; }
                 spinner.getValueFactory().setValue(
                         getTableView().getItems().get(getIndex()).getQuantity());
                 setGraphic(spinner);
@@ -129,14 +107,10 @@ public class PaymentController {
 
     private void loadServices() {
         Task<List<Service>> task = new Task<>() {
-            @Override protected List<Service> call() {
-                return ServiceDao.findActive();
-            }
+            @Override protected List<Service> call() throws Exception { return ServiceDao.findActive(); }
         };
         task.setOnSucceeded(e -> {
-            for (Service svc : task.getValue()) {
-                serviceItems.add(new ServiceLineItem(svc));
-            }
+            for (Service svc : task.getValue()) serviceItems.add(new ServiceLineItem(svc));
             tblServices.setItems(FXCollections.observableList(serviceItems));
             refreshGrandTotal();
         });
@@ -146,14 +120,10 @@ public class PaymentController {
     }
 
     private void refreshGrandTotal() {
-        BigDecimal roomTotal = room.getPricePerNight().multiply(BigDecimal.valueOf(nights));
-        BigDecimal svcTotal = serviceItems.stream()
-                .map(ServiceLineItem::getLineTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        lblGrandTotal.setText((roomTotal.add(svcTotal)).toPlainString() + " MAD");
+        double roomTotal = room.getPricePerNight() * nights;
+        double svcTotal  = serviceItems.stream().mapToDouble(ServiceLineItem::getLineTotal).sum();
+        lblGrandTotal.setText(String.format("%.2f MAD", roomTotal + svcTotal));
     }
-
-    // ── Actions ───────────────────────────────────────────────────────────────
 
     @FXML
     private void handleConfirm() {
@@ -164,16 +134,12 @@ public class PaymentController {
         btnConfirm.setText("Processing…");
 
         Task<String> task = new Task<>() {
-            @Override
-            protected String call() throws Exception {
-                return performBooking();
-            }
+            @Override protected String call() throws Exception { return performBooking(); }
         };
 
         task.setOnSucceeded(e -> {
             bookingConfirmed = true;
-            String code = task.getValue();
-            lblSuccess.setText("✓ Booking confirmed! Reservation Code: " + code);
+            lblSuccess.setText("✓ Booking confirmed! Reservation Code: " + task.getValue());
             lblSuccess.setVisible(true);
             lblSuccess.setManaged(true);
             btnConfirm.setVisible(false);
@@ -192,21 +158,12 @@ public class PaymentController {
         t.start();
     }
 
-    /**
-     * Core booking logic — runs on background thread.
-     * 1. Resolve or create Guest
-     * 2. Create Reservation
-     * 3. Build Invoice with room line + service lines
-     * 4. Issue invoice
-     *
-     * @return reservation code on success
-     */
     private String performBooking() throws Exception {
         // 1. Guest
         String passport = tfPassport.getText().trim();
         Optional<Guest> existingGuest = GuestDao.findByPassport(passport);
 
-        long guestId;
+        int guestId;
         if (existingGuest.isPresent()) {
             guestId = existingGuest.get().getId();
         } else {
@@ -215,39 +172,35 @@ public class PaymentController {
             g.setLastName(tfLastName.getText().trim());
             g.setIdPassportNumber(passport);
             g.setEmail(tfEmail.getText().trim());
-            g.setPhone(tfPhone.getText().trim());
             guestId = GuestDao.create(g);
         }
 
         // 2. Reservation
-        User booker = SessionManager.getInstance().getCurrentUser();
+        User booker = SessionManager.getCurrentUser();
         Reservation res = new Reservation();
         res.setGuestId(guestId);
         res.setRoomId(room.getId());
-        res.setBookedByUserId(booker.getId());
+        res.setBookedByUserId((int) booker.getId());
         res.setCheckInDate(checkIn);
         res.setCheckOutDate(checkOut);
         res.setStatus(Reservation.Status.CONFIRMED);
 
-        long reservationId = ReservationDao.create(res);
-        // Fetch generated reservation code
+        int reservationId = ReservationDao.create(res);
         String reservationCode = ReservationDao.findById(reservationId)
                 .map(Reservation::getReservationCode)
                 .orElse("SS-UNKNOWN");
 
-        // 3. Invoice — build lines
+        // 3. Invoice lines
         List<InvoiceLine> lines = new ArrayList<>();
 
-        // Room accommodation line
         InvoiceLine roomLine = new InvoiceLine();
-        roomLine.setLineType(LineType.ACCOMMODATION);
+        roomLine.setLineType(LineType.ROOM);
         roomLine.setReferenceId(room.getId());
         roomLine.setDescription("Room " + room.getRoomNumber() + " × " + nights + " night(s)");
         roomLine.setQuantity((int) nights);
         roomLine.setUnitPrice(room.getPricePerNight());
         lines.add(roomLine);
 
-        // Service lines (qty > 0 only)
         for (ServiceLineItem item : serviceItems) {
             if (item.getQuantity() > 0) {
                 InvoiceLine svcLine = new InvoiceLine();
@@ -270,32 +223,21 @@ public class PaymentController {
         return reservationCode;
     }
 
-    @FXML
-    private void handleCancel() {
-        ((Stage) btnCancel.getScene().getWindow()).close();
-    }
+    @FXML private void handleCancel() { ((Stage) btnCancel.getScene().getWindow()).close(); }
 
-    public boolean isBookingConfirmed() {
-        return bookingConfirmed;
-    }
-
-    // ── Validation ────────────────────────────────────────────────────────────
+    public boolean isBookingConfirmed() { return bookingConfirmed; }
 
     private boolean validateGuestForm() {
         if (tfFirstName.getText().isBlank() || tfLastName.getText().isBlank()) {
-            lblError.setText("First name and last name are required.");
-            return false;
+            lblError.setText("First name and last name are required."); return false;
         }
         if (tfPassport.getText().isBlank()) {
-            lblError.setText("Passport / ID number is required.");
-            return false;
+            lblError.setText("Passport / ID number is required."); return false;
         }
         return true;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Inner helper: wraps a Service with an observable quantity for the table
-    // ─────────────────────────────────────────────────────────────────────────
+    // ── Inner helper ──────────────────────────────────────────────────────────
 
     public static class ServiceLineItem {
         private final Service service;
@@ -303,16 +245,14 @@ public class PaymentController {
 
         public ServiceLineItem(Service service) { this.service = service; }
 
-        public Service getService()         { return service; }
-        public String  getServiceName()     { return service.getName(); }
-        public String  getUnitPriceDisplay(){ return service.getUnitPrice().toPlainString() + " MAD"; }
-        public int     getQuantity()        { return quantity; }
-        public void    setQuantity(int q)   { this.quantity = q; }
-        public BigDecimal getLineTotal()    {
-            return service.getUnitPrice().multiply(BigDecimal.valueOf(quantity));
-        }
-        public String getLineTotalDisplay() {
-            return quantity == 0 ? "—" : getLineTotal().toPlainString() + " MAD";
+        public Service getService()          { return service; }
+        public String  getServiceName()      { return service.getName(); }
+        public String  getUnitPriceDisplay() { return String.format("%.2f MAD", service.getUnitPrice()); }
+        public int     getQuantity()         { return quantity; }
+        public void    setQuantity(int q)    { this.quantity = q; }
+        public double  getLineTotal()        { return service.getUnitPrice() * quantity; }
+        public String  getLineTotalDisplay() {
+            return quantity == 0 ? "—" : String.format("%.2f MAD", getLineTotal());
         }
     }
 }

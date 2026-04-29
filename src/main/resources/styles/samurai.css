@@ -913,3 +913,79 @@
     -fx-text-fill: rgba(220,190,190,0.82);
     -fx-font-size: 12px;
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROFILE PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Avatar circle */
+.avatar-circle {
+    -fx-fill: radial-gradient(center 40% 35%, radius 70%,
+              rgba(190,35,35,0.7), rgba(80,10,10,0.9));
+    -fx-stroke: rgba(200,100,100,0.45);
+    -fx-stroke-width: 2.5;
+    -fx-effect: dropshadow(gaussian, rgba(200,35,35,0.5), 18, 0.3, 0, 0);
+}
+
+.avatar-initials {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e8c97e;
+    -fx-font-family: "Georgia", serif;
+}
+
+/* Shift day cards */
+.shift-day-card {
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-border-color: rgba(200,100,100,0.20);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-alignment: CENTER;
+    -fx-padding: 12 8 12 8;
+}
+
+.shift-day-card.shift-day-today {
+    -fx-background-color: rgba(190,35,35,0.18);
+    -fx-border-color: rgba(220,80,80,0.55);
+    -fx-effect: dropshadow(gaussian, rgba(200,35,35,0.3), 10, 0.2, 0, 0);
+}
+
+.shift-day-name {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(180,140,140,0.75);
+    -fx-letter-spacing: 1.5;
+}
+
+.shift-day-num {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e2c97e;
+}
+
+.shift-name-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: rgba(220,190,190,0.9);
+    -fx-wrap-text: true;
+    -fx-text-alignment: CENTER;
+}
+
+.shift-time-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: rgba(180,150,150,0.7);
+}
+
+/* Login "btn-link" for switching panels */
+.btn-link {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #e2c97e;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-underline: true;
+    -fx-padding: 0;
+}
+.btn-link:hover {
+    -fx-text-fill: #f5e0a0;
+}
