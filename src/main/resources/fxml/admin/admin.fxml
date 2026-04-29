@@ -3,223 +3,120 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ma.ensa.khouribga.smartstay.admin.AdminController"
-            styleClass="interior-root" stylesheets="@/styles/samurai.css"
-            prefWidth="1200" prefHeight="760">
+<BorderPane styleClass="interior-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.admin.AdminController">
 
-    <!-- ── TOP BAR ────────────────────────────────────────────────────────── -->
-    <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
-            <Label text="⚔  SMARTSTAY ADMIN" styleClass="welcome-label"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="welcomeLabel" styleClass="label-muted"/>
-            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
-        </HBox>
-    </top>
+    <left>
+        <VBox styleClass="sidebar" prefWidth="250" spacing="10">
+            <VBox alignment="CENTER" spacing="10" style="-fx-padding: 0 0 30 0;">
+                <Label text="侍" styleClass="kanji-large" style="-fx-font-size: 36px; -fx-text-fill: #8b0000;"/>
+                <Label text="SMARTSTAY" styleClass="app-title" style="-fx-font-size: 20px;"/>
+                <Label text="ADMINISTRATOR" styleClass="app-subtitle" style="-fx-font-size: 10px;"/>
+            </VBox>
+            
+            <Button text="⛩ Dashboard" styleClass="nav-button, nav-button-active" maxWidth="Infinity"/>
+            
+            <Region VBox.vgrow="ALWAYS"/>
+            
+            <VBox alignment="CENTER" spacing="15" style="-fx-padding: 20;">
+                <HBox alignment="CENTER" spacing="10" style="-fx-cursor: hand;" onMouseClicked="#goToProfile">
+                    <StackPane styleClass="avatar-circle" prefWidth="40" prefHeight="40">
+                        <Label text="AD" styleClass="avatar-initials" style="-fx-font-size: 16px;"/>
+                    </StackPane>
+                    <VBox alignment="CENTER_LEFT">
+                        <Label text="System Admin" style="-fx-text-fill: #e0e0e0; -fx-font-weight: bold;"/>
+                        <Label text="View Profile" styleClass="label-muted" style="-fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-secondary, btn-logout" maxWidth="Infinity"/>
+            </VBox>
+        </VBox>
+    </left>
 
-    <!-- ── MAIN CONTENT ───────────────────────────────────────────────────── -->
     <center>
-        <TabPane styleClass="tab-pane" tabClosingPolicy="UNAVAILABLE"
-                 BorderPane.alignment="CENTER">
+        <VBox styleClass="content-area" spacing="20" style="-fx-padding: 30;">
+            
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Imperial Command Center" styleClass="section-title" style="-fx-font-size: 28px;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="System Status: " styleClass="label-muted"/>
+                <Label text="ONLINE" styleClass="badge, badge-available"/>
+            </HBox>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 1 — OVERVIEW
-            ══════════════════════════════════════════════════════════════ -->
-            <Tab text="⛩  Overview">
-                <VBox spacing="24" styleClass="content-area">
-                    <HBox alignment="CENTER_LEFT" spacing="12">
-                        <Label text="HOTEL OVERVIEW" styleClass="section-title"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Refresh" styleClass="btn-secondary" onAction="#refreshOverview"/>
-                    </HBox>
-
-                    <!-- KPI Stat Cards row -->
-                    <HBox spacing="16">
-                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
-                            <Label text="AVAILABLE" styleClass="stat-card-label"/>
-                            <Label fx:id="statAvailable" text="–" styleClass="stat-card-value"/>
-                            <Label text="rooms" styleClass="label-muted"/>
-                        </VBox>
-                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
-                            <Label text="OCCUPIED" styleClass="stat-card-label"/>
-                            <Label fx:id="statOccupied" text="–" styleClass="stat-card-value"/>
-                            <Label text="rooms" styleClass="label-muted"/>
-                        </VBox>
-                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
-                            <Label text="CLEANING" styleClass="stat-card-label"/>
-                            <Label fx:id="statCleaning" text="–" styleClass="stat-card-value"/>
-                            <Label text="rooms" styleClass="label-muted"/>
-                        </VBox>
-                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
-                            <Label text="MAINTENANCE" styleClass="stat-card-label"/>
-                            <Label fx:id="statMaint" text="–" styleClass="stat-card-value"/>
-                            <Label text="rooms" styleClass="label-muted"/>
-                        </VBox>
-                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
-                            <Label text="ACTIVE RESERVATIONS" styleClass="stat-card-label"/>
-                            <Label fx:id="statActiveRes" text="–" styleClass="stat-card-value"/>
-                            <Label text="bookings" styleClass="label-muted"/>
-                        </VBox>
-                    </HBox>
-
-                    <!-- Info panel -->
-                    <VBox styleClass="card" spacing="10">
-                        <Label text="QUICK NOTES" styleClass="section-title"/>
-                        <Label text="• Use the Reservations tab to check guests in or out."
-                               styleClass="label-muted" wrapText="true"/>
-                        <Label text="• Use the Rooms tab to manually override room status or add notes."
-                               styleClass="label-muted" wrapText="true"/>
-                        <Label text="• Use the Payroll tab to generate and mark salary records as paid."
-                               styleClass="label-muted" wrapText="true"/>
+            <TabPane VBox.vgrow="ALWAYS" styleClass="tab-pane" tabClosingPolicy="UNAVAILABLE">
+                
+                <Tab text="⛩ OVERVIEW">
+                    <VBox spacing="20" style="-fx-padding: 20 0 0 0;">
+                        <HBox spacing="20">
+                            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
+                                <Label text="Available Rooms" styleClass="stat-card-label, label-muted"/>
+                                <Label fx:id="statAvailable" text="0" styleClass="stat-card-value" style="-fx-font-size: 36px; -fx-text-fill: #2ecc71; -fx-font-weight: bold;"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
+                                <Label text="Occupied Rooms" styleClass="stat-card-label, label-muted"/>
+                                <Label fx:id="statOccupied" text="0" styleClass="stat-card-value" style="-fx-font-size: 36px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
+                                <Label text="Active Bookings" styleClass="stat-card-label, label-muted"/>
+                                <Label fx:id="statActiveRes" text="0" styleClass="stat-card-value" style="-fx-font-size: 36px; -fx-text-fill: #c5a059; -fx-font-weight: bold;"/>
+                            </VBox>
+                            <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="10">
+                                <Label text="Maintenance Alerts" styleClass="stat-card-label, label-muted"/>
+                                <Label fx:id="statMaint" text="0" styleClass="stat-card-value" style="-fx-font-size: 36px; -fx-text-fill: #f1c40f; -fx-font-weight: bold;"/>
+                            </VBox>
+                        </HBox>
                     </VBox>
-                </VBox>
-            </Tab>
+                </Tab>
 
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 2 — RESERVATIONS
-            ══════════════════════════════════════════════════════════════ -->
-            <Tab text="📋  Reservations">
-                <VBox spacing="14" styleClass="content-area">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="ALL RESERVATIONS" styleClass="section-title"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="Status:" styleClass="form-label"/>
-                        <ComboBox fx:id="resStatusFilter" styleClass="combo-box"
-                                  promptText="ALL" onAction="#filterReservations"/>
-                        <Button text="Refresh" styleClass="btn-secondary"
-                                onAction="#loadAllReservations"/>
-                    </HBox>
-
-                    <TableView fx:id="resTable" VBox.vgrow="ALWAYS" styleClass="table-view">
-                        <columns>
-                            <TableColumn fx:id="colResCode"   text="Reservation Code" prefWidth="165"/>
-                            <TableColumn fx:id="colResGuest"  text="Guest"             prefWidth="160"/>
-                            <TableColumn fx:id="colResRoom"   text="Room"              prefWidth="80"/>
-                            <TableColumn fx:id="colResIn"     text="Check-In"          prefWidth="115"/>
-                            <TableColumn fx:id="colResOut"    text="Check-Out"         prefWidth="115"/>
-                            <TableColumn fx:id="colResStatus" text="Status"            prefWidth="130"/>
-                        </columns>
-                        <placeholder>
-                            <Label text="No reservations found." styleClass="label-muted"/>
-                        </placeholder>
-                    </TableView>
-
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Selected reservation:" styleClass="form-label"/>
-                        <Button text="✓ Check In"   styleClass="btn-primary"   onAction="#doCheckIn"/>
-                        <Button text="⬆ Check Out"  styleClass="btn-secondary" onAction="#doCheckOut"/>
-                    </HBox>
-                </VBox>
-            </Tab>
-
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 3 — ROOMS
-            ══════════════════════════════════════════════════════════════ -->
-            <Tab text="🏯  Rooms">
-                <HBox spacing="20" styleClass="content-area">
-
-                    <!-- Left: room table -->
-                    <VBox spacing="14" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="ROOM INVENTORY" styleClass="section-title"/>
+                <Tab text="🏯 ROOMS">
+                    <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
+                        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
+                            <ComboBox fx:id="roomStatusFilter" promptText="Filter Status..." styleClass="combo-box"/>
+                            <Button text="Refresh Registry" onAction="#loadAllRooms" styleClass="btn-secondary"/>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Label text="Filter:" styleClass="form-label"/>
-                            <ComboBox fx:id="roomStatusFilter" styleClass="combo-box"
-                                      promptText="All statuses" onAction="#filterRooms"/>
-                            <Button text="Refresh" styleClass="btn-secondary" onAction="#loadAllRooms"/>
+                            <ComboBox fx:id="roomStatusEdit" promptText="Change Status To..." styleClass="combo-box"/>
+                            <Button text="UPDATE SELECTED" onAction="#updateRoomStatus" styleClass="btn-primary"/>
                         </HBox>
-
-                        <TableView fx:id="roomTable" VBox.vgrow="ALWAYS" styleClass="table-view">
-                            <columns>
-                                <TableColumn fx:id="colRoomNum"    text="Room #"  prefWidth="90"/>
-                                <TableColumn fx:id="colRoomType"   text="Type"    prefWidth="150"/>
-                                <TableColumn fx:id="colRoomFloor"  text="Floor"   prefWidth="70"/>
-                                <TableColumn fx:id="colRoomStatus" text="Status"  prefWidth="130"/>
-                                <TableColumn fx:id="colRoomNotes"  text="Notes"   prefWidth="220"/>
-                            </columns>
-                            <placeholder>
-                                <Label text="No rooms found." styleClass="label-muted"/>
-                            </placeholder>
-                        </TableView>
+                        
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
+                            <FlowPane fx:id="roomGrid" styleClass="data-grid"/>
+                        </ScrollPane>
                     </VBox>
+                </Tab>
 
-                    <!-- Right: edit panel -->
-                    <VBox spacing="14" prefWidth="260">
-                        <VBox styleClass="section-box" spacing="12">
-                            <Label text="UPDATE STATUS" styleClass="section-title"/>
-                            <Label text="Select a room in the table, then choose a new status:"
-                                   styleClass="label-muted" wrapText="true"/>
-                            <Label text="NEW STATUS" styleClass="form-label"/>
-                            <ComboBox fx:id="roomStatusEdit" maxWidth="Infinity"
-                                      styleClass="combo-box" promptText="Select status"/>
-                            <Button text="Apply Status Change" styleClass="btn-primary"
-                                    maxWidth="Infinity" onAction="#updateRoomStatus"/>
-                        </VBox>
-                    </VBox>
-                </HBox>
-            </Tab>
-
-            <!-- ══════════════════════════════════════════════════════════════
-                 TAB 4 — PAYROLL
-            ══════════════════════════════════════════════════════════════ -->
-            <Tab text="💴  Payroll">
-                <HBox spacing="20" styleClass="content-area">
-
-                    <!-- Left: payroll table -->
-                    <VBox spacing="14" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="PAYROLL RECORDS" styleClass="section-title"/>
+                <Tab text="📋 RESERVATIONS">
+                    <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
+                        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
+                            <ComboBox fx:id="resStatusFilter" promptText="Filter Status..." styleClass="combo-box"/>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Button text="Refresh" styleClass="btn-secondary" onAction="#loadAllPayroll"/>
+                            <Button text="CHECK-IN SELECTED" onAction="#doCheckIn" styleClass="btn-success"/>
+                            <Button text="CHECK-OUT SELECTED" onAction="#doCheckOut" styleClass="btn-primary"/>
                         </HBox>
 
-                        <TableView fx:id="payrollTable" VBox.vgrow="ALWAYS" styleClass="table-view">
-                            <columns>
-                                <TableColumn fx:id="colPayStaff"  text="Staff"        prefWidth="130"/>
-                                <TableColumn fx:id="colPayPos"    text="Position"     prefWidth="130"/>
-                                <TableColumn fx:id="colPayStart"  text="Period Start" prefWidth="120"/>
-                                <TableColumn fx:id="colPayEnd"    text="Period End"   prefWidth="120"/>
-                                <TableColumn fx:id="colPayNet"    text="Net Salary"   prefWidth="130"/>
-                                <TableColumn fx:id="colPayStatus" text="Status"       prefWidth="110"/>
-                            </columns>
-                            <placeholder>
-                                <Label text="No payroll records. Generate one to get started."
-                                       styleClass="label-muted"/>
-                            </placeholder>
-                        </TableView>
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
+                            <FlowPane fx:id="resGrid" styleClass="data-grid"/>
+                        </ScrollPane>
+                    </VBox>
+                </Tab>
 
-                        <HBox spacing="10" alignment="CENTER_LEFT">
-                            <Label text="Selected record:" styleClass="form-label"/>
-                            <Button text="✓ Mark Paid" styleClass="btn-success"
-                                    onAction="#markPayrollPaid"/>
+                <Tab text="💴 PAYROLL">
+                    <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
+                        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
+                            <Label text="Compute Period:" styleClass="form-label"/>
+                            <DatePicker fx:id="payPeriodStart" styleClass="date-picker"/>
+                            <Label text="to" styleClass="label-muted"/>
+                            <DatePicker fx:id="payPeriodEnd" styleClass="date-picker"/>
+                            <Button text="Generate Scrolls" onAction="#generatePayroll" styleClass="btn-primary"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="MARK SELECTED PAID" onAction="#markPayrollPaid" styleClass="btn-success"/>
                         </HBox>
+
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
+                            <FlowPane fx:id="payrollGrid" styleClass="data-grid"/>
+                        </ScrollPane>
                     </VBox>
+                </Tab>
 
-                    <!-- Right: generate panel -->
-                    <VBox spacing="14" prefWidth="280">
-                        <VBox styleClass="section-box" spacing="12">
-                            <Label text="GENERATE PAYROLL" styleClass="section-title"/>
-                            <Label text="Creates a payroll entry for every active staff member for the selected period."
-                                   styleClass="label-muted" wrapText="true"/>
-
-                            <Label text="PERIOD START" styleClass="form-label"/>
-                            <DatePicker fx:id="payPeriodStart" maxWidth="Infinity"
-                                        styleClass="date-picker"/>
-
-                            <Label text="PERIOD END" styleClass="form-label"/>
-                            <DatePicker fx:id="payPeriodEnd" maxWidth="Infinity"
-                                        styleClass="date-picker"/>
-
-                            <Button text="Generate for All Staff" styleClass="btn-primary"
-                                    maxWidth="Infinity" onAction="#generatePayroll"/>
-                        </VBox>
-                    </VBox>
-                </HBox>
-            </Tab>
-
-        </TabPane>
+            </TabPane>
+        </VBox>
     </center>
-
 </BorderPane>

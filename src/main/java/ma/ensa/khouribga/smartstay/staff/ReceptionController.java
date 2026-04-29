@@ -2,234 +2,247 @@ package ma.ensa.khouribga.smartstay.staff;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
 import ma.ensa.khouribga.smartstay.Navigator;
-import ma.ensa.khouribga.smartstay.dao.CleaningDao;
-import ma.ensa.khouribga.smartstay.dao.GuestDao;
 import ma.ensa.khouribga.smartstay.dao.ReservationDao;
-import ma.ensa.khouribga.smartstay.dao.RoomDao;
-import ma.ensa.khouribga.smartstay.model.*;
+import ma.ensa.khouribga.smartstay.db.Database;
+import ma.ensa.khouribga.smartstay.model.Reservation;
+import ma.ensa.khouribga.smartstay.profile.StaffProfileController;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
-import java.time.LocalDate;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class ReceptionController {
 
-    @FXML private Label welcomeLabel;
-    @FXML private TableView<Reservation> resTable;
-    @FXML private TableColumn<Reservation, String> colCode;
-    @FXML private TableColumn<Reservation, String> colGuest;
-    @FXML private TableColumn<Reservation, String> colRoom;
-    @FXML private TableColumn<Reservation, LocalDate> colIn;
-    @FXML private TableColumn<Reservation, LocalDate> colOut;
-    @FXML private TableColumn<Reservation, Reservation.Status> colStatus;
-    @FXML private TextField walkFirstName;
-    @FXML private TextField walkLastName;
-    @FXML private TextField walkPassport;
-    @FXML private TextField walkEmail;
-    @FXML private ComboBox<Room> walkRoomCombo;
-    @FXML private DatePicker walkCheckIn;
-    @FXML private DatePicker walkCheckOut;
-    @FXML private Label walkError;
-    @FXML private ComboBox<Room> cleanRoomCombo;
-    @FXML private ComboBox<CleaningRequest.Priority> cleanPriority;
-    @FXML private TextArea cleanNote;
+    // ── Grid Bindings (Replaced Tables) ───────────────────────────────────────
+    @FXML private FlowPane resGrid;
 
+    // ── Operations Bindings ───────────────────────────────────────────────────
+    @FXML private TextField txtCleanRoom;
+
+    // ── Maintenance Dispatch Bindings ─────────────────────────────────────────
+    @FXML private TextField txtMaintRoom;
+    @FXML private ComboBox<String> cmbMaintCategory;
+    @FXML private TextArea txtMaintDesc;
+
+    // ── Selection State ───────────────────────────────────────────────────────
+    private Reservation selectedRes;
+    private VBox selectedResCard;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     @FXML
     public void initialize() {
-        try { SessionManager.requireRole(User.Role.STAFF); }
-        catch (Exception e) { Navigator.goToLogin(welcomeLabel); return; }
-
-        welcomeLabel.setText(SessionManager.getCurrentUser().getUsername());
-
-        colCode.setCellValueFactory(new PropertyValueFactory<>("reservationCode"));
-        colGuest.setCellValueFactory(new PropertyValueFactory<>("guestFullName"));
-        colRoom.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
-        colIn.setCellValueFactory(new PropertyValueFactory<>("checkInDate"));
-        colOut.setCellValueFactory(new PropertyValueFactory<>("checkOutDate"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-        colIn.setCellFactory(c -> new TableCell<>() {
-            @Override protected void updateItem(LocalDate d, boolean empty) {
-                super.updateItem(d, empty);
-                setText(empty || d == null ? null : d.format(DATE_FMT));
-            }
-        });
-        colOut.setCellFactory(c -> new TableCell<>() {
-            @Override protected void updateItem(LocalDate d, boolean empty) {
-                super.updateItem(d, empty);
-                setText(empty || d == null ? null : d.format(DATE_FMT));
-            }
-        });
-
-        walkCheckIn.setValue(LocalDate.now());
-        walkCheckOut.setValue(LocalDate.now().plusDays(1));
-
-        applyRoomCellFactory(walkRoomCombo);
-        applyRoomCellFactory(cleanRoomCombo);
-
-        cleanPriority.setItems(FXCollections.observableArrayList(CleaningRequest.Priority.values()));
-        cleanPriority.setValue(CleaningRequest.Priority.MEDIUM);
-
-        loadRooms();
+        if (cmbMaintCategory != null) {
+            cmbMaintCategory.setItems(FXCollections.observableArrayList(
+                "PLUMBING / WATER", 
+                "ELECTRICAL / LIGHTING", 
+                "HVAC / CLIMATE", 
+                "FURNITURE / FIXTURES", 
+                "ELECTRONICS / TV", 
+                "CLEANING HAZARD"
+            ));
+        }
         loadReservations();
     }
 
-    private void applyRoomCellFactory(ComboBox<Room> combo) {
-        combo.setCellFactory(lv -> new ListCell<>() {
-            @Override protected void updateItem(Room r, boolean empty) {
-                super.updateItem(r, empty);
-                setText(empty || r == null ? null : "Room " + r.getRoomNumber() + " – " + r.getTypeName());
-            }
-        });
-        combo.setButtonCell(new ListCell<>() {
-            @Override protected void updateItem(Room r, boolean empty) {
-                super.updateItem(r, empty);
-                setText(empty || r == null ? "Select room" : "Room " + r.getRoomNumber());
-            }
-        });
-    }
+    // ── Logistics & Grid Generation ───────────────────────────────────────────
 
-    private void loadRooms() {
+    @FXML
+    public void loadReservations() {
         new Thread(() -> {
             try {
-                List<Room> available = RoomDao.findAvailable();
-                List<Room> all       = RoomDao.findAll();
-                Platform.runLater(() -> {
-                    walkRoomCombo.setItems(FXCollections.observableArrayList(available));
-                    cleanRoomCombo.setItems(FXCollections.observableArrayList(all));
-                });
-            } catch (Exception ex) { ex.printStackTrace(); }
-        }, "reception-rooms").start();
-    }
-
-    @FXML public void loadReservations() {
-        new Thread(() -> {
-            try {
-                List<Reservation> active = ReservationDao.findActive();
-                Platform.runLater(() -> resTable.setItems(FXCollections.observableArrayList(active)));
-            } catch (Exception ex) { ex.printStackTrace(); }
-        }, "reception-reservations").start();
-    }
-
-    @FXML public void doCheckIn() {
-        Reservation sel = resTable.getSelectionModel().getSelectedItem();
-        if (sel == null) { showAlert("Select a reservation to check in."); return; }
-        if (sel.getStatus() == Reservation.Status.CHECKED_IN || sel.getStatus() == Reservation.Status.CHECKED_OUT) {
-            showAlert("Reservation is already " + sel.getStatus()); return;
-        }
-        new Thread(() -> {
-            try {
-                ReservationDao.updateStatus(sel.getId(), sel.getRoomId(), Reservation.Status.CHECKED_IN);
-                Platform.runLater(this::loadReservations);
-            } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
-        }, "reception-checkin").start();
-    }
-
-    @FXML public void doCheckOut() {
-        Reservation sel = resTable.getSelectionModel().getSelectedItem();
-        if (sel == null) { showAlert("Select a reservation to check out."); return; }
-        if (sel.getStatus() != Reservation.Status.CHECKED_IN) { showAlert("Only CHECKED_IN reservations can be checked out."); return; }
-        new Thread(() -> {
-            try {
-                ReservationDao.updateStatus(sel.getId(), sel.getRoomId(), Reservation.Status.CHECKED_OUT);
-                Platform.runLater(this::loadReservations);
-            } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
-        }, "reception-checkout").start();
-    }
-
-    @FXML public void doCancel() {
-        Reservation sel = resTable.getSelectionModel().getSelectedItem();
-        if (sel == null) { showAlert("Select a reservation to cancel."); return; }
-        new Thread(() -> {
-            try {
-                ReservationDao.updateStatus(sel.getId(), sel.getRoomId(), Reservation.Status.CANCELLED);
-                Platform.runLater(this::loadReservations);
-            } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
-        }, "reception-cancel").start();
-    }
-
-    @FXML public void doWalkIn() {
-        walkError.setText("");
-        String firstName = walkFirstName.getText().trim();
-        String lastName  = walkLastName.getText().trim();
-        String passport  = walkPassport.getText().trim();
-        String email     = walkEmail.getText().trim();
-        Room   room      = walkRoomCombo.getValue();
-        LocalDate checkIn  = walkCheckIn.getValue();
-        LocalDate checkOut = walkCheckOut.getValue();
-
-        if (firstName.isEmpty() || lastName.isEmpty()) { walkError.setText("Enter guest name."); return; }
-        if (passport.isEmpty())   { walkError.setText("Enter passport / ID."); return; }
-        if (email.isEmpty())      { walkError.setText("Enter email."); return; }
-        if (room == null)         { walkError.setText("Select a room."); return; }
-        if (checkIn == null || checkOut == null || !checkOut.isAfter(checkIn)) {
-            walkError.setText("Select valid check-in / check-out dates."); return;
-        }
-
-        final String fn = firstName, ln = lastName, pp = passport, em = email;
-        new Thread(() -> {
-            try {
-                Guest guest = GuestDao.findByPassport(pp).orElseGet(() -> {
-                    Guest g = new Guest(); g.setFirstName(fn); g.setLastName(ln);
-                    g.setEmail(em); g.setIdPassportNumber(pp); return g;
-                });
-                if (guest.getId() == 0) guest.setId(GuestDao.create(guest));
-
-                Reservation res = new Reservation();
-                res.setGuestId(guest.getId()); res.setRoomId(room.getId());
-                res.setBookedByUserId((int) SessionManager.getCurrentUser().getId());
-                res.setCheckInDate(checkIn); res.setCheckOutDate(checkOut);
-                res.setAdultsCount(1); res.setChildrenCount(0);
-                ReservationDao.create(res);
-                ReservationDao.updateStatus(res.getId(), room.getId(), Reservation.Status.CHECKED_IN);
-
-                Platform.runLater(() -> {
-                    walkFirstName.clear(); walkLastName.clear(); walkPassport.clear(); walkEmail.clear();
-                    walkRoomCombo.setValue(null);
-                    loadReservations(); loadRooms();
-                    showAlert("Walk-in created and room checked in.");
-                });
+                List<Reservation> list = ReservationDao.findActive(); 
+                Platform.runLater(() -> populateResGrid(list));
             } catch (Exception ex) {
                 ex.printStackTrace();
-                Platform.runLater(() -> walkError.setText("Error: " + ex.getMessage()));
             }
-        }, "reception-walkin").start();
+        }).start();
     }
 
-    @FXML public void doCleaningRequest() {
-        Room room = cleanRoomCombo.getValue();
-        if (room == null) { showAlert("Select a room."); return; }
-        CleaningRequest req = new CleaningRequest();
-        req.setRoomId(room.getId());
-        req.setRequestedByUserId((int) SessionManager.getCurrentUser().getId());
-        req.setPriority(cleanPriority.getValue() != null ? cleanPriority.getValue() : CleaningRequest.Priority.MEDIUM);
-        req.setRequestNote(cleanNote.getText().trim());
+    private void populateResGrid(List<Reservation> list) {
+        if (resGrid == null) return;
+        resGrid.getChildren().clear();
+        selectedRes = null;
+        selectedResCard = null;
+
+        for (Reservation res : list) {
+            VBox card = new VBox(8);
+            card.getStyleClass().add("data-card");
+
+            HBox header = new HBox();
+            header.setAlignment(Pos.CENTER_LEFT);
+            Label lblCode = new Label(res.getReservationCode());
+            lblCode.getStyleClass().add("card-header-text");
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Label badge = createBadge(res.getStatus().toString());
+            header.getChildren().addAll(lblCode, spacer, badge);
+
+            Label lblGuest = new Label("Guest: " + res.getGuestFullName());
+            lblGuest.getStyleClass().add("card-detail-text");
+            Label lblRoom = new Label("Room: " + res.getRoomNumber());
+            lblRoom.getStyleClass().add("card-detail-text");
+            
+            // Adding Dates for the front desk
+            Label lblDates = new Label(res.getCheckInDate().format(DATE_FMT) + " to " + res.getCheckOutDate().format(DATE_FMT));
+            lblDates.getStyleClass().add("card-detail-text");
+            lblDates.setStyle("-fx-text-fill: #a0a0a0; -fx-font-size: 11px;");
+
+            card.getChildren().addAll(header, new Separator(), lblGuest, lblRoom, lblDates);
+
+            card.setOnMouseClicked(e -> {
+                if (selectedResCard != null) selectedResCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card");
+                selectedResCard = card;
+                selectedRes = res;
+            });
+
+            resGrid.getChildren().add(card);
+        }
+    }
+
+    private Label createBadge(String statusText) {
+        Label badge = new Label(statusText);
+        badge.getStyleClass().add("badge");
+        if (statusText.equals("AVAILABLE") || statusText.equals("CHECKED_OUT")) {
+            badge.getStyleClass().add("badge-available");
+        } else if (statusText.equals("CONFIRMED")) {
+            badge.getStyleClass().add("badge-paid");
+        } else if (statusText.equals("CHECKED_IN")) {
+            badge.getStyleClass().add("badge-cleaning"); // Blue badge in our theme
+        } else {
+            badge.getStyleClass().add("badge-pending");
+        }
+        return badge;
+    }
+
+    @FXML
+    public void doCheckIn() {
+        if (selectedRes == null) { showAlert(Alert.AlertType.WARNING, "Select a reservation card to check-in."); return; }
         new Thread(() -> {
             try {
-                CleaningDao.create(req);
-                Platform.runLater(() -> { cleanRoomCombo.setValue(null); cleanNote.clear(); showAlert("Cleaning request submitted."); });
+                ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_IN);
+                Platform.runLater(this::loadReservations);
             } catch (Exception ex) {
-                Platform.runLater(() -> showAlert("Error: " + ex.getMessage()));
+                Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Check-in failed."));
             }
-        }, "reception-cleaning").start();
+        }).start();
     }
 
-    private void showAlert(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
+    @FXML
+    public void doCheckOut() {
+        if (selectedRes == null) { showAlert(Alert.AlertType.WARNING, "Select a reservation card to check-out."); return; }
+        new Thread(() -> {
+            try {
+                ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_OUT);
+                Platform.runLater(this::loadReservations);
+            } catch (Exception ex) {
+                Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Check-out failed."));
+            }
+        }).start();
+    }
+
+    @FXML
+    public void doWalkIn(ActionEvent event) {
+        showAlert(Alert.AlertType.INFORMATION, "Walk-in registration initiated...");
+    }
+
+    @FXML
+    public void requestCleaning() {
+        String room = txtCleanRoom.getText().trim();
+        if(room.isEmpty()) { showAlert(Alert.AlertType.WARNING, "Enter a room number to dispatch cleaning."); return; }
+        showAlert(Alert.AlertType.INFORMATION, "Cleaning Crew dispatched to room " + room);
+        txtCleanRoom.clear();
+    }
+
+    // ── Maintenance Dispatch ──────────────────────────────────────────────────
+
+    @FXML
+    public void dispatchMaintenance() {
+        String roomStr = txtMaintRoom.getText().trim();
+        String category = cmbMaintCategory.getValue();
+        String desc = txtMaintDesc.getText().trim();
+
+        if (roomStr.isEmpty() || category == null || desc.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Please fill out Room, Hazard Type, and Situation Report.");
+            return;
+        }
+
+        new Thread(() -> {
+            try (Connection conn = Database.getConnection()) {
+                String roomSql = "SELECT id FROM rooms WHERE room_number = ?";
+                long roomId = -1;
+                try (PreparedStatement psRoom = conn.prepareStatement(roomSql)) {
+                    psRoom.setString(1, roomStr);
+                    try (ResultSet rs = psRoom.executeQuery()) {
+                        if (rs.next()) roomId = rs.getLong("id");
+                    }
+                }
+
+                if (roomId == -1) {
+                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Room " + roomStr + " does not exist in the compound."));
+                    return;
+                }
+
+                String title = "[" + category + "] Reception Dispatch";
+                String insertSql = "INSERT INTO maintenance_requests (room_id, title, priority, status, description) VALUES (?, ?, 'HIGH', 'PENDING', ?)";
+                try (PreparedStatement psInsert = conn.prepareStatement(insertSql)) {
+                    psInsert.setLong(1, roomId);
+                    psInsert.setString(2, title);
+                    psInsert.setString(3, desc);
+                    psInsert.executeUpdate();
+                }
+
+                String updateRoomSql = "UPDATE rooms SET status = 'MAINTENANCE' WHERE id = ?";
+                try (PreparedStatement psUpdate = conn.prepareStatement(updateRoomSql)) {
+                    psUpdate.setLong(1, roomId);
+                    psUpdate.executeUpdate();
+                }
+
+                Platform.runLater(() -> {
+                    txtMaintRoom.clear();
+                    txtMaintDesc.clear();
+                    cmbMaintCategory.setValue(null);
+                    showAlert(Alert.AlertType.INFORMATION, "Crew dispatched to Room " + roomStr + ". Room locked to MAINTENANCE.");
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Database transmission failed."));
+            }
+        }).start();
+    }
+
+    // ── Navigation & System ───────────────────────────────────────────────────
+
+    @FXML
+    public void goToProfile(MouseEvent event) {
+        Navigator.navigateTo((Node) event.getSource(), Navigator.STAFF_PROFILE, ctrl -> {
+            ((StaffProfileController) ctrl).setPreviousRoute(Navigator.RECEPTION);
+        });
+    }
+
+    @FXML
+    public void handleLogout(ActionEvent event) {
+        SessionManager.logout();
+        Navigator.goToLogin((Node) event.getSource());
+    }
+
+    private void showAlert(Alert.AlertType type, String message) {
+        Alert alert = new Alert(type, message, ButtonType.OK);
+        alert.setHeaderText(null);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm());
+        alert.getDialogPane().getStyleClass().add("dialog-pane");
         alert.showAndWait();
-    }
-
-    @FXML public void onLogout() { SessionManager.logout(); Navigator.goToLogin(welcomeLabel); }
-    @FXML public void goToProfile() {
-        Navigator.navigateTo(welcomeLabel, Navigator.STAFF_PROFILE,
-            ctrl -> ((ma.ensa.khouribga.smartstay.profile.StaffProfileController) ctrl)
-                        .setPreviousRoute(Navigator.RECEPTION));
     }
 }

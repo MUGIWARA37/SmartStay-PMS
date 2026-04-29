@@ -2,84 +2,83 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="ma.ensa.khouribga.smartstay.staff.ReceptionController"
-            styleClass="interior-root" stylesheets="@/styles/samurai.css" prefWidth="1100" prefHeight="700">
-    
+
+<BorderPane styleClass="interior-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.staff.ReceptionController">
+
     <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
-            <Label text="RECEPTION DESK" styleClass="welcome-label"/>
+        <HBox alignment="CENTER_LEFT" spacing="20" styleClass="glass-box" style="-fx-padding: 20; -fx-background-radius: 0; -fx-border-radius: 0; -fx-border-width: 0 0 1px 0;">
+            <Label text="侍" styleClass="kanji-large" style="-fx-font-size: 32px; -fx-text-fill: #8b0000;"/>
+            <VBox>
+                <Label text="FRONT DESK COMMAND" styleClass="app-title" style="-fx-font-size: 24px;"/>
+                <Label text="GUEST LOGISTICS &amp; OPERATIONS" styleClass="app-subtitle" style="-fx-font-size: 12px;"/>
+            </VBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="welcomeLabel" styleClass="label-muted"/>
-            <Button text="👤  Profile" styleClass="btn-secondary" onAction="#goToProfile"/>
-            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
+            <Button text="👤 PROFILE &amp; COMM LINK" onMouseClicked="#goToProfile" styleClass="btn-secondary"/>
+            <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-logout, btn-secondary"/>
         </HBox>
     </top>
+
     <center>
-        <HBox spacing="20" styleClass="content-area">
-            <!-- Left: Active reservations -->
-            <VBox spacing="14" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="ACTIVE RESERVATIONS" styleClass="section-title"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Refresh" styleClass="btn-secondary,btn-small" onAction="#loadReservations"/>
-                </HBox>
-                <TableView fx:id="resTable" VBox.vgrow="ALWAYS" styleClass="table-view">
-                    <columns>
-                        <TableColumn fx:id="colCode" text="Code" prefWidth="130"/>
-                        <TableColumn fx:id="colGuest" text="Guest" prefWidth="140"/>
-                        <TableColumn fx:id="colRoom" text="Room" prefWidth="70"/>
-                        <TableColumn fx:id="colIn" text="Check-In" prefWidth="105"/>
-                        <TableColumn fx:id="colOut" text="Check-Out" prefWidth="105"/>
-                        <TableColumn fx:id="colStatus" text="Status" prefWidth="110"/>
-                    </columns>
-                    <placeholder><Label text="No active reservations." styleClass="label-muted"/></placeholder>
-                </TableView>
-                <HBox spacing="8">
-                    <Button text="Check In" styleClass="btn-primary,btn-small" onAction="#doCheckIn"/>
-                    <Button text="Check Out" styleClass="btn-secondary,btn-small" onAction="#doCheckOut"/>
-                    <Button text="Cancel" styleClass="btn-danger,btn-small" onAction="#doCancel"/>
-                </HBox>
-            </VBox>
-            <!-- Right: Walk-in form + cleaning request -->
-            <VBox spacing="14" prefWidth="340">
-                <VBox styleClass="section-box" spacing="10">
-                    <Label text="WALK-IN RESERVATION" styleClass="section-title"/>
-                    <Label text="GUEST NAME" styleClass="form-label"/>
-                    <HBox spacing="8">
-                        <TextField fx:id="walkFirstName" styleClass="form-field" promptText="First" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                        <TextField fx:id="walkLastName" styleClass="form-field" promptText="Last" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-                    </HBox>
-                    <Label text="PASSPORT / ID" styleClass="form-label"/>
-                    <TextField fx:id="walkPassport" styleClass="form-field" promptText="Passport/ID" maxWidth="Infinity"/>
-                    <Label text="EMAIL" styleClass="form-label"/>
-                    <TextField fx:id="walkEmail" styleClass="form-field" promptText="email@example.com" maxWidth="Infinity"/>
-                    <Label text="ROOM NUMBER" styleClass="form-label"/>
-                    <ComboBox fx:id="walkRoomCombo" maxWidth="Infinity" styleClass="combo-box" promptText="Select room"/>
-                    <HBox spacing="8">
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
-                            <Label text="CHECK-IN" styleClass="form-label"/>
-                            <DatePicker fx:id="walkCheckIn" maxWidth="Infinity" styleClass="date-picker"/>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane" style="-fx-padding: 20;">
+            <HBox spacing="25" alignment="TOP_CENTER">
+                
+                <VBox spacing="25" minWidth="350" maxWidth="400">
+                    
+                    <VBox styleClass="glass-box" spacing="15">
+                        <Label text="Walk-In Registration" styleClass="section-title" style="-fx-font-size: 20px;"/>
+                        <Label text="Process unregistered arrivals." styleClass="label-muted"/>
+                        <Button text="NEW WALK-IN" onAction="#doWalkIn" styleClass="btn-primary" maxWidth="Infinity"/>
+                    </VBox>
+
+                    <VBox styleClass="glass-box" spacing="15">
+                        <Label text="Dispatch Cleaning" styleClass="section-title" style="-fx-font-size: 20px;"/>
+                        <HBox spacing="10">
+                            <TextField fx:id="txtCleanRoom" promptText="Room #" styleClass="text-field" HBox.hgrow="ALWAYS"/>
+                            <Button text="REQUEST" onAction="#requestCleaning" styleClass="btn-secondary"/>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="glass-box" spacing="15">
+                        <Label text="Dispatch Maintenance" styleClass="section-title" style="-fx-font-size: 20px;"/>
+                        
+                        <HBox spacing="10">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="TARGET ROOM" styleClass="field-label"/>
+                                <TextField fx:id="txtMaintRoom" promptText="e.g. 104" styleClass="text-field"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="HAZARD TYPE" styleClass="field-label"/>
+                                <ComboBox fx:id="cmbMaintCategory" promptText="Select..." styleClass="combo-box" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
+
+                        <VBox spacing="5">
+                            <Label text="SITUATION REPORT" styleClass="field-label"/>
+                            <TextArea fx:id="txtMaintDesc" promptText="Describe the physical damage or issue..." styleClass="text-area" prefRowCount="2" wrapText="true"/>
                         </VBox>
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
-                            <Label text="CHECK-OUT" styleClass="form-label"/>
-                            <DatePicker fx:id="walkCheckOut" maxWidth="Infinity" styleClass="date-picker"/>
-                        </VBox>
+                        
+                        <Button text="DISPATCH CREW" onAction="#dispatchMaintenance" styleClass="samurai-button" maxWidth="Infinity"/>
+                    </VBox>
+                </VBox>
+
+                <VBox spacing="15" HBox.hgrow="ALWAYS">
+                    <HBox alignment="CENTER_LEFT" spacing="15" styleClass="glass-box" style="-fx-padding: 15;">
+                        <Label text="Today's Logistics" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="REFRESH" onAction="#loadReservations" styleClass="btn-secondary"/>
                     </HBox>
-                    <Label fx:id="walkError" text="" styleClass="label-red" wrapText="true"/>
-                    <Button text="Create Reservation" styleClass="btn-primary" onAction="#doWalkIn" maxWidth="Infinity"/>
+
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane" minHeight="450">
+                        <FlowPane fx:id="resGrid" styleClass="data-grid"/>
+                    </ScrollPane>
+                    
+                    <HBox spacing="15" alignment="CENTER_RIGHT" styleClass="glass-box" style="-fx-padding: 15;">
+                        <Button text="CHECK IN SELECTED" onAction="#doCheckIn" styleClass="btn-success"/>
+                        <Button text="CHECK OUT SELECTED" onAction="#doCheckOut" styleClass="btn-primary"/>
+                    </HBox>
                 </VBox>
-                <VBox styleClass="section-box" spacing="10">
-                    <Label text="CLEANING REQUEST" styleClass="section-title"/>
-                    <Label text="ROOM" styleClass="form-label"/>
-                    <ComboBox fx:id="cleanRoomCombo" maxWidth="Infinity" styleClass="combo-box" promptText="Select room"/>
-                    <Label text="PRIORITY" styleClass="form-label"/>
-                    <ComboBox fx:id="cleanPriority" maxWidth="Infinity" styleClass="combo-box"/>
-                    <Label text="NOTE" styleClass="form-label"/>
-                    <TextArea fx:id="cleanNote" prefHeight="50" wrapText="true" promptText="Cleaning instructions..." styleClass="text-area"/>
-                    <Button text="Request Cleaning" styleClass="btn-secondary" onAction="#doCleaningRequest" maxWidth="Infinity"/>
-                </VBox>
-            </VBox>
-        </HBox>
+
+            </HBox>
+        </ScrollPane>
     </center>
 </BorderPane>

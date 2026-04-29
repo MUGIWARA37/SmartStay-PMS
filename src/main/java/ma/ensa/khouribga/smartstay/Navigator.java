@@ -22,6 +22,7 @@ public class Navigator {
     public static final String ADMIN           = "/fxml/admin/admin.fxml";
     public static final String STAFF_PROFILE   = "/fxml/profile/staff_profile.fxml";
     public static final String CLIENT_PROFILE  = "/fxml/profile/client_profile.fxml";
+    public static final String ADMIN_PROFILE = "/fxml/profile/admin_profile.fxml";
 
     // ── Core navigation (replaces current scene content) ─────────────────────
 

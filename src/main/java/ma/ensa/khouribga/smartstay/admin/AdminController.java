@@ -2,9 +2,13 @@ package ma.ensa.khouribga.smartstay.admin;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
 import ma.ensa.khouribga.smartstay.Navigator;
 import ma.ensa.khouribga.smartstay.dao.*;
 import ma.ensa.khouribga.smartstay.model.*;
@@ -16,62 +20,69 @@ import java.util.List;
 
 public class AdminController {
 
-    @FXML private Label welcomeLabel;
-
-    // ── Overview tab ─────────────────────────────────────────────────────────
     @FXML private Label statAvailable;
     @FXML private Label statOccupied;
     @FXML private Label statCleaning;
     @FXML private Label statMaint;
     @FXML private Label statActiveRes;
 
-    // ── Rooms tab ─────────────────────────────────────────────────────────────
-    @FXML private TableView<Room> roomTable;
-    @FXML private TableColumn<Room, String> colRoomNum;
-    @FXML private TableColumn<Room, String> colRoomType;
-    @FXML private TableColumn<Room, Integer> colRoomFloor;
-    @FXML private TableColumn<Room, Room.Status> colRoomStatus;
-    @FXML private TableColumn<Room, String> colRoomNotes;
+    @FXML private FlowPane roomGrid;
+    @FXML private FlowPane resGrid;
+    @FXML private FlowPane payrollGrid;
+
     @FXML private ComboBox<Room.Status> roomStatusFilter;
     @FXML private ComboBox<Room.Status> roomStatusEdit;
-
-    // ── Reservations tab ──────────────────────────────────────────────────────
-    @FXML private TableView<Reservation> resTable;
-    @FXML private TableColumn<Reservation, String> colResCode;
-    @FXML private TableColumn<Reservation, String> colResGuest;
-    @FXML private TableColumn<Reservation, String> colResRoom;
-    @FXML private TableColumn<Reservation, LocalDate> colResIn;
-    @FXML private TableColumn<Reservation, LocalDate> colResOut;
-    @FXML private TableColumn<Reservation, Reservation.Status> colResStatus;
     @FXML private ComboBox<String> resStatusFilter;
-
-    // ── Payroll tab ───────────────────────────────────────────────────────────
-    @FXML private TableView<Payroll> payrollTable;
-    @FXML private TableColumn<Payroll, String> colPayStaff;
-    @FXML private TableColumn<Payroll, String> colPayPos;
-    @FXML private TableColumn<Payroll, LocalDate> colPayStart;
-    @FXML private TableColumn<Payroll, LocalDate> colPayEnd;
-    @FXML private TableColumn<Payroll, Double> colPayNet;
-    @FXML private TableColumn<Payroll, Payroll.Status> colPayStatus;
     @FXML private DatePicker payPeriodStart;
     @FXML private DatePicker payPeriodEnd;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
+    private Room selectedRoom;
+    private VBox selectedRoomCard;
+    private Reservation selectedRes;
+    private VBox selectedResCard;
+    private Payroll selectedPayroll;
+    private VBox selectedPayrollCard;
+
     @FXML
     public void initialize() {
-        try { SessionManager.requireRole(User.Role.ADMIN); }
-        catch (Exception e) { Navigator.goToLogin(welcomeLabel); return; }
+        try { SessionManager.requireRole(User.Role.ADMIN); } 
+        catch (Exception e) { Platform.runLater(() -> Navigator.goToLogin(statAvailable)); return; }
 
-        welcomeLabel.setText("Admin: " + SessionManager.getCurrentUser().getUsername());
-
-        setupRoomsTab();
-        setupReservationsTab();
-        setupPayrollTab();
+        setupFilters();
         loadOverview();
+        loadAllRooms();
+        loadAllReservations();
+        loadAllPayroll();
     }
 
-    // ── Overview ──────────────────────────────────────────────────────────────
+    private void setupFilters() {
+        if (roomStatusFilter != null) {
+            roomStatusFilter.setItems(FXCollections.observableArrayList(Room.Status.values()));
+            roomStatusFilter.setOnAction(e -> filterRooms());
+        }
+        if (roomStatusEdit != null) {
+            roomStatusEdit.setItems(FXCollections.observableArrayList(Room.Status.values()));
+        }
+        if (resStatusFilter != null) {
+            resStatusFilter.setItems(FXCollections.observableArrayList("ALL", "PENDING", "CONFIRMED", "CHECKED_IN", "CHECKED_OUT", "CANCELLED"));
+            resStatusFilter.setValue("ALL");
+            resStatusFilter.setOnAction(e -> filterReservations());
+        }
+        if (payPeriodStart != null) payPeriodStart.setValue(LocalDate.now().withDayOfMonth(1));
+        if (payPeriodEnd != null) payPeriodEnd.setValue(LocalDate.now());
+    }
+
+    @FXML 
+    public void goToProfile(MouseEvent event) {
+        Navigator.navigateTo((Node) event.getSource(), Navigator.ADMIN_PROFILE);
+    }
+
+    @FXML public void handleLogout(ActionEvent event) {
+        SessionManager.logout();
+        Navigator.goToLogin(statAvailable);
+    }
 
     @FXML public void refreshOverview() { loadOverview(); }
 
@@ -79,217 +90,257 @@ public class AdminController {
         new Thread(() -> {
             try {
                 int[] counts = RoomDao.countByStatus();
-                // counts indexed by Room.Status ordinal: AVAILABLE=0, OCCUPIED=1, MAINTENANCE=2, CLEANING=3
                 List<Reservation> active = ReservationDao.findActive();
                 Platform.runLater(() -> {
                     if (statAvailable != null) statAvailable.setText(String.valueOf(counts[Room.Status.AVAILABLE.ordinal()]));
-                    if (statOccupied  != null) statOccupied.setText(String.valueOf(counts[Room.Status.OCCUPIED.ordinal()]));
-                    if (statCleaning  != null) statCleaning.setText(String.valueOf(counts[Room.Status.CLEANING.ordinal()]));
-                    if (statMaint     != null) statMaint.setText(String.valueOf(counts[Room.Status.MAINTENANCE.ordinal()]));
+                    if (statOccupied != null) statOccupied.setText(String.valueOf(counts[Room.Status.OCCUPIED.ordinal()]));
+                    if (statMaint != null) statMaint.setText(String.valueOf(counts[Room.Status.MAINTENANCE.ordinal()]));
                     if (statActiveRes != null) statActiveRes.setText(String.valueOf(active.size()));
                 });
             } catch (Exception ex) { ex.printStackTrace(); }
-        }, "admin-overview").start();
-    }
-
-    // ── Rooms ─────────────────────────────────────────────────────────────────
-
-    private void setupRoomsTab() {
-        if (colRoomNum == null) return;
-        colRoomNum.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
-        colRoomType.setCellValueFactory(new PropertyValueFactory<>("typeName"));
-        colRoomFloor.setCellValueFactory(new PropertyValueFactory<>("floor"));
-        colRoomStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        if (colRoomNotes != null) colRoomNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
-
-        if (roomStatusFilter != null) {
-            roomStatusFilter.setItems(FXCollections.observableArrayList(Room.Status.values()));
-        }
-        if (roomStatusEdit != null) {
-            roomStatusEdit.setItems(FXCollections.observableArrayList(Room.Status.values()));
-        }
-        loadAllRooms();
+        }).start();
     }
 
     @FXML public void loadAllRooms() {
         new Thread(() -> {
             try {
                 List<Room> rooms = RoomDao.findAll();
-                Platform.runLater(() -> { if (roomTable != null) roomTable.setItems(FXCollections.observableArrayList(rooms)); });
+                Platform.runLater(() -> populateRoomGrid(rooms));
             } catch (Exception ex) { ex.printStackTrace(); }
-        }, "admin-rooms").start();
+        }).start();
     }
 
     @FXML public void filterRooms() {
-        if (roomStatusFilter == null || roomStatusFilter.getValue() == null) { loadAllRooms(); return; }
-        Room.Status filter = roomStatusFilter.getValue();
+        if (roomStatusFilter.getValue() == null) { loadAllRooms(); return; }
         new Thread(() -> {
             try {
-                List<Room> rooms = RoomDao.findByStatus(filter);
-                Platform.runLater(() -> { if (roomTable != null) roomTable.setItems(FXCollections.observableArrayList(rooms)); });
+                List<Room> rooms = RoomDao.findByStatus(roomStatusFilter.getValue());
+                Platform.runLater(() -> populateRoomGrid(rooms));
             } catch (Exception ex) { ex.printStackTrace(); }
-        }, "admin-room-filter").start();
+        }).start();
+    }
+
+    private void populateRoomGrid(List<Room> rooms) {
+        if (roomGrid == null) return;
+        roomGrid.getChildren().clear();
+        selectedRoom = null;
+        selectedRoomCard = null;
+
+        for (Room room : rooms) {
+            VBox card = new VBox(8);
+            card.getStyleClass().add("data-card");
+
+            HBox header = new HBox();
+            header.setAlignment(Pos.CENTER_LEFT);
+            Label lblNum = new Label("Room " + room.getRoomNumber());
+            lblNum.getStyleClass().add("card-header-text");
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Label badge = createBadge(room.getStatus().toString());
+            header.getChildren().addAll(lblNum, spacer, badge);
+
+            Label lblType = new Label("Type: " + room.getTypeName());
+            lblType.getStyleClass().add("card-detail-text");
+            Label lblFloor = new Label("Floor: " + room.getFloor());
+            lblFloor.getStyleClass().add("card-detail-text");
+            
+            card.getChildren().addAll(header, new Separator(), lblType, lblFloor);
+            if (room.getNotes() != null && !room.getNotes().isEmpty()) {
+                Label lblNotes = new Label("Notes: " + room.getNotes());
+                lblNotes.getStyleClass().add("card-detail-text");
+                lblNotes.setStyle("-fx-text-fill: #e74c3c;");
+                card.getChildren().add(lblNotes);
+            }
+
+            card.setOnMouseClicked(e -> {
+                if (selectedRoomCard != null) selectedRoomCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card");
+                selectedRoomCard = card;
+                selectedRoom = room;
+            });
+
+            roomGrid.getChildren().add(card);
+        }
     }
 
     @FXML public void updateRoomStatus() {
-        if (roomTable == null || roomStatusEdit == null) return;
-        Room sel = roomTable.getSelectionModel().getSelectedItem();
-        Room.Status newStatus = roomStatusEdit.getValue();
-        if (sel == null || newStatus == null) { showAlert("Select a room and a new status."); return; }
+        if (selectedRoom == null || roomStatusEdit.getValue() == null) {
+            showAlert("Select a room card and a new status from the dropdown."); return;
+        }
         new Thread(() -> {
             try {
-                RoomDao.updateStatus(sel.getId(), newStatus);
+                RoomDao.updateStatus(selectedRoom.getId(), roomStatusEdit.getValue());
                 Platform.runLater(this::loadAllRooms);
-            } catch (Exception ex) { Platform.runLater(() -> showAlert("Update failed: " + ex.getMessage())); }
-        }, "admin-room-update").start();
-    }
-
-    // ── Reservations ──────────────────────────────────────────────────────────
-
-    private void setupReservationsTab() {
-        if (colResCode == null) return;
-        colResCode.setCellValueFactory(new PropertyValueFactory<>("reservationCode"));
-        colResGuest.setCellValueFactory(new PropertyValueFactory<>("guestFullName"));
-        colResRoom.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
-        colResIn.setCellValueFactory(new PropertyValueFactory<>("checkInDate"));
-        colResOut.setCellValueFactory(new PropertyValueFactory<>("checkOutDate"));
-        colResStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-        colResIn.setCellFactory(c -> new TableCell<>() {
-            @Override protected void updateItem(LocalDate d, boolean empty) {
-                super.updateItem(d, empty);
-                setText(empty || d == null ? null : d.format(DATE_FMT));
-            }
-        });
-        colResOut.setCellFactory(c -> new TableCell<>() {
-            @Override protected void updateItem(LocalDate d, boolean empty) {
-                super.updateItem(d, empty);
-                setText(empty || d == null ? null : d.format(DATE_FMT));
-            }
-        });
-
-        if (resStatusFilter != null) {
-            resStatusFilter.setItems(FXCollections.observableArrayList(
-                    "ALL", "PENDING", "CONFIRMED", "CHECKED_IN", "CHECKED_OUT", "CANCELLED"));
-            resStatusFilter.setValue("ALL");
-        }
-        loadAllReservations();
+            } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
+        }).start();
     }
 
     @FXML public void loadAllReservations() {
         new Thread(() -> {
             try {
                 List<Reservation> list = ReservationDao.findAll();
-                Platform.runLater(() -> { if (resTable != null) resTable.setItems(FXCollections.observableArrayList(list)); });
+                Platform.runLater(() -> populateResGrid(list));
             } catch (Exception ex) { ex.printStackTrace(); }
-        }, "admin-res").start();
+        }).start();
     }
 
     @FXML public void filterReservations() {
-        if (resStatusFilter == null || resStatusFilter.getValue() == null || resStatusFilter.getValue().equals("ALL")) {
+        if (resStatusFilter.getValue() == null || resStatusFilter.getValue().equals("ALL")) {
             loadAllReservations(); return;
         }
-        Reservation.Status filter = Reservation.Status.valueOf(resStatusFilter.getValue());
         new Thread(() -> {
             try {
-                List<Reservation> list = ReservationDao.findByStatus(filter);
-                Platform.runLater(() -> { if (resTable != null) resTable.setItems(FXCollections.observableArrayList(list)); });
+                List<Reservation> list = ReservationDao.findByStatus(Reservation.Status.valueOf(resStatusFilter.getValue()));
+                Platform.runLater(() -> populateResGrid(list));
             } catch (Exception ex) { ex.printStackTrace(); }
-        }, "admin-res-filter").start();
+        }).start();
+    }
+
+    private void populateResGrid(List<Reservation> list) {
+        if (resGrid == null) return;
+        resGrid.getChildren().clear();
+        selectedRes = null;
+        selectedResCard = null;
+
+        for (Reservation res : list) {
+            VBox card = new VBox(8);
+            card.getStyleClass().add("data-card");
+
+            HBox header = new HBox();
+            header.setAlignment(Pos.CENTER_LEFT);
+            Label lblCode = new Label(res.getReservationCode());
+            lblCode.getStyleClass().add("card-header-text");
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Label badge = createBadge(res.getStatus().toString());
+            header.getChildren().addAll(lblCode, spacer, badge);
+
+            Label lblGuest = new Label("Guest: " + res.getGuestFullName());
+            lblGuest.getStyleClass().add("card-detail-text");
+            Label lblRoom = new Label("Room: " + res.getRoomNumber());
+            lblRoom.getStyleClass().add("card-detail-text");
+            Label lblDates = new Label("Dates: " + res.getCheckInDate().format(DATE_FMT) + " to " + res.getCheckOutDate().format(DATE_FMT));
+            lblDates.getStyleClass().add("card-detail-text");
+
+            card.getChildren().addAll(header, new Separator(), lblGuest, lblRoom, lblDates);
+
+            card.setOnMouseClicked(e -> {
+                if (selectedResCard != null) selectedResCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card");
+                selectedResCard = card;
+                selectedRes = res;
+            });
+
+            resGrid.getChildren().add(card);
+        }
     }
 
     @FXML public void doCheckIn() {
-        if (resTable == null) return;
-        Reservation sel = resTable.getSelectionModel().getSelectedItem();
-        if (sel == null) { showAlert("Select a reservation."); return; }
+        if (selectedRes == null) { showAlert("Select a reservation card."); return; }
         new Thread(() -> {
-            try { ReservationDao.updateStatus(sel.getId(), sel.getRoomId(), Reservation.Status.CHECKED_IN);
+            try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_IN);
                 Platform.runLater(this::loadAllReservations); }
             catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
-        }, "admin-checkin").start();
+        }).start();
     }
 
     @FXML public void doCheckOut() {
-        if (resTable == null) return;
-        Reservation sel = resTable.getSelectionModel().getSelectedItem();
-        if (sel == null) { showAlert("Select a reservation."); return; }
+        if (selectedRes == null) { showAlert("Select a reservation card."); return; }
         new Thread(() -> {
-            try { ReservationDao.updateStatus(sel.getId(), sel.getRoomId(), Reservation.Status.CHECKED_OUT);
+            try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_OUT);
                 Platform.runLater(this::loadAllReservations); }
             catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
-        }, "admin-checkout").start();
-    }
-
-    // ── Payroll ───────────────────────────────────────────────────────────────
-
-    private void setupPayrollTab() {
-        if (colPayStaff == null) return;
-        colPayStaff.setCellValueFactory(new PropertyValueFactory<>("staffUsername"));
-        colPayPos.setCellValueFactory(new PropertyValueFactory<>("staffPosition"));
-        colPayStart.setCellValueFactory(new PropertyValueFactory<>("periodStart"));
-        colPayEnd.setCellValueFactory(new PropertyValueFactory<>("periodEnd"));
-        colPayNet.setCellValueFactory(new PropertyValueFactory<>("netSalary"));
-        colPayStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-        colPayNet.setCellFactory(c -> new TableCell<>() {
-            @Override protected void updateItem(Double v, boolean empty) {
-                super.updateItem(v, empty);
-                setText(empty || v == null ? null : String.format("%.2f MAD", v));
-            }
-        });
-
-        if (payPeriodStart != null) payPeriodStart.setValue(LocalDate.now().withDayOfMonth(1));
-        if (payPeriodEnd   != null) payPeriodEnd.setValue(LocalDate.now());
-        loadAllPayroll();
+        }).start();
     }
 
     @FXML public void loadAllPayroll() {
         new Thread(() -> {
             try {
                 List<Payroll> list = PayrollDao.findAll();
-                Platform.runLater(() -> { if (payrollTable != null) payrollTable.setItems(FXCollections.observableArrayList(list)); });
+                Platform.runLater(() -> populatePayrollGrid(list));
             } catch (Exception ex) { ex.printStackTrace(); }
-        }, "admin-payroll").start();
+        }).start();
+    }
+
+    private void populatePayrollGrid(List<Payroll> list) {
+        if (payrollGrid == null) return;
+        payrollGrid.getChildren().clear();
+        selectedPayroll = null;
+        selectedPayrollCard = null;
+
+        for (Payroll pay : list) {
+            VBox card = new VBox(8);
+            card.getStyleClass().add("data-card");
+
+            HBox header = new HBox();
+            header.setAlignment(Pos.CENTER_LEFT);
+            Label lblStaff = new Label(pay.getStaffUsername());
+            lblStaff.getStyleClass().add("card-header-text");
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Label badge = createBadge(pay.getStatus().toString());
+            header.getChildren().addAll(lblStaff, spacer, badge);
+
+            Label lblPos = new Label("Position: " + pay.getStaffPosition());
+            lblPos.getStyleClass().add("card-detail-text");
+            Label lblDates = new Label("Period: " + pay.getPeriodStart().format(DATE_FMT) + " - " + pay.getPeriodEnd().format(DATE_FMT));
+            lblDates.getStyleClass().add("card-detail-text");
+            Label lblNet = new Label(String.format("Net Salary: %.2f MAD", pay.getNetSalary()));
+            lblNet.getStyleClass().add("card-detail-text");
+            lblNet.setStyle("-fx-text-fill: #c5a059; -fx-font-weight: bold;");
+
+            card.getChildren().addAll(header, new Separator(), lblPos, lblDates, lblNet);
+
+            card.setOnMouseClicked(e -> {
+                if (selectedPayrollCard != null) selectedPayrollCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card");
+                selectedPayrollCard = card;
+                selectedPayroll = pay;
+            });
+
+            payrollGrid.getChildren().add(card);
+        }
     }
 
     @FXML public void generatePayroll() {
-        if (payPeriodStart == null || payPeriodEnd == null) return;
-        LocalDate start = payPeriodStart.getValue();
-        LocalDate end   = payPeriodEnd.getValue();
-        if (start == null || end == null || !end.isAfter(start)) {
-            showAlert("Select a valid payroll period."); return;
-        }
+        if (payPeriodStart.getValue() == null || payPeriodEnd.getValue() == null) return;
+        LocalDate start = payPeriodStart.getValue(), end = payPeriodEnd.getValue();
+        if (!end.isAfter(start)) { showAlert("Select a valid period."); return; }
         new Thread(() -> {
-            try {
-                PayrollDao.generateForPeriod(start, end);
-                Platform.runLater(() -> { loadAllPayroll(); showAlert("Payroll generated for all staff."); });
-            } catch (Exception ex) {
-                Platform.runLater(() -> showAlert("Error: " + ex.getMessage()));
-            }
-        }, "admin-payroll-gen").start();
+            try { PayrollDao.generateForPeriod(start, end);
+                Platform.runLater(() -> { loadAllPayroll(); showAlert("Payroll generated."); });
+            } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
+        }).start();
     }
 
     @FXML public void markPayrollPaid() {
-        if (payrollTable == null) return;
-        Payroll sel = payrollTable.getSelectionModel().getSelectedItem();
-        if (sel == null) { showAlert("Select a payroll record."); return; }
+        if (selectedPayroll == null) { showAlert("Select a payroll card."); return; }
         new Thread(() -> {
-            try {
-                PayrollDao.markPaid(sel.getId());
+            try { PayrollDao.markPaid(selectedPayroll.getId());
                 Platform.runLater(this::loadAllPayroll);
             } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
-        }, "admin-payroll-paid").start();
+        }).start();
     }
 
-    // ── Shared ────────────────────────────────────────────────────────────────
+    private Label createBadge(String statusText) {
+        Label badge = new Label(statusText);
+        badge.getStyleClass().add("badge");
+        if (statusText.equals("AVAILABLE") || statusText.equals("CHECKED_OUT") || statusText.equals("PAID")) {
+            badge.getStyleClass().add("badge-available");
+        } else if (statusText.equals("OCCUPIED") || statusText.equals("CANCELLED")) {
+            badge.getStyleClass().add("badge-occupied");
+        } else if (statusText.equals("MAINTENANCE") || statusText.equals("PENDING")) {
+            badge.getStyleClass().add("badge-maintenance");
+        } else if (statusText.equals("CLEANING") || statusText.equals("CHECKED_IN")) {
+            badge.getStyleClass().add("badge-cleaning");
+        }
+        return badge;
+    }
 
     private void showAlert(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm());
+        alert.getDialogPane().getStyleClass().add("dialog-pane");
         alert.showAndWait();
-    }
-
-    @FXML public void onLogout() {
-        SessionManager.logout();
-        Navigator.goToLogin(welcomeLabel);
     }
 }

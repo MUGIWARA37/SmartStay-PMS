@@ -1,21 +1,15 @@
 package ma.ensa.khouribga.smartstay.auth;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
-import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import ma.ensa.khouribga.smartstay.Navigator;
 import ma.ensa.khouribga.smartstay.dao.UserDao;
@@ -32,95 +26,37 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Random;
 
 public class LoginController {
 
-    // ── Login FXML bindings ───────────────────────────────────────────────────
-    @FXML private MediaView     mediaView;
-    @FXML private Pane          particlePane;
-    @FXML private VBox          brandStripe;
+    @FXML private MediaView     bgVideo;
     @FXML private VBox          loginPanel;
-    @FXML private VBox          glassCard;
-    @FXML private TextField     usernameField;
-    @FXML private PasswordField passwordField;
-    @FXML private Label         errorLabel;
+    @FXML private TextField     txtUsername;
+    @FXML private PasswordField txtPassword;
+    @FXML private Label         lblError;
 
-    // ── Register FXML bindings ────────────────────────────────────────────────
     @FXML private VBox          registerPanel;
-    @FXML private TextField     regFirstName;
-    @FXML private TextField     regLastName;
-    @FXML private TextField     regUsername;
-    @FXML private TextField     regEmail;
-    @FXML private PasswordField regPassword;
-    @FXML private PasswordField regConfirm;
-    @FXML private Label         regErrorLabel;
-
-    private static final Random RNG = new Random();
-    private Timeline particleTimeline;
-
-    // ── Initialize ────────────────────────────────────────────────────────────
+    @FXML private TextField     txtRegFirst;
+    @FXML private TextField     txtRegLast;
+    @FXML private TextField     txtRegUser;
+    @FXML private TextField     txtRegEmail;
+    @FXML private PasswordField txtRegPass;
 
     @FXML
     public void initialize() {
         startVideoBackground();
-        startSakuraParticles();
-        bindResponsiveLayout();
         clearError();
     }
 
-    // ── Panel switching ───────────────────────────────────────────────────────
-
     @FXML
-    public void showRegister() {
-        loginPanel.setVisible(false);
-        loginPanel.setManaged(false);
-        registerPanel.setVisible(true);
-        registerPanel.setManaged(true);
-        clearRegError();
-    }
-
-    @FXML
-    public void showLogin() {
-        registerPanel.setVisible(false);
-        registerPanel.setManaged(false);
-        loginPanel.setVisible(true);
-        loginPanel.setManaged(true);
+    public void toggleRegister() {
+        boolean isLoginVisible = loginPanel.isVisible();
+        loginPanel.setVisible(!isLoginVisible);
+        loginPanel.setManaged(!isLoginVisible);
+        registerPanel.setVisible(isLoginVisible);
+        registerPanel.setManaged(isLoginVisible);
         clearError();
     }
-
-    // ── Responsive layout ─────────────────────────────────────────────────────
-
-    private void bindResponsiveLayout() {
-        particlePane.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene == null) return;
-
-            mediaView.fitWidthProperty().bind(newScene.widthProperty());
-            mediaView.fitHeightProperty().bind(newScene.heightProperty());
-            particlePane.prefWidthProperty().bind(newScene.widthProperty());
-            particlePane.prefHeightProperty().bind(newScene.heightProperty());
-
-            newScene.widthProperty().addListener((o, oldW, newW) -> {
-                double scale = newW.doubleValue() / 1100.0;
-                double cardWidth = Math.min(480, Math.max(300, 340 * scale));
-                for (VBox panel : new VBox[]{loginPanel, registerPanel}) {
-                    panel.setPrefWidth(cardWidth);
-                    panel.setMaxWidth(cardWidth);
-                    double fontScale = Math.min(1.4, Math.max(0.85, scale));
-                    panel.setStyle("-fx-font-size: " + (14 * fontScale) + "px;");
-                }
-            });
-
-            newScene.heightProperty().addListener((o, oldH, newH) -> {
-                double scale = newH.doubleValue() / 700.0;
-                double topBot = Math.min(72, Math.max(28, 52 * scale));
-                loginPanel.setPadding(new javafx.geometry.Insets(topBot, 50, topBot - 4, 50));
-                registerPanel.setPadding(new javafx.geometry.Insets(topBot - 16, 50, topBot - 16, 50));
-            });
-        });
-    }
-
-    // ── Video background ──────────────────────────────────────────────────────
 
     private void startVideoBackground() {
         URL videoUrl = getClass().getResource("/videos/sakura.mp4");
@@ -130,61 +66,28 @@ public class LoginController {
         player.setAutoPlay(true);
         player.setMute(true);
         player.setCycleCount(MediaPlayer.INDEFINITE);
-        mediaView.setMediaPlayer(player);
-        mediaView.setPreserveRatio(false);
+        bgVideo.setMediaPlayer(player);
+        bgVideo.setPreserveRatio(false);
+        
+        bgVideo.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                bgVideo.fitWidthProperty().bind(newScene.widthProperty());
+                bgVideo.fitHeightProperty().bind(newScene.heightProperty());
+            }
+        });
     }
-
-    // ── Sakura particles ──────────────────────────────────────────────────────
-
-    private void startSakuraParticles() {
-        particleTimeline = new Timeline(new KeyFrame(Duration.millis(600), e -> spawnLeaf()));
-        particleTimeline.setCycleCount(Timeline.INDEFINITE);
-        particleTimeline.play();
-    }
-
-    private void spawnLeaf() {
-        Region leaf = new Region();
-        double paneWidth = particlePane.getWidth();
-        if (paneWidth <= 0) paneWidth = 1100;
-        double startX = RNG.nextDouble() * paneWidth;
-        leaf.setLayoutX(startX);
-        leaf.setLayoutY(-20);
-        particlePane.getChildren().add(leaf);
-
-        double fallDistance = particlePane.getHeight() + 40;
-        double duration     = 4000 + RNG.nextDouble() * 4000;
-        double drift        = (RNG.nextDouble() - 0.5) * 160;
-
-        Timeline fall = new Timeline(
-            new KeyFrame(Duration.ZERO,
-                new KeyValue(leaf.layoutYProperty(), -20),
-                new KeyValue(leaf.layoutXProperty(), startX),
-                new KeyValue(leaf.opacityProperty(), 0.85),
-                new KeyValue(leaf.rotateProperty(), RNG.nextDouble() * 60 - 30)
-            ),
-            new KeyFrame(Duration.millis(duration),
-                new KeyValue(leaf.layoutYProperty(), fallDistance),
-                new KeyValue(leaf.layoutXProperty(), startX + drift),
-                new KeyValue(leaf.opacityProperty(), 0.0),
-                new KeyValue(leaf.rotateProperty(), RNG.nextDouble() * 360)
-            )
-        );
-        fall.setOnFinished(ev -> particlePane.getChildren().remove(leaf));
-        fall.play();
-    }
-
-    // ── Login action ──────────────────────────────────────────────────────────
 
     @FXML
-    public void onLogin() {
+    public void handleLogin() {
         clearError();
-        String username = usernameField.getText().trim();
-        String password = passwordField.getText();
+        String username = txtUsername.getText().trim();
+        String password = txtPassword.getText();
+        
         if (username.isEmpty()) { showError("Please enter your username."); return; }
         if (password.isEmpty()) { showError("Please enter your password."); return; }
 
-        usernameField.setDisable(true);
-        passwordField.setDisable(true);
+        txtUsername.setDisable(true);
+        txtPassword.setDisable(true);
 
         Thread authThread = new Thread(() -> {
             try {
@@ -205,17 +108,13 @@ public class LoginController {
         authThread.start();
     }
 
-    // ── Register action ───────────────────────────────────────────────────────
-
     @FXML
-    public void onRegister() {
-        clearRegError();
-        String firstName = regFirstName.getText().trim();
-        String lastName  = regLastName.getText().trim();
-        String username  = regUsername.getText().trim();
-        String email     = regEmail.getText().trim();
-        String password  = regPassword.getText();
-        String confirm   = regConfirm.getText();
+    public void handleRegister() {
+        String firstName = txtRegFirst.getText().trim();
+        String lastName  = txtRegLast.getText().trim();
+        String username  = txtRegUser.getText().trim();
+        String email     = txtRegEmail.getText().trim();
+        String password  = txtRegPass.getText();
 
         if (firstName.isEmpty())            { showRegError("First name is required.");           return; }
         if (lastName.isEmpty())             { showRegError("Last name is required.");            return; }
@@ -223,37 +122,28 @@ public class LoginController {
         if (username.length() < 3)          { showRegError("Username must be at least 3 characters."); return; }
         if (email.isEmpty() || !email.contains("@")) { showRegError("Please enter a valid email."); return; }
         if (password.length() < 8)          { showRegError("Password must be at least 8 characters."); return; }
-        if (!password.equals(confirm))      { showRegError("Passwords do not match.");          return; }
 
-        regFirstName.setDisable(true);
-        regLastName.setDisable(true);
-        regUsername.setDisable(true);
-        regEmail.setDisable(true);
-        regPassword.setDisable(true);
-        regConfirm.setDisable(true);
+        txtRegFirst.setDisable(true);
+        txtRegLast.setDisable(true);
+        txtRegUser.setDisable(true);
+        txtRegEmail.setDisable(true);
+        txtRegPass.setDisable(true);
 
         String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
 
         Thread t = new Thread(() -> {
             try {
-                // Check username availability
                 boolean taken = checkUsernameTaken(username);
                 if (taken) {
                     Platform.runLater(() -> { showRegError("Username already taken. Try another."); resetRegFields(); });
                     return;
                 }
-                // Insert user
                 long userId = UserDao.insert(username, email, hash, User.Role.CLIENT);
-                // Insert guest record
                 insertGuest(userId, firstName, lastName, email);
-                // Auto-login
                 User user = findActiveUser(username);
                 if (user != null) {
                     SessionManager.setCurrentUser(user);
-                    Platform.runLater(() -> {
-                        if (particleTimeline != null) particleTimeline.stop();
-                        Navigator.navigateTo(regUsername, Navigator.HOME);
-                    });
+                    Platform.runLater(() -> Navigator.navigateTo(txtRegUser, Navigator.HOME));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -264,15 +154,8 @@ public class LoginController {
         t.start();
     }
 
-    // ── DB helpers ────────────────────────────────────────────────────────────
-
     private User findActiveUser(String username) throws SQLException {
-        String sql = """
-                SELECT id, username, email, password_hash, role, is_active
-                FROM users
-                WHERE username = ? AND is_active = TRUE
-                LIMIT 1
-                """;
+        String sql = "SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = ? AND is_active = TRUE LIMIT 1";
         try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
@@ -302,10 +185,7 @@ public class LoginController {
     }
 
     private void insertGuest(long userId, String firstName, String lastName, String email) throws SQLException {
-        String sql = """
-                INSERT INTO guests (first_name, last_name, email, created_at)
-                VALUES (?, ?, ?, NOW())
-                """;
+        String sql = "INSERT INTO guests (first_name, last_name, email, created_at) VALUES (?, ?, ?, NOW())";
         try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, firstName);
@@ -327,13 +207,10 @@ public class LoginController {
         }
     }
 
-    // ── Routing ───────────────────────────────────────────────────────────────
-
     private void routeByRole(User.Role role) {
-        if (particleTimeline != null) particleTimeline.stop();
         switch (role) {
-            case ADMIN  -> Navigator.navigateTo(usernameField, Navigator.ADMIN);
-            case CLIENT -> Navigator.navigateTo(usernameField, Navigator.HOME);
+            case ADMIN  -> Navigator.navigateTo(txtUsername, Navigator.ADMIN);
+            case CLIENT -> Navigator.navigateTo(txtUsername, Navigator.HOME);
             case STAFF  -> routeStaffByPosition();
             default     -> { showError("Unknown role — contact administrator."); resetFields(); }
         }
@@ -348,7 +225,7 @@ public class LoginController {
                 ps.setLong(1, userId);
                 try (ResultSet rs = ps.executeQuery()) {
                     String pos = rs.next() ? rs.getString("position").toLowerCase() : "";
-                    Platform.runLater(() -> Navigator.navigateTo(usernameField, switch (pos) {
+                    Platform.runLater(() -> Navigator.navigateTo(txtUsername, switch (pos) {
                         case "reception"   -> Navigator.RECEPTION;
                         case "cleaning"    -> Navigator.CLEANING;
                         case "maintenance" -> Navigator.MAINTENANCE;
@@ -357,30 +234,37 @@ public class LoginController {
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
-                Platform.runLater(() -> Navigator.navigateTo(usernameField, Navigator.RECEPTION));
+                Platform.runLater(() -> Navigator.navigateTo(txtUsername, Navigator.RECEPTION));
             }
         }, "staff-route-thread");
         t.setDaemon(true);
         t.start();
     }
 
-    // ── UI helpers ────────────────────────────────────────────────────────────
-
-    private void showError(String msg)    { errorLabel.setText(msg);    errorLabel.setVisible(true); }
-    private void clearError()             { errorLabel.setText("");      errorLabel.setVisible(false); }
-    private void showRegError(String msg) { regErrorLabel.setText(msg); regErrorLabel.setVisible(true); }
-    private void clearRegError()          { regErrorLabel.setText("");   regErrorLabel.setVisible(false); }
+    private void showError(String msg) { 
+        if(lblError != null) { lblError.setText(msg); lblError.setVisible(true); lblError.setManaged(true); }
+    }
+    
+    private void clearError() { 
+        if(lblError != null) { lblError.setText(""); lblError.setVisible(false); lblError.setManaged(false); }
+    }
+    
+    private void showRegError(String msg) { 
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Registration Error");
+        alert.setHeaderText("Could not complete registration");
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
 
     private void resetFields() {
-        usernameField.setDisable(false);
-        passwordField.setDisable(false);
-        passwordField.clear();
-        usernameField.requestFocus();
+        txtUsername.setDisable(false); txtPassword.setDisable(false);
+        txtPassword.clear(); txtUsername.requestFocus();
     }
 
     private void resetRegFields() {
-        regFirstName.setDisable(false); regLastName.setDisable(false);
-        regUsername.setDisable(false);  regEmail.setDisable(false);
-        regPassword.setDisable(false);  regConfirm.setDisable(false);
+        txtRegFirst.setDisable(false); txtRegLast.setDisable(false);
+        txtRegUser.setDisable(false);  txtRegEmail.setDisable(false);
+        txtRegPass.setDisable(false);  
     }
 }

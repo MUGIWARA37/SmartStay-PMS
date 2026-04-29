@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane styleClass="interior-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.profile.AdminProfileController">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 30 40 10 40;">
+            <Button text="← Return to Command Center" onAction="#goBack" styleClass="btn-secondary"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Shogun Profile" styleClass="section-title" style="-fx-font-size: 28px;"/>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="30" alignment="TOP_CENTER" style="-fx-padding: 40;">
+            
+            <VBox styleClass="glass-box" spacing="15" alignment="CENTER" prefWidth="320" maxHeight="400">
+                <StackPane styleClass="avatar-circle" prefWidth="120" prefHeight="120" maxWidth="120" maxHeight="120">
+                    <Label fx:id="lblInitials" text="AD" styleClass="avatar-initials" style="-fx-font-size: 48px;"/>
+                </StackPane>
+                
+                <Label fx:id="lblUsername" text="System Admin" styleClass="card-header-text" style="-fx-font-size: 24px;"/>
+                
+                <Label text="SHOGUN (ADMIN)" styleClass="badge, badge-occupied" style="-fx-font-size: 14px; -fx-padding: 6 15;"/>
+                
+                <Separator style="-fx-padding: 10 0;"/>
+                
+                <VBox alignment="CENTER" spacing="5">
+                    <Label text="System Access Level" styleClass="label-muted"/>
+                    <Label text="Absolute (All Sectors Unlocked)" style="-fx-text-fill: #c5a059; -fx-font-weight: bold;"/>
+                </VBox>
+            </VBox>
+
+            <VBox spacing="25" prefWidth="550">
+                
+                <VBox styleClass="glass-box" spacing="20">
+                    <Label text="Master Communications" styleClass="section-title" style="-fx-font-size: 20px;"/>
+                    
+                    <VBox spacing="5">
+                        <Label text="IMPERIAL EMAIL ADDRESS" styleClass="field-label"/>
+                        <TextField fx:id="txtEmail" promptText="Enter command email..." styleClass="text-field"/>
+                    </VBox>
+                    
+                    <Button text="UPDATE COMM LINK" onAction="#updateContact" styleClass="btn-primary" maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox styleClass="glass-box" spacing="20">
+                    <Label text="Authentication Protocol" styleClass="section-title" style="-fx-font-size: 20px;"/>
+                    
+                    <VBox spacing="5">
+                        <Label text="CURRENT PASSPHRASE" styleClass="field-label"/>
+                        <PasswordField fx:id="txtOldPass" promptText="Verify current identity..." styleClass="password-field"/>
+                    </VBox>
+                    
+                    <HBox spacing="15">
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="NEW PASSPHRASE" styleClass="field-label"/>
+                            <PasswordField fx:id="txtNewPass" promptText="At least 8 characters..." styleClass="password-field"/>
+                        </VBox>
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="CONFIRM PASSPHRASE" styleClass="field-label"/>
+                            <PasswordField fx:id="txtConfirmPass" promptText="Type it again..." styleClass="password-field"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <Button text="CHANGE MASTER PASSPHRASE" onAction="#updatePassword" styleClass="samurai-button" maxWidth="Infinity" style="-fx-border-color: #e74c3c; -fx-text-fill: #e74c3c; -fx-background-color: transparent;"/>
+                </VBox>
+
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>
