@@ -190,6 +190,11 @@ public class HomeController implements Initializable {
         Navigator.goToLogin(btnLogout);
     }
 
+    @FXML
+    private void goToProfile() {
+        Navigator.navigateTo(btnLogout, Navigator.CLIENT_PROFILE);
+    }
+
     private void showError(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
         alert.setHeaderText(null);

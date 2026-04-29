@@ -6,12 +6,8 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="ma.ensa.khouribga.smartstay.admin.AdminController"
-            styleClass="interior-root"
+            styleClass="interior-root" stylesheets="@/styles/samurai.css"
             prefWidth="1200" prefHeight="760">
-
-    <stylesheets>
-        <URL value="@/styles/samurai.css"/>
-    </stylesheets>
 
     <!-- ── TOP BAR ────────────────────────────────────────────────────────── -->
     <top>

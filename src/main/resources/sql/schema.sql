@@ -1,4 +1,4 @@
-USE Smart_Hotel_v_1_0;
+USE smartstay;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
