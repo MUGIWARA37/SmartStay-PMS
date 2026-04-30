@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
 <?import javafx.geometry.Insets?>
 
 <BorderPane styleClass="interior-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.admin.AdminController">
@@ -113,6 +114,48 @@
                         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
                             <FlowPane fx:id="payrollGrid" styleClass="data-grid"/>
                         </ScrollPane>
+                    </VBox>
+                </Tab>
+
+
+                <Tab text="👥 STAFF">
+                    <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
+                        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
+                            <ComboBox fx:id="staffRoleFilter" promptText="Filter Role..." styleClass="combo-box"/>
+                            <ComboBox fx:id="staffStatusFilter" promptText="Filter Status..." styleClass="combo-box"/>
+                            <Button text="Refresh Roster" onAction="#loadAllStaff" styleClass="btn-secondary"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="ACTIVATE SELECTED" onAction="#activateStaff" styleClass="btn-success"/>
+                            <Button text="DEACTIVATE SELECTED" onAction="#deactivateStaff" styleClass="btn-primary"/>
+                        </HBox>
+
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
+                            <FlowPane fx:id="staffGrid" styleClass="data-grid"/>
+                        </ScrollPane>
+                    </VBox>
+                </Tab>
+
+                <Tab text="📊 REVENUE">
+                    <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
+                        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
+                            <Label text="Year:" styleClass="form-label"/>
+                            <ComboBox fx:id="revenueYearPicker" promptText="Select Year..." styleClass="combo-box"/>
+                            <Button text="Load Chart" onAction="#loadRevenueChart" styleClass="btn-primary"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="revenueTotalLabel" text="Annual Total: —" styleClass="card-header-text" style="-fx-font-size: 16px;"/>
+                        </HBox>
+
+                        <BarChart fx:id="revenueChart" VBox.vgrow="ALWAYS" styleClass="revenue-chart"
+                                  animated="false" legendVisible="false">
+                            <xAxis>
+                                <CategoryAxis fx:id="revenueXAxis" label="Month"
+                                              style="-fx-tick-label-fill: #a0a0a0; -fx-text-fill: #a0a0a0;"/>
+                            </xAxis>
+                            <yAxis>
+                                <NumberAxis fx:id="revenueYAxis" label="Revenue (MAD)"
+                                            style="-fx-tick-label-fill: #a0a0a0; -fx-text-fill: #a0a0a0;"/>
+                            </yAxis>
+                        </BarChart>
                     </VBox>
                 </Tab>
 

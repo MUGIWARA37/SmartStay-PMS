@@ -6,19 +6,22 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.dao.ReservationDao;
 import ma.ensa.khouribga.smartstay.dao.RoomDao;
+import ma.ensa.khouribga.smartstay.model.Reservation;
 import ma.ensa.khouribga.smartstay.model.Room;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -26,7 +29,10 @@ import java.util.stream.Collectors;
 public class HomeController implements Initializable {
 
     @FXML private Label welcomeLabel;
+    @FXML private Label lblSubtitle;
     @FXML private Button btnLogout;
+    @FXML private Button btnBrowse;
+    @FXML private Button btnMyBookings;
     @FXML private ComboBox<String> cbRoomType;
     @FXML private Slider priceSlider;
     @FXML private Label priceLabel;
@@ -34,10 +40,14 @@ public class HomeController implements Initializable {
     @FXML private DatePicker dpCheckOut;
     @FXML private Button btnSearch;
     @FXML private FlowPane roomGrid;
+    @FXML private FlowPane bookingsGrid;
     @FXML private Label lblStatus;
     @FXML private ProgressIndicator spinner;
+    @FXML private VBox panelBrowse;
+    @FXML private VBox panelBookings;
 
     private List<Room> allRooms;
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -60,6 +70,33 @@ public class HomeController implements Initializable {
 
         loadRooms();
     }
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+
+    @FXML
+    private void showBrowseTab() {
+        panelBrowse.setVisible(true);
+        panelBrowse.setManaged(true);
+        panelBookings.setVisible(false);
+        panelBookings.setManaged(false);
+        btnBrowse.getStyleClass().setAll("nav-button-active");
+        btnMyBookings.getStyleClass().setAll("nav-button");
+        if (lblSubtitle != null) lblSubtitle.setText("Find and book your perfect room");
+    }
+
+    @FXML
+    private void showBookingsTab() {
+        panelBrowse.setVisible(false);
+        panelBrowse.setManaged(false);
+        panelBookings.setVisible(true);
+        panelBookings.setManaged(true);
+        btnMyBookings.getStyleClass().setAll("nav-button-active");
+        btnBrowse.getStyleClass().setAll("nav-button");
+        if (lblSubtitle != null) lblSubtitle.setText("Your reservation history");
+        loadMyBookings();
+    }
+
+    // ── Browse Rooms ──────────────────────────────────────────────────────────
 
     private void loadRooms() {
         spinner.setVisible(true);
@@ -183,6 +220,98 @@ public class HomeController implements Initializable {
             showError("Could not open room details: " + ex.getMessage());
         }
     }
+
+    // ── My Bookings ───────────────────────────────────────────────────────────
+
+    @FXML
+    public void loadMyBookings() {
+        if (bookingsGrid == null) return;
+        bookingsGrid.getChildren().clear();
+        Label loading = new Label("Loading your reservations…");
+        loading.getStyleClass().add("label-muted");
+        bookingsGrid.getChildren().add(loading);
+
+        int userId = (int) SessionManager.getCurrentUser().getId();
+
+        new Thread(() -> {
+            try {
+                List<Reservation> list = ReservationDao.findByGuest(userId);
+                Platform.runLater(() -> renderBookingCards(list));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> {
+                    bookingsGrid.getChildren().clear();
+                    Label err = new Label("Could not load reservations.");
+                    err.getStyleClass().add("label-muted");
+                    bookingsGrid.getChildren().add(err);
+                });
+            }
+        }).start();
+    }
+
+    private void renderBookingCards(List<Reservation> list) {
+        bookingsGrid.getChildren().clear();
+
+        if (list.isEmpty()) {
+            Label empty = new Label("You have no reservations yet. Browse rooms to make your first booking!");
+            empty.getStyleClass().add("label-muted");
+            empty.setWrapText(true);
+            bookingsGrid.getChildren().add(empty);
+            return;
+        }
+
+        for (Reservation res : list) {
+            VBox card = new VBox(8);
+            card.getStyleClass().add("data-card");
+            card.setPrefWidth(300);
+
+            HBox header = new HBox();
+            header.setAlignment(Pos.CENTER_LEFT);
+            Label lblCode = new Label(res.getReservationCode());
+            lblCode.getStyleClass().add("card-header-text");
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Label badge = createBadge(res.getStatus().toString());
+            header.getChildren().addAll(lblCode, spacer, badge);
+
+            Label lblRoom = new Label("🏯  Room " + res.getRoomNumber() + "  ·  " + res.getRoomTypeName());
+            lblRoom.getStyleClass().add("card-detail-text");
+
+            String dates = (res.getCheckInDate() != null ? res.getCheckInDate().format(DATE_FMT) : "?")
+                    + "  →  "
+                    + (res.getCheckOutDate() != null ? res.getCheckOutDate().format(DATE_FMT) : "?");
+            Label lblDates = new Label("📅  " + dates);
+            lblDates.getStyleClass().add("card-detail-text");
+
+            if (res.getCheckInDate() != null && res.getCheckOutDate() != null) {
+                long nights = res.getCheckOutDate().toEpochDay() - res.getCheckInDate().toEpochDay();
+                double total = nights * res.getPricePerNight();
+                Label lblTotal = new Label(String.format("💴  %.2f MAD  (%d night%s)", total, nights, nights == 1 ? "" : "s"));
+                lblTotal.getStyleClass().add("card-detail-text");
+                lblTotal.setStyle("-fx-text-fill: #c5a059; -fx-font-weight: bold;");
+                card.getChildren().addAll(header, new Separator(), lblRoom, lblDates, lblTotal);
+            } else {
+                card.getChildren().addAll(header, new Separator(), lblRoom, lblDates);
+            }
+
+            bookingsGrid.getChildren().add(card);
+        }
+    }
+
+    private Label createBadge(String status) {
+        Label badge = new Label(status);
+        badge.getStyleClass().add("badge");
+        switch (status) {
+            case "CONFIRMED"   -> badge.getStyleClass().add("badge-cleaning");
+            case "CHECKED_IN"  -> badge.getStyleClass().add("badge-available");
+            case "CHECKED_OUT" -> badge.getStyleClass().add("badge-available");
+            case "CANCELLED"   -> badge.getStyleClass().add("badge-occupied");
+            default            -> badge.getStyleClass().add("badge-maintenance");
+        }
+        return badge;
+    }
+
+    // ── Navigation ────────────────────────────────────────────────────────────
 
     @FXML
     private void handleLogout() {

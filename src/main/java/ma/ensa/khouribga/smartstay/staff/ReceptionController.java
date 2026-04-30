@@ -26,6 +26,7 @@ public class ReceptionController {
 
     // ── Grid Bindings (Replaced Tables) ───────────────────────────────────────
     @FXML private FlowPane resGrid;
+    @FXML private TextField txtSearch;
 
     // ── Operations Bindings ───────────────────────────────────────────────────
     @FXML private TextField txtCleanRoom;
@@ -38,6 +39,7 @@ public class ReceptionController {
     // ── Selection State ───────────────────────────────────────────────────────
     private Reservation selectedRes;
     private VBox selectedResCard;
+    private List<Reservation> allReservations = List.of();
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     @FXML
@@ -62,11 +64,31 @@ public class ReceptionController {
         new Thread(() -> {
             try {
                 List<Reservation> list = ReservationDao.findActive(); 
-                Platform.runLater(() -> populateResGrid(list));
+                Platform.runLater(() -> {
+                    allReservations = list;
+                    if (txtSearch != null) txtSearch.clear();
+                    populateResGrid(list);
+                });
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }).start();
+    }
+
+    @FXML
+    public void filterReservations() {
+        String query = txtSearch == null ? "" : txtSearch.getText().trim().toLowerCase();
+        if (query.isEmpty()) {
+            populateResGrid(allReservations);
+            return;
+        }
+        List<Reservation> filtered = allReservations.stream()
+            .filter(r ->
+                r.getReservationCode().toLowerCase().contains(query) ||
+                r.getGuestFullName().toLowerCase().contains(query) ||
+                r.getRoomNumber().toLowerCase().contains(query))
+            .toList();
+        populateResGrid(filtered);
     }
 
     private void populateResGrid(List<Reservation> list) {
