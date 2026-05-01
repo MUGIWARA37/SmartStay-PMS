@@ -5,10 +5,10 @@
 <?import javafx.scene.media.MediaView?>
 <?import javafx.scene.layout.StackPane?>
 
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.profile.StaffProfileController">
     <MediaView fx:id="bgMediaView" mouseTransparent="true"
                preserveRatio="false" style="-fx-smooth: true;"/>
-    <BorderPane styleClass="interior-root" fx:controller="ma.ensa.khouribga.smartstay.profile.StaffProfileController">
+    <BorderPane styleClass="interior-root">
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 30 40 10 40;">

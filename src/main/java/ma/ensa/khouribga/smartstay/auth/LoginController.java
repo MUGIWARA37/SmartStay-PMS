@@ -12,6 +12,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 
 import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
