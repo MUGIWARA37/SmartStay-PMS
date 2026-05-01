@@ -1,4 +1,5 @@
 package ma.ensa.khouribga.smartstay.staff;
+import ma.ensa.khouribga.smartstay.ThemeManager;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -124,4 +125,10 @@ public class CleaningController {
             ctrl -> ((ma.ensa.khouribga.smartstay.profile.StaffProfileController) ctrl)
                         .setPreviousRoute(Navigator.CLEANING));
     }
+
+    @FXML
+    public void handleThemeToggle() {
+        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    }
+
 }

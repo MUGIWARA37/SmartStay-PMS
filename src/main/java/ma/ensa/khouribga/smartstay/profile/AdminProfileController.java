@@ -1,4 +1,5 @@
 package ma.ensa.khouribga.smartstay.profile;
+import ma.ensa.khouribga.smartstay.ThemeManager;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -159,4 +160,10 @@ public class AdminProfileController {
         alert.getDialogPane().getStyleClass().add("dialog-pane");
         alert.showAndWait();
     }
+
+    @FXML
+    public void handleThemeToggle() {
+        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    }
+
 }

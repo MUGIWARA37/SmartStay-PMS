@@ -90,6 +90,7 @@ public class Navigator {
         double height = (currentScene != null) ? currentScene.getHeight() : 700;
 
         Scene newScene = new Scene(root, width, height);
+        ThemeManager.applyToScene(newScene);
         stage.setScene(newScene);
         stage.show();
     }

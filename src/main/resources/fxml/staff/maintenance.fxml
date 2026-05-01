@@ -12,7 +12,8 @@
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="welcomeLabel" styleClass="label-muted"/>
             <Button text="👤  Profile" styleClass="btn-secondary" onAction="#goToProfile"/>
-            <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
+            <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity"/>
+                <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
         </HBox>
     </top>
     <center>

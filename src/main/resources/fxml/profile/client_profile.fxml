@@ -14,7 +14,8 @@
             <Label text="⚔  MY PROFILE" styleClass="welcome-label"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="← Back" styleClass="btn-secondary" onAction="#goBack"/>
-            <Button text="Logout" styleClass="btn-logout" onAction="#onLogout"/>
+            <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity"/>
+                <Button text="Logout" styleClass="btn-logout" onAction="#onLogout"/>
         </HBox>
     </top>
 

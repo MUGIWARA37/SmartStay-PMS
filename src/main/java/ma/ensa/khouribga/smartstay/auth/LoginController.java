@@ -267,4 +267,10 @@ public class LoginController {
         txtRegUser.setDisable(false);  txtRegEmail.setDisable(false);
         txtRegPass.setDisable(false);  
     }
+
+    @FXML
+    public void handleThemeToggle() {
+        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    }
+
 }

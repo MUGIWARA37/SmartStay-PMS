@@ -1,4 +1,5 @@
 package ma.ensa.khouribga.smartstay.profile;
+import ma.ensa.khouribga.smartstay.ThemeManager;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -238,4 +239,10 @@ public class ClientProfileController {
             lbl.setStyle(isError ? "-fx-text-fill: #e05c5c;" : "-fx-text-fill: #4caf82;");
         });
     }
+
+    @FXML
+    public void handleThemeToggle() {
+        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    }
+
 }

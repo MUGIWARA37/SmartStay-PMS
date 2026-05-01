@@ -76,4 +76,7 @@
 
         </VBox>
     </VBox>
+    <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme"
+            StackPane.alignment="TOP_RIGHT"
+            style="-fx-translate-x: -20; -fx-translate-y: 20;"/>
 </StackPane>

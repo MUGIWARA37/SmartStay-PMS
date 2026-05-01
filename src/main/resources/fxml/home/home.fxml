@@ -30,7 +30,8 @@
             <Region VBox.vgrow="ALWAYS"/>
 
             <!-- Logout -->
-            <Button fx:id="btnLogout" text="⬅  Sign Out" styleClass="btn-logout"
+            <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity" style="-fx-margin: 0 0 8 0;"/>
+                <Button fx:id="btnLogout" text="⬅  Sign Out" styleClass="btn-logout"
                     maxWidth="Infinity" onAction="#handleLogout"/>
             <padding><Insets bottom="16"/></padding>
         </VBox>

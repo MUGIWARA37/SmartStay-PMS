@@ -14,7 +14,8 @@
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="👤 PROFILE &amp; COMM LINK" onMouseClicked="#goToProfile" styleClass="btn-secondary"/>
-            <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-logout, btn-secondary"/>
+            <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity"/>
+                <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-logout, btn-secondary"/>
         </HBox>
     </top>
 

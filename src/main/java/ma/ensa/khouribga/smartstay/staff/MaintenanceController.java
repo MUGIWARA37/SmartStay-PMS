@@ -1,4 +1,5 @@
 package ma.ensa.khouribga.smartstay.staff;
+import ma.ensa.khouribga.smartstay.ThemeManager;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -184,4 +185,10 @@ public class MaintenanceController {
             ctrl -> ((ma.ensa.khouribga.smartstay.profile.StaffProfileController) ctrl)
                         .setPreviousRoute(Navigator.MAINTENANCE));
     }
+
+    @FXML
+    public void handleThemeToggle() {
+        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    }
+
 }

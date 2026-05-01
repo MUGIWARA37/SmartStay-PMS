@@ -1,4 +1,5 @@
 package ma.ensa.khouribga.smartstay.home;
+import ma.ensa.khouribga.smartstay.ThemeManager;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -329,4 +330,10 @@ public class HomeController implements Initializable {
         alert.setHeaderText(null);
         alert.showAndWait();
     }
+
+    @FXML
+    public void handleThemeToggle() {
+        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    }
+
 }
