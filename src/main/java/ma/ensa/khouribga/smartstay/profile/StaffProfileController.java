@@ -1,9 +1,11 @@
 package ma.ensa.khouribga.smartstay.profile;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -23,6 +25,7 @@ import java.time.LocalDate;
 
 public class StaffProfileController {
 
+    @FXML private MediaView bgMediaView;
     @FXML private Label lblInitials;
     @FXML private Label lblFullName;
     @FXML private Label lblRole;
@@ -52,6 +55,7 @@ public class StaffProfileController {
 
     @FXML
     public void initialize() {
+        VideoBackground.register(bgMediaView);
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) return;
 

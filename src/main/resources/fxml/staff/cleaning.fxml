@@ -2,9 +2,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
-<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.layout.StackPane?>
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true"
+               preserveRatio="false" style="-fx-smooth: true;"/>
+    <BorderPane
             fx:controller="ma.ensa.khouribga.smartstay.staff.CleaningController"
-            styleClass="interior-root" stylesheets="@/styles/samurai.css" prefWidth="1100" prefHeight="700">
+            styleClass="interior-root" prefWidth="1100" prefHeight="700">
     
     <top>
         <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
@@ -44,3 +49,4 @@
         </VBox>
     </center>
 </BorderPane>
+</StackPane>

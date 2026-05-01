@@ -3,9 +3,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.layout.StackPane?>
 
-<BorderPane xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true"
+               preserveRatio="false" style="-fx-smooth: true;"/>
+    <BorderPane
             fx:controller="ma.ensa.khouribga.smartstay.home.HomeController"
             styleClass="interior-root"
             prefWidth="1280" prefHeight="800">
@@ -118,3 +122,4 @@
     </center>
 
 </BorderPane>
+</StackPane>

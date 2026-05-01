@@ -44,7 +44,7 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        startVideoBackground();
+        VideoBackground.register(bgVideo);
         clearError();
     }
 
@@ -56,25 +56,6 @@ public class LoginController {
         registerPanel.setVisible(isLoginVisible);
         registerPanel.setManaged(isLoginVisible);
         clearError();
-    }
-
-    private void startVideoBackground() {
-        URL videoUrl = getClass().getResource("/videos/sakura.mp4");
-        if (videoUrl == null) return;
-        Media media = new Media(videoUrl.toExternalForm());
-        MediaPlayer player = new MediaPlayer(media);
-        player.setAutoPlay(true);
-        player.setMute(true);
-        player.setCycleCount(MediaPlayer.INDEFINITE);
-        bgVideo.setMediaPlayer(player);
-        bgVideo.setPreserveRatio(false);
-        
-        bgVideo.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                bgVideo.fitWidthProperty().bind(newScene.widthProperty());
-                bgVideo.fitHeightProperty().bind(newScene.heightProperty());
-            }
-        });
     }
 
     @FXML

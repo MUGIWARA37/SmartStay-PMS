@@ -1,9 +1,11 @@
 package ma.ensa.khouribga.smartstay.staff;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import ma.ensa.khouribga.smartstay.Navigator;
@@ -21,6 +23,7 @@ import java.util.List;
 
 public class MaintenanceController {
 
+    @FXML private MediaView bgMediaView;
     @FXML private Label welcomeLabel;
     @FXML private ComboBox<String> statusFilter;
     @FXML private TableView<MaintenanceRequest> taskTable;
@@ -43,6 +46,7 @@ public class MaintenanceController {
 
     @FXML
     public void initialize() {
+        VideoBackground.register(bgMediaView);
         try { SessionManager.requireRole(User.Role.STAFF); }
         catch (Exception e) { Navigator.goToLogin(welcomeLabel); return; }
 

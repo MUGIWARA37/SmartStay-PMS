@@ -1,9 +1,11 @@
 package ma.ensa.khouribga.smartstay.home;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 
 public class HomeController implements Initializable {
 
+    @FXML private MediaView bgMediaView;
     @FXML private Label welcomeLabel;
     @FXML private Label lblSubtitle;
     @FXML private Button btnLogout;
@@ -52,6 +55,7 @@ public class HomeController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        VideoBackground.register(bgMediaView);
         String name = SessionManager.getCurrentUser().getUsername();
         welcomeLabel.setText("Welcome back, " + name);
 

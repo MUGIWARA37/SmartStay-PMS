@@ -355,3 +355,31 @@
 
 /* ── CONTENT AREA ─────────────────────────────────────────── */
 .content-area { -fx-background-color: transparent; }
+/* ── VIDEO BACKGROUND ─────────────────────────────────────── */
+/* Interior scenes now have a cinematic video behind them.
+   The root itself must be transparent so the video shows. */
+.video-root {
+    -fx-background-color: transparent;
+}
+.interior-root {
+    /* override solid colour — let video bleed through */
+    -fx-background-color: rgba(10, 10, 14, 0.55);
+}
+.light-mode .interior-root,
+.light-mode.interior-root {
+    -fx-background-color: rgba(253, 240, 245, 0.60);
+}
+/* Sidebar gets a stronger glass tint so text stays readable */
+.sidebar {
+    -fx-background-color: linear-gradient(to bottom, rgba(10,10,14,0.82), rgba(4,4,6,0.88));
+}
+.light-mode .sidebar {
+    -fx-background-color: linear-gradient(to bottom, rgba(255,240,245,0.88), rgba(253,230,240,0.92));
+}
+/* Header bar matching glass */
+.header-bar {
+    -fx-background-color: rgba(12,12,16,0.72);
+}
+.light-mode .header-bar {
+    -fx-background-color: rgba(255,245,248,0.88);
+}

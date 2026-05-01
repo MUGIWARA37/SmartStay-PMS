@@ -3,8 +3,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.chart.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.layout.StackPane?>
 
-<BorderPane styleClass="interior-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.admin.AdminController">
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true"
+               preserveRatio="false" style="-fx-smooth: true;"/>
+    <BorderPane styleClass="interior-root" fx:controller="ma.ensa.khouribga.smartstay.admin.AdminController">
 
     <left>
         <VBox styleClass="sidebar" prefWidth="250" spacing="10">
@@ -205,3 +210,4 @@
         </VBox>
     </center>
 </BorderPane>
+</StackPane>

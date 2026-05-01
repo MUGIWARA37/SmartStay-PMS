@@ -1,9 +1,11 @@
 package ma.ensa.khouribga.smartstay.profile;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.scene.control.*;
 import javafx.scene.shape.Circle;
 import ma.ensa.khouribga.smartstay.Navigator;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class ClientProfileController {
 
     // ── Header ────────────────────────────────────────────────────────────────
+    @FXML private MediaView bgMediaView;
     @FXML private Circle  avatarCircle;
     @FXML private Label   avatarInitials;
     @FXML private Label   fullNameLabel;
@@ -47,6 +50,7 @@ public class ClientProfileController {
 
     @FXML
     public void initialize() {
+        VideoBackground.register(bgMediaView);
         loadProfile();
     }
 

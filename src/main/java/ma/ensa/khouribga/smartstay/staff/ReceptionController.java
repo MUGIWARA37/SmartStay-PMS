@@ -1,10 +1,12 @@
 package ma.ensa.khouribga.smartstay.staff;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -26,6 +28,7 @@ import java.util.List;
 public class ReceptionController {
 
     // ── Grid Bindings (Replaced Tables) ───────────────────────────────────────
+    @FXML private MediaView bgMediaView;
     @FXML private FlowPane resGrid;
     @FXML private TextField txtSearch;
 
@@ -45,6 +48,7 @@ public class ReceptionController {
 
     @FXML
     public void initialize() {
+        VideoBackground.register(bgMediaView);
         if (cmbMaintCategory != null) {
             cmbMaintCategory.setItems(FXCollections.observableArrayList(
                 "PLUMBING / WATER", 

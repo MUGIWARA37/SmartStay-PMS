@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.chart.*;
@@ -12,6 +13,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import ma.ensa.khouribga.smartstay.Navigator;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 import ma.ensa.khouribga.smartstay.dao.*;
 import ma.ensa.khouribga.smartstay.model.*;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
@@ -30,6 +32,7 @@ import java.util.Map;
 
 public class AdminController {
 
+    @FXML private MediaView bgMediaView;
     @FXML private Label statAvailable;
     @FXML private Label statOccupied;
     @FXML private Label statCleaning;
@@ -73,6 +76,7 @@ public class AdminController {
 
     @FXML
     public void initialize() {
+        VideoBackground.register(bgMediaView);
         try { SessionManager.requireRole(User.Role.ADMIN); }
         catch (Exception e) { Platform.runLater(() -> Navigator.goToLogin(statAvailable)); return; }
         updateThemeButton();

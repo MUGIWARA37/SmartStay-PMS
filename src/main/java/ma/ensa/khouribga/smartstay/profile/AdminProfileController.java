@@ -1,9 +1,11 @@
 package ma.ensa.khouribga.smartstay.profile;
 import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.media.MediaView;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -22,6 +24,7 @@ import java.sql.ResultSet;
 
 public class AdminProfileController {
 
+    @FXML private MediaView bgMediaView;
     @FXML private Label lblInitials;
     @FXML private Label lblUsername;
     @FXML private TextField txtEmail;
@@ -34,6 +37,7 @@ public class AdminProfileController {
 
     @FXML
     public void initialize() {
+        VideoBackground.register(bgMediaView);
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) {
             Platform.runLater(() -> Navigator.goToLogin(lblUsername));
