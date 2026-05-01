@@ -54,6 +54,8 @@ public class AdminController {
     @FXML private ComboBox<Room.Status> roomStatusFilter;
     @FXML private ComboBox<Room.Status> roomStatusEdit;
     @FXML private ComboBox<String> resStatusFilter;
+    @FXML private DatePicker resDateFrom;
+    @FXML private DatePicker resDateTo;
     @FXML private ComboBox<String> staffRoleFilter;
     @FXML private ComboBox<String> staffStatusFilter;
     @FXML private DatePicker payPeriodStart;
@@ -205,6 +207,8 @@ public class AdminController {
         if (roomStatusFilter != null) { roomStatusFilter.setItems(FXCollections.observableArrayList(Room.Status.values())); roomStatusFilter.setOnAction(e -> filterRooms()); }
         if (roomStatusEdit   != null) roomStatusEdit.setItems(FXCollections.observableArrayList(Room.Status.values()));
         if (resStatusFilter  != null) { resStatusFilter.setItems(FXCollections.observableArrayList("ALL","PENDING","CONFIRMED","CHECKED_IN","CHECKED_OUT","CANCELLED")); resStatusFilter.setValue("ALL"); resStatusFilter.setOnAction(e -> filterReservations()); }
+        if (resDateFrom != null) { resDateFrom.setValue(LocalDate.now().withDayOfYear(1)); resDateFrom.setOnAction(e -> filterReservations()); }
+        if (resDateTo   != null) { resDateTo.setValue(LocalDate.now().withMonth(12).withDayOfMonth(31)); resDateTo.setOnAction(e -> filterReservations()); }
         if (payPeriodStart   != null) payPeriodStart.setValue(LocalDate.now().withDayOfMonth(1));
         if (payPeriodEnd     != null) payPeriodEnd.setValue(LocalDate.now());
         if (staffRoleFilter  != null) { staffRoleFilter.setItems(FXCollections.observableArrayList("ALL","STAFF","ADMIN","CLIENT")); staffRoleFilter.setValue("ALL"); staffRoleFilter.setOnAction(e -> filterStaff()); }
@@ -241,8 +245,35 @@ public class AdminController {
     }
 
     // ── Reservations ──────────────────────────────────────────────────────────
-    @FXML public void loadAllReservations() { new Thread(() -> { try { List<Reservation> list = ReservationDao.findAll(); Platform.runLater(() -> populateResGrid(list)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }
-    @FXML public void filterReservations() { if (resStatusFilter.getValue() == null || "ALL".equals(resStatusFilter.getValue())) { loadAllReservations(); return; } new Thread(() -> { try { List<Reservation> list = ReservationDao.findByStatus(Reservation.Status.valueOf(resStatusFilter.getValue())); Platform.runLater(() -> populateResGrid(list)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }
+    @FXML public void loadAllReservations() {
+        // Default: show only reservations whose check-in falls in the current year
+        LocalDate yearStart = LocalDate.now().withDayOfYear(1);
+        LocalDate yearEnd   = LocalDate.now().withMonth(12).withDayOfMonth(31);
+        new Thread(() -> {
+            try {
+                List<Reservation> list = ReservationDao.findByCheckInRange(yearStart, yearEnd);
+                Platform.runLater(() -> populateResGrid(list));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }).start();
+    }
+    @FXML public void filterReservations() {
+        LocalDate from   = (resDateFrom != null && resDateFrom.getValue() != null)
+                           ? resDateFrom.getValue() : LocalDate.now().withDayOfYear(1);
+        LocalDate to     = (resDateTo   != null && resDateTo.getValue()   != null)
+                           ? resDateTo.getValue()   : LocalDate.now().withMonth(12).withDayOfMonth(31);
+        String statusVal = (resStatusFilter != null) ? resStatusFilter.getValue() : "ALL";
+        new Thread(() -> {
+            try {
+                List<Reservation> list = ReservationDao.findByCheckInRange(from, to);
+                if (statusVal != null && !"ALL".equals(statusVal)) {
+                    Reservation.Status filter = Reservation.Status.valueOf(statusVal);
+                    list = list.stream().filter(r -> r.getStatus() == filter).toList();
+                }
+                final List<Reservation> result = list;
+                Platform.runLater(() -> populateResGrid(result));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }).start();
+    }
 
     private void populateResGrid(List<Reservation> list) {
         if (resGrid == null) return;
@@ -259,8 +290,8 @@ public class AdminController {
         }
     }
 
-    @FXML public void doCheckIn() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_IN); Platform.runLater(this::loadAllReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
-    @FXML public void doCheckOut() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_OUT); Platform.runLater(this::loadAllReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
+    @FXML public void doCheckIn() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_IN); Platform.runLater(this::filterReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
+    @FXML public void doCheckOut() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_OUT); Platform.runLater(this::filterReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
 
     // ── Payroll ───────────────────────────────────────────────────────────────
     @FXML public void loadAllPayroll() { new Thread(() -> { try { List<Payroll> list = PayrollDao.findAll(); Platform.runLater(() -> populatePayrollGrid(list)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }

@@ -141,8 +141,13 @@
                 <!-- RESERVATIONS TAB -->
                 <Tab text="📋 RESERVATIONS">
                     <VBox spacing="15" style="-fx-padding: 20 0 0 0;">
-                        <HBox spacing="15" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
+                        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="glass-box" style="-fx-padding: 15;">
                             <ComboBox fx:id="resStatusFilter" promptText="Filter Status..." styleClass="combo-box"/>
+                            <Label text="From:" styleClass="label-muted"/>
+                            <DatePicker fx:id="resDateFrom" styleClass="date-picker" prefWidth="145"/>
+                            <Label text="To:" styleClass="label-muted"/>
+                            <DatePicker fx:id="resDateTo" styleClass="date-picker" prefWidth="145"/>
+                            <Button text="🔍 APPLY" onAction="#filterReservations" styleClass="btn-secondary"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Button text="CHECK-IN SELECTED" onAction="#doCheckIn" styleClass="btn-success"/>
                             <Button text="CHECK-OUT SELECTED" onAction="#doCheckOut" styleClass="btn-primary"/>

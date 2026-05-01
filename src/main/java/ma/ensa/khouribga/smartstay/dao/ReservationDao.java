@@ -77,6 +77,24 @@ public class ReservationDao {
     }
 
     /**
+     * Returns all reservations whose check-in date falls within the given calendar year.
+     * Most recent first.
+     */
+    public static List<Reservation> findByYear(int year) throws SQLException {
+        List<Reservation> list = new ArrayList<>();
+        String sql = SELECT_JOINED
+                   + " WHERE YEAR(r.check_in_date) = ? ORDER BY r.check_in_date DESC";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /**
      * Returns all reservations for a specific guest (by their user account id).
      */
     public static List<Reservation> findByGuest(int bookedByUserId) throws SQLException {
