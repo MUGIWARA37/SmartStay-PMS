@@ -75,8 +75,10 @@ public class PayrollDao {
      */
     public static void generateForPeriod(LocalDate periodStart, LocalDate periodEnd) throws SQLException {
         String staffSql = "SELECT id, salary_base FROM staff_profiles WHERE is_on_duty = TRUE OR is_on_duty = FALSE";
+        // INSERT IGNORE skips rows where (staff_profile_id, period_start, period_end) already exist.
+        // Requires a UNIQUE KEY on those three columns in the payroll table.
         String insertSql = """
-                INSERT INTO payroll
+                INSERT IGNORE INTO payroll
                   (staff_profile_id, period_start, period_end, base_salary,
                    bonuses, deductions, net_salary, status, generated_at)
                 VALUES (?, ?, ?, ?, 0, 0, ?, 'GENERATED', NOW())

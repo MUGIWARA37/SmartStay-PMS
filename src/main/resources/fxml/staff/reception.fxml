@@ -65,6 +65,7 @@
                     <HBox alignment="CENTER_LEFT" spacing="15" styleClass="glass-box" style="-fx-padding: 15;">
                         <Label text="Today's Logistics" styleClass="section-title"/>
                         <Region HBox.hgrow="ALWAYS"/>
+                        <TextField fx:id="txtSearch" promptText="🔍  Search code, guest, room…" styleClass="text-field" prefWidth="260" onKeyReleased="#filterReservations"/>
                         <Button text="REFRESH" onAction="#loadReservations" styleClass="btn-secondary"/>
                     </HBox>
 

@@ -56,9 +56,9 @@
             <VBox fx:id="panelBrowse" VBox.vgrow="ALWAYS">
 
                 <!-- Filter bar -->
-                <HBox styleClass="card" spacing="16" alignment="CENTER_LEFT">
+                <HBox styleClass="card" spacing="16" alignment="CENTER_LEFT" VBox.vgrow="NEVER">
+                    <VBox.margin><Insets top="16" right="20" bottom="0" left="20"/></VBox.margin>
                     <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
-                    <margin><Insets top="16" right="20" bottom="0" left="20"/></margin>
 
                     <Label text="Type:" styleClass="form-label"/>
                     <ComboBox fx:id="cbRoomType" prefWidth="160" styleClass="combo-box"/>

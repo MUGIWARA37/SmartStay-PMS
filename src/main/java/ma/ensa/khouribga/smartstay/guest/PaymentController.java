@@ -13,8 +13,11 @@ import ma.ensa.khouribga.smartstay.dao.ServiceDao;
 import ma.ensa.khouribga.smartstay.model.*;
 import ma.ensa.khouribga.smartstay.model.Invoice.InvoiceLine;
 import ma.ensa.khouribga.smartstay.model.Invoice.InvoiceLine.LineType;
+import ma.ensa.khouribga.smartstay.service.InvoiceExportService;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -51,6 +54,7 @@ public class PaymentController {
     @FXML private Label lblSuccess;
     @FXML private Button btnConfirm;
     @FXML private Button btnCancel;
+    @FXML private Button btnExportPdf;
 
     // State
     private Room room;
@@ -59,6 +63,8 @@ public class PaymentController {
     private long nights;
     private boolean bookingConfirmed = false;
     private List<ServiceLineItem> serviceItems = new ArrayList<>();
+    private long lastInvoiceId = -1;
+    private int lastReservationId = -1;
 
     public void initData(Room room, LocalDate checkIn, LocalDate checkOut) {
         this.room     = room;
@@ -133,17 +139,24 @@ public class PaymentController {
         btnConfirm.setDisable(true);
         btnConfirm.setText("Processing…");
 
-        Task<String> task = new Task<>() {
-            @Override protected String call() throws Exception { return performBooking(); }
+        Task<String[]> task = new Task<>() {
+            @Override protected String[] call() throws Exception { return performBooking(); }
         };
 
         task.setOnSucceeded(e -> {
             bookingConfirmed = true;
-            lblSuccess.setText("✓ Booking confirmed! Reservation Code: " + task.getValue());
+            String[] result = task.getValue();
+            lastReservationId = Integer.parseInt(result[0]);
+            lastInvoiceId     = Integer.parseInt(result[1]);
+            lblSuccess.setText("✓ Booking confirmed! Reservation Code: " + result[2]);
             lblSuccess.setVisible(true);
             lblSuccess.setManaged(true);
             btnConfirm.setVisible(false);
             btnConfirm.setManaged(false);
+            if (btnExportPdf != null) {
+                btnExportPdf.setVisible(true);
+                btnExportPdf.setManaged(true);
+            }
             btnCancel.setText("Close");
         });
 
@@ -158,7 +171,7 @@ public class PaymentController {
         t.start();
     }
 
-    private String performBooking() throws Exception {
+    private String[] performBooking() throws Exception {
         // 1. Guest
         String passport = tfPassport.getText().trim();
         Optional<Guest> existingGuest = GuestDao.findByPassport(passport);
@@ -220,7 +233,38 @@ public class PaymentController {
         long invoiceId = InvoiceDao.create(invoice);
         InvoiceDao.updateStatus(invoiceId, Invoice.Status.ISSUED);
 
-        return reservationCode;
+        return new String[]{ String.valueOf(reservationId), String.valueOf(invoiceId), reservationCode };
+    }
+
+    @FXML
+    private void handleExportPdf() {
+        if (lastInvoiceId < 0 || lastReservationId < 0) return;
+        new Thread(() -> {
+            try {
+                Invoice invoice = InvoiceDao.findById(lastInvoiceId).orElseThrow();
+                Reservation res = ReservationDao.findById(lastReservationId).orElseThrow();
+                File pdf = InvoiceExportService.export(invoice, res);
+                javafx.application.Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                            "Invoice saved to:\n" + pdf.getAbsolutePath(), ButtonType.OK);
+                    alert.setHeaderText("📜  Invoice Exported");
+                    alert.getDialogPane().getStylesheets().add(
+                            getClass().getResource("/styles/samurai.css").toExternalForm());
+                    alert.getDialogPane().getStyleClass().add("dialog-pane");
+                    alert.showAndWait();
+                    try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(pdf); }
+                    catch (Exception ignored) {}
+                });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    Alert err = new Alert(Alert.AlertType.ERROR,
+                            "PDF export failed: " + ex.getMessage(), ButtonType.OK);
+                    err.setHeaderText(null);
+                    err.showAndWait();
+                });
+            }
+        }).start();
     }
 
     @FXML private void handleCancel() { ((Stage) btnCancel.getScene().getWindow()).close(); }
