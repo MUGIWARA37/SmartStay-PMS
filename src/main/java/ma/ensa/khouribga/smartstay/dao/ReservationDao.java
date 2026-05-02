@@ -5,6 +5,7 @@ import ma.ensa.khouribga.smartstay.db.TxManager;
 import ma.ensa.khouribga.smartstay.model.Reservation;
 import ma.ensa.khouribga.smartstay.model.Room;
 
+import java.security.SecureRandom;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -303,12 +304,12 @@ public class ReservationDao {
 
     // ── Private utils ─────────────────────────────────────────────────────────
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     /** Generates a unique reservation code: {@code SS-YYYYMMDD-XXXXX}. */
     private static String generateCode() {
-        String date = java.time.LocalDate.now()
-                          .toString().replace("-", "");
-        String hex  = Integer.toHexString((int)(Math.random() * 0xFFFFF))
-                          .toUpperCase();
-        return "SS-" + date + "-" + String.format("%5s", hex).replace(' ', '0');
+        String date = LocalDate.now().toString().replace("-", "");
+        String hex  = String.format("%05X", SECURE_RANDOM.nextInt(0x100000));
+        return "SS-" + date + "-" + hex;
     }
 }

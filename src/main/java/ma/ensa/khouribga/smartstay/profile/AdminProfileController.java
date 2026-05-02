@@ -13,14 +13,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import ma.ensa.khouribga.smartstay.Navigator;
-import ma.ensa.khouribga.smartstay.db.Database;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 import org.mindrot.jbcrypt.BCrypt;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 
 public class AdminProfileController {
 
@@ -73,13 +69,8 @@ public class AdminProfileController {
         }
 
         new Thread(() -> {
-            String sql = "UPDATE users SET email = ? WHERE id = ?";
-            try (Connection conn = Database.getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, newEmail);
-                ps.setLong(2, currentUser.getId());
-                ps.executeUpdate();
-                
+            try {
+                UserDao.updateEmail(currentUser.getId(), newEmail);
                 currentUser.setEmail(newEmail);
                 Platform.runLater(() -> showAlert(Alert.AlertType.INFORMATION, "Success", "Communications link updated successfully."));
             } catch (Exception e) {
@@ -112,35 +103,18 @@ public class AdminProfileController {
 
         new Thread(() -> {
             try {
-                // 1. Verify old password from DB
-                String sqlFetch = "SELECT password_hash FROM users WHERE id = ?";
-                String currentHash = "";
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement(sqlFetch)) {
-                    ps.setLong(1, currentUser.getId());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            currentHash = rs.getString("password_hash");
-                        }
-                    }
-                }
+                String currentHash = UserDao.findById(currentUser.getId())
+                        .map(User::getPasswordHash)
+                        .orElse("");
 
                 if (!BCrypt.checkpw(oldPass, currentHash)) {
                     Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Authentication Failed", "Current passphrase is incorrect."));
                     return;
                 }
 
-                // 2. Hash new password and save
                 String newHash = BCrypt.hashpw(newPass, BCrypt.gensalt(12));
-                String sqlUpdate = "UPDATE users SET password_hash = ? WHERE id = ?";
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement(sqlUpdate)) {
-                    ps.setString(1, newHash);
-                    ps.setLong(2, currentUser.getId());
-                    ps.executeUpdate();
-                }
+                UserDao.updatePasswordHash(currentUser.getId(), newHash);
 
-                // 3. Update local session and UI
                 currentUser.setPasswordHash(newHash);
                 Platform.runLater(() -> {
                     txtOldPass.clear();

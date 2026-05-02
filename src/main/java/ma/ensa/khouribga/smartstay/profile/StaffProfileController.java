@@ -12,6 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
@@ -239,15 +240,9 @@ public class StaffProfileController {
 
         new Thread(() -> {
             try {
-                String sqlFetch = "SELECT password_hash FROM users WHERE id = ?";
-                String currentHash = "";
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement(sqlFetch)) {
-                    ps.setLong(1, currentUser.getId());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) currentHash = rs.getString("password_hash");
-                    }
-                }
+                String currentHash = UserDao.findById(currentUser.getId())
+                        .map(User::getPasswordHash)
+                        .orElse("");
 
                 if (!BCrypt.checkpw(oldPass, currentHash)) {
                     Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Authentication Failed", "Current passphrase is incorrect."));
@@ -255,13 +250,7 @@ public class StaffProfileController {
                 }
 
                 String newHash = BCrypt.hashpw(newPass, BCrypt.gensalt(12));
-                String sqlUpdate = "UPDATE users SET password_hash = ? WHERE id = ?";
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement(sqlUpdate)) {
-                    ps.setString(1, newHash);
-                    ps.setLong(2, currentUser.getId());
-                    ps.executeUpdate();
-                }
+                UserDao.updatePasswordHash(currentUser.getId(), newHash);
 
                 currentUser.setPasswordHash(newHash);
                 Platform.runLater(() -> {
@@ -284,11 +273,16 @@ public class StaffProfileController {
         }
 
         new Thread(() -> {
-            String sql = "INSERT INTO maintenance_requests (room_id, title, priority, status, description) VALUES (1, ?, 'MEDIUM', 'PENDING', ?)";
+            String sql = """
+                    INSERT INTO maintenance_requests
+                        (room_id, reported_by_user_id, title, priority, status, description)
+                    VALUES (1, ?, ?, 'MEDIUM', 'NEW', ?)
+                    """;
             try (Connection conn = Database.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, "[APP] Staff Alert: " + currentUser.getUsername());
-                ps.setString(2, desc);
+                ps.setLong(1, currentUser.getId());
+                ps.setString(2, "[APP] Staff Alert: " + currentUser.getUsername());
+                ps.setString(3, desc);
                 ps.executeUpdate();
 
                 Platform.runLater(() -> {

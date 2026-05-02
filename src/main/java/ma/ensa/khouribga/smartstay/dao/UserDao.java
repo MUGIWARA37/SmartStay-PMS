@@ -153,4 +153,49 @@ public class UserDao {
             }
         }
     }
+
+    /**
+     * Returns {@code true} if any user (active or inactive) already holds the given username.
+     * Use this for registration availability checks.
+     */
+    public static boolean existsByUsername(String username) throws SQLException {
+        String sql = "SELECT 1 FROM users WHERE username = ? LIMIT 1";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
+     * Updates the email address for the given user.
+     *
+     * @return {@code true} if a row was updated.
+     */
+    public static boolean updateEmail(long userId, String email) throws SQLException {
+        String sql = "UPDATE users SET email = ? WHERE id = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setLong(2, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Updates the BCrypt password hash for the given user.
+     *
+     * @return {@code true} if a row was updated.
+     */
+    public static boolean updatePasswordHash(long userId, String newPasswordHash) throws SQLException {
+        String sql = "UPDATE users SET password_hash = ? WHERE id = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newPasswordHash);
+            ps.setLong(2, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
 }

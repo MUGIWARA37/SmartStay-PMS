@@ -174,10 +174,11 @@ CREATE TABLE invoices (
   reservation_id BIGINT NOT NULL,
   invoice_number VARCHAR(50) NOT NULL UNIQUE,
   issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  subtotal_amount DECIMAL(10,2) NOT NULL,
-  tax_amount DECIMAL(10,2) NOT NULL,
-  total_amount DECIMAL(10,2) NOT NULL,
+  subtotal_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  tax_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   status ENUM('DRAFT','ISSUED','PAID','CANCELLED') NOT NULL DEFAULT 'ISSUED',
+  paid_at DATETIME NULL,
   notes VARCHAR(255) NULL,
   CONSTRAINT fk_invoices_reservation FOREIGN KEY (reservation_id) REFERENCES reservations(id)
 );

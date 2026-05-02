@@ -3,6 +3,7 @@ package ma.ensa.khouribga.smartstay;
 import javafx.scene.Scene;
 import javafx.scene.Parent;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,23 +11,30 @@ import java.util.List;
  * Global theme manager for SmartStay PMS.
  * Dark  = "Bloody Samurai" — bloodborne.mp4  (default)
  * Light = "Pink Blossom"   — sakura.mp4
+ *
+ * Scene references are held weakly so that navigating away does not
+ * prevent garbage-collection of old scenes.
  */
 public class ThemeManager {
 
     private static boolean darkMode = true;
-    private static final List<Scene> registeredScenes = new ArrayList<>();
+    private static final List<WeakReference<Scene>> registeredScenes = new ArrayList<>();
 
     public static void applyToScene(Scene scene) {
         if (scene == null) return;
-        registeredScenes.removeIf(s -> s == null);
-        if (!registeredScenes.contains(scene)) registeredScenes.add(scene);
+        // Remove stale refs and any existing registration for this scene
+        registeredScenes.removeIf(ref -> ref.get() == null || ref.get() == scene);
+        registeredScenes.add(new WeakReference<>(scene));
         applyTheme(scene);
     }
 
     public static void toggle() {
         darkMode = !darkMode;
-        registeredScenes.removeIf(s -> s == null);
-        for (Scene scene : registeredScenes) applyTheme(scene);
+        registeredScenes.removeIf(ref -> ref.get() == null);
+        for (WeakReference<Scene> ref : registeredScenes) {
+            Scene scene = ref.get();
+            if (scene != null) applyTheme(scene);
+        }
         // Swap background videos on ALL registered MediaViews
         VideoBackground.syncAll(darkMode);
     }
