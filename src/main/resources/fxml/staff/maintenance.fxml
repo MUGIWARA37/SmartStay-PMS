@@ -4,51 +4,83 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
 <?import javafx.scene.layout.StackPane?>
+
 <StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.staff.MaintenanceController">
     <MediaView fx:id="bgMediaView" mouseTransparent="true"
                preserveRatio="false" style="-fx-smooth: true;"/>
-    <BorderPane
-            styleClass="interior-root" prefWidth="1100" prefHeight="700">
-    
+    <BorderPane styleClass="interior-root" prefWidth="1100" prefHeight="700">
+
+    <!-- ═══════════ SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar" prefWidth="220" spacing="4">
+            <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4">
+                <Label text="侍" styleClass="sidebar-logo"/>
+                <Label text="SMARTSTAY" styleClass="app-title"/>
+                <Label text="MAINTENANCE" styleClass="app-subtitle"/>
+                <Label text="智 Wisdom · 侍 Precision" styleClass="sidebar-sub-kanji"/>
+            </VBox>
+            <Button text="🛠  My Tickets" styleClass="nav-button-active" maxWidth="Infinity"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <HBox alignment="CENTER" style="-fx-padding: 0 16 8 16;">
+                <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+            </HBox>
+            <VBox spacing="8" style="-fx-padding: 0 16 16 16;">
+                <HBox alignment="CENTER" spacing="10" style="-fx-cursor: hand;" onMouseClicked="#goToProfile">
+                    <StackPane styleClass="avatar-circle" prefWidth="36" prefHeight="36">
+                        <Label text="MT" styleClass="avatar-initials" style="-fx-font-size: 14px;"/>
+                    </StackPane>
+                    <VBox alignment="CENTER_LEFT">
+                        <Label fx:id="welcomeLabel" text="Staff" style="-fx-text-fill: #e0e0e0; -fx-font-weight: bold; -fx-font-size: 12px;"/>
+                        <Label text="View Profile →" styleClass="label-muted" style="-fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                <Button text="LOGOUT" styleClass="btn-logout" onAction="#onLogout" maxWidth="Infinity"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- ═══════════ HEADER BAR -->
     <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
-            <Label text="MAINTENANCE DASHBOARD" styleClass="welcome-label"/>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+            <Label text="MAINTENANCE DASHBOARD" styleClass="breadcrumb-label"/>
+            <Button text="Tickets" styleClass="header-nav-link-active"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="welcomeLabel" styleClass="label-muted"/>
-            <Button text="👤  Profile" styleClass="btn-secondary" onAction="#goToProfile"/>
-            <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity"/>
-                <Button text="Log Out" styleClass="btn-logout" onAction="#onLogout"/>
         </HBox>
     </top>
+
     <center>
-        <HBox spacing="20" styleClass="content-area">
-            <VBox spacing="14" HBox.hgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="10">
-                    <Label text="MY MAINTENANCE TASKS" styleClass="section-title"/>
+        <HBox spacing="20" styleClass="content-area" style="-fx-padding: 20;">
+            <!-- Task list -->
+            <VBox spacing="0" HBox.hgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="toolbar-bar">
+                    <Label text="MY MAINTENANCE TASKS" styleClass="section-title" style="-fx-font-size: 16px;"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <ComboBox fx:id="statusFilter" promptText="Filter" styleClass="combo-box"/>
-                    <Button text="Apply" styleClass="btn-secondary,btn-small" onAction="#applyFilter"/>
-                    <Button text="Refresh" styleClass="btn-secondary,btn-small" onAction="#loadTasks"/>
+                    <Button text="Apply"   styleClass="btn-secondary" onAction="#applyFilter"/>
+                    <Button text="Refresh" styleClass="btn-secondary" onAction="#loadTasks"/>
                 </HBox>
                 <TableView fx:id="taskTable" VBox.vgrow="ALWAYS" styleClass="table-view">
                     <columns>
-                        <TableColumn fx:id="colRoom" text="Room" prefWidth="80"/>
-                        <TableColumn fx:id="colTitle" text="Title" prefWidth="180"/>
-                        <TableColumn fx:id="colPriority" text="Priority" prefWidth="100"/>
-                        <TableColumn fx:id="colStatus" text="Status" prefWidth="130"/>
-                        <TableColumn fx:id="colDesc" text="Description" prefWidth="220"/>
-                        <TableColumn fx:id="colCreated" text="Created" prefWidth="150"/>
+                        <TableColumn fx:id="colRoom"     text="Room"        prefWidth="80"/>
+                        <TableColumn fx:id="colTitle"    text="Title"       prefWidth="180"/>
+                        <TableColumn fx:id="colPriority" text="Priority"    prefWidth="100"/>
+                        <TableColumn fx:id="colStatus"   text="Status"      prefWidth="130"/>
+                        <TableColumn fx:id="colDesc"     text="Description" prefWidth="220"/>
+                        <TableColumn fx:id="colCreated"  text="Created"     prefWidth="150"/>
                     </columns>
                     <placeholder><Label text="No maintenance tasks assigned." styleClass="label-muted"/></placeholder>
                 </TableView>
-                <HBox spacing="10">
-                    <Button text="Mark IN PROGRESS" styleClass="btn-secondary,btn-small" onAction="#markInProgress"/>
-                    <Button text="Mark RESOLVED" styleClass="btn-primary,btn-small" onAction="#markResolved"/>
+                <HBox spacing="12" styleClass="toolbar-bar">
+                    <Button text="Mark IN PROGRESS" styleClass="btn-secondary" onAction="#markInProgress"/>
+                    <Button text="Mark RESOLVED"    styleClass="btn-success"   onAction="#markResolved"/>
                 </HBox>
             </VBox>
+
+            <!-- Report new issue panel -->
             <VBox spacing="14" prefWidth="300">
                 <VBox styleClass="section-box" spacing="10">
-                    <Label text="REPORT NEW ISSUE" styleClass="section-title"/>
+                    <Label text="REPORT NEW ISSUE" styleClass="section-title" style="-fx-font-size: 16px;"/>
+                    <Region styleClass="gold-divider"/>
                     <Label text="ROOM" styleClass="form-label"/>
                     <ComboBox fx:id="roomCombo" maxWidth="Infinity" styleClass="combo-box" promptText="Select room"/>
                     <Label text="TITLE" styleClass="form-label"/>
