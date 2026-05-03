@@ -118,6 +118,9 @@ public class LoginController {
                     return;
                 }
                 UserDao.insert(username, email, hash, User.Role.CLIENT);
+                // The guests table has no user_id FK; the link between a guest record
+                // and its user account is established through the shared email address
+                // (see schema: guests.email ↔ users.email).
                 Guest g = new Guest();
                 g.setFirstName(firstName);
                 g.setLastName(lastName);
