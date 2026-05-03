@@ -372,15 +372,46 @@ public class AdminController {
         if (roomGrid == null) return;
         roomGrid.getChildren().clear(); selectedRoom = null; selectedRoomCard = null;
         for (Room room : rooms) {
-            VBox card = new VBox(8); card.getStyleClass().add("data-card");
-            HBox header = new HBox(); header.setAlignment(Pos.CENTER_LEFT);
-            Label lblNum = new Label("Room " + room.getRoomNumber()); lblNum.getStyleClass().add("card-header-text");
-            Region s = new Region(); HBox.setHgrow(s, Priority.ALWAYS);
-            header.getChildren().addAll(lblNum, s, createBadge(room.getStatus().toString()));
-            Label lblType = label("Type: " + room.getTypeName()); Label lblFloor = label("Floor: " + room.getFloor());
-            card.getChildren().addAll(header, new Separator(), lblType, lblFloor);
-            if (room.getNotes() != null && !room.getNotes().isEmpty()) { Label n = new Label("Notes: " + room.getNotes()); n.getStyleClass().add("card-detail-text"); n.setStyle("-fx-text-fill: #e74c3c;"); card.getChildren().add(n); }
-            card.setOnMouseClicked(e -> { if (selectedRoomCard != null) selectedRoomCard.getStyleClass().remove("selected-card"); card.getStyleClass().add("selected-card"); selectedRoomCard = card; selectedRoom = room; });
+            VBox card = new VBox(0);
+            card.getStyleClass().add("data-card");
+            card.setPrefWidth(300); card.setMinWidth(260); card.setMaxWidth(360);
+
+            // Header
+            HBox header = new HBox(12); header.setAlignment(Pos.CENTER_LEFT);
+            header.setStyle("-fx-padding: 16 16 12 16;");
+            StackPane icon = new StackPane();
+            icon.setPrefSize(48, 48); icon.setMinSize(48, 48);
+            icon.setStyle("-fx-background-color:rgba(197,160,89,0.15);-fx-background-radius:8;" +
+                "-fx-border-color:rgba(197,160,89,0.3);-fx-border-radius:8;-fx-border-width:1;");
+            Label iconLbl = new Label("🏨"); iconLbl.setStyle("-fx-font-size:22px;"); icon.getChildren().add(iconLbl);
+            VBox nameCol = new VBox(4); HBox.setHgrow(nameCol, Priority.ALWAYS);
+            Label lblNum = new Label("Room " + room.getRoomNumber()); lblNum.getStyleClass().add("card-header-text"); lblNum.setStyle("-fx-font-size:16px;");
+            Label typeBadge = new Label(room.getTypeName() != null ? room.getTypeName() : "STANDARD");
+            typeBadge.setStyle("-fx-background-color:rgba(197,160,89,0.15);-fx-text-fill:#c5a059;" +
+                "-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:2 8;-fx-background-radius:4;");
+            nameCol.getChildren().addAll(lblNum, typeBadge);
+            header.getChildren().addAll(icon, nameCol, createBadge(room.getStatus().toString()));
+
+            Region divider = new Region(); divider.setMaxWidth(Double.MAX_VALUE); divider.setPrefHeight(1);
+            divider.setStyle("-fx-background-color:rgba(197,160,89,0.18);");
+
+            VBox body = new VBox(9); body.setStyle("-fx-padding:14 16 16 16;");
+            body.getChildren().addAll(
+                detailRow("🏢", "Floor " + room.getFloor(), "#a0a0a0"),
+                detailRow("👥", "Max " + room.getMaxOccupancy() + " guests", "#a0a0a0"),
+                detailRow("💴", String.format("%.2f MAD / night", room.getPricePerNight()), "#c5a059"),
+                detailRow("✨", room.getAmenities() != null && !room.getAmenities().isEmpty() ? room.getAmenities() : "Standard amenities", "#888")
+            );
+            if (room.getNotes() != null && !room.getNotes().isEmpty())
+                body.getChildren().add(detailRow("⚠", room.getNotes(), "#e74c3c"));
+            if (room.getTypeDescription() != null && !room.getTypeDescription().isEmpty())
+                body.getChildren().add(detailRow("📋", room.getTypeDescription(), "#666"));
+
+            card.getChildren().addAll(header, divider, body);
+            card.setOnMouseClicked(e -> {
+                if (selectedRoomCard != null) selectedRoomCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card"); selectedRoomCard = card; selectedRoom = room;
+            });
             roomGrid.getChildren().add(card);
         }
     }
@@ -424,13 +455,45 @@ public class AdminController {
         if (resGrid == null) return;
         resGrid.getChildren().clear(); selectedRes = null; selectedResCard = null;
         for (Reservation res : list) {
-            VBox card = new VBox(8); card.getStyleClass().add("data-card");
-            HBox header = new HBox(); header.setAlignment(Pos.CENTER_LEFT);
-            Label lbl = new Label(res.getReservationCode()); lbl.getStyleClass().add("card-header-text");
-            Region s = new Region(); HBox.setHgrow(s, Priority.ALWAYS);
-            header.getChildren().addAll(lbl, s, createBadge(res.getStatus().toString()));
-            card.getChildren().addAll(header, new Separator(), label("Guest: " + res.getGuestFullName()), label("Room: " + res.getRoomNumber()), label("Dates: " + res.getCheckInDate().format(DATE_FMT) + " to " + res.getCheckOutDate().format(DATE_FMT)));
-            card.setOnMouseClicked(e -> { if (selectedResCard != null) selectedResCard.getStyleClass().remove("selected-card"); card.getStyleClass().add("selected-card"); selectedResCard = card; selectedRes = res; });
+            VBox card = new VBox(0);
+            card.getStyleClass().add("data-card");
+            card.setPrefWidth(320); card.setMinWidth(280); card.setMaxWidth(380);
+
+            // Header
+            HBox header = new HBox(12); header.setAlignment(Pos.CENTER_LEFT);
+            header.setStyle("-fx-padding: 16 16 12 16;");
+            String gName = res.getGuestFullName();
+            String initials = gName != null && gName.length() >= 2 ? gName.substring(0, 2).toUpperCase() : "??";
+            StackPane avatar = new StackPane(); avatar.setPrefSize(48, 48); avatar.setMinSize(48, 48);
+            avatar.getStyleClass().add("avatar-circle");
+            Label avLbl = new Label(initials); avLbl.getStyleClass().add("avatar-initials"); avLbl.setStyle("-fx-font-size:16px;");
+            avatar.getChildren().add(avLbl);
+            VBox nameCol = new VBox(4); HBox.setHgrow(nameCol, Priority.ALWAYS);
+            Label lblCode = new Label(res.getReservationCode()); lblCode.getStyleClass().add("card-header-text"); lblCode.setStyle("-fx-font-size:14px;");
+            Label lblGuest = new Label(gName); lblGuest.setStyle("-fx-font-size:12px;-fx-text-fill:#a0a0a0;");
+            nameCol.getChildren().addAll(lblCode, lblGuest);
+            header.getChildren().addAll(avatar, nameCol, createBadge(res.getStatus().toString()));
+
+            Region divider = new Region(); divider.setMaxWidth(Double.MAX_VALUE); divider.setPrefHeight(1);
+            divider.setStyle("-fx-background-color:rgba(197,160,89,0.18);");
+
+            // Nights calc
+            long nights = res.getCheckInDate() != null && res.getCheckOutDate() != null
+                ? res.getCheckOutDate().toEpochDay() - res.getCheckInDate().toEpochDay() : 0;
+
+            VBox body = new VBox(9); body.setStyle("-fx-padding:14 16 16 16;");
+            body.getChildren().addAll(
+                detailRow("🏯", "Room " + res.getRoomNumber(), "#c5a059"),
+                detailRow("📅", res.getCheckInDate().format(DATE_FMT) + "  →  " + res.getCheckOutDate().format(DATE_FMT), "#a0a0a0"),
+                detailRow("🌙", nights + " night" + (nights == 1 ? "" : "s"), "#888"),
+                detailRow("💴", String.format("%.2f MAD", res.getBaseTotal()), "#1e8449")
+            );
+
+            card.getChildren().addAll(header, divider, body);
+            card.setOnMouseClicked(e -> {
+                if (selectedResCard != null) selectedResCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card"); selectedResCard = card; selectedRes = res;
+            });
             resGrid.getChildren().add(card);
         }
     }
@@ -452,14 +515,46 @@ public class AdminController {
         if (payrollGrid == null) return;
         payrollGrid.getChildren().clear(); selectedPayroll = null; selectedPayrollCard = null;
         for (Payroll pay : list) {
-            VBox card = new VBox(8); card.getStyleClass().add("data-card");
-            HBox header = new HBox(); header.setAlignment(Pos.CENTER_LEFT);
-            Label lbl = new Label(pay.getStaffUsername()); lbl.getStyleClass().add("card-header-text");
-            Region s = new Region(); HBox.setHgrow(s, Priority.ALWAYS);
-            header.getChildren().addAll(lbl, s, createBadge(pay.getStatus().toString()));
-            Label net = new Label(String.format("Net Salary: %.2f MAD", pay.getNetSalary())); net.getStyleClass().add("card-detail-text"); net.setStyle("-fx-text-fill: #c5a059; -fx-font-weight: bold;");
-            card.getChildren().addAll(header, new Separator(), label("Position: " + pay.getStaffPosition()), label("Period: " + pay.getPeriodStart().format(DATE_FMT) + " - " + pay.getPeriodEnd().format(DATE_FMT)));
-            card.setOnMouseClicked(e -> { if (selectedPayrollCard != null) selectedPayrollCard.getStyleClass().remove("selected-card"); card.getStyleClass().add("selected-card"); selectedPayrollCard = card; selectedPayroll = pay; });
+            VBox card = new VBox(0);
+            card.getStyleClass().add("data-card");
+            card.setPrefWidth(320); card.setMinWidth(280); card.setMaxWidth(380);
+
+            // Header
+            HBox header = new HBox(12); header.setAlignment(Pos.CENTER_LEFT);
+            header.setStyle("-fx-padding: 16 16 12 16;");
+            String uname = pay.getStaffUsername();
+            String initials = uname != null && uname.length() >= 2 ? uname.substring(0,2).toUpperCase() : "??";
+            StackPane avatar = new StackPane(); avatar.setPrefSize(48,48); avatar.setMinSize(48,48);
+            avatar.getStyleClass().add("avatar-circle");
+            Label avLbl = new Label(initials); avLbl.getStyleClass().add("avatar-initials"); avLbl.setStyle("-fx-font-size:16px;");
+            avatar.getChildren().add(avLbl);
+            VBox nameCol = new VBox(4); HBox.setHgrow(nameCol, Priority.ALWAYS);
+            Label lblName = new Label(uname); lblName.getStyleClass().add("card-header-text"); lblName.setStyle("-fx-font-size:15px;");
+            Label lblPos  = new Label(pay.getStaffPosition() != null ? pay.getStaffPosition() : "Staff");
+            lblPos.setStyle("-fx-font-size:11px;-fx-text-fill:#c5a059;");
+            nameCol.getChildren().addAll(lblName, lblPos);
+            header.getChildren().addAll(avatar, nameCol, createBadge(pay.getStatus().toString()));
+
+            Region divider = new Region(); divider.setMaxWidth(Double.MAX_VALUE); divider.setPrefHeight(1);
+            divider.setStyle("-fx-background-color:rgba(197,160,89,0.18);");
+
+            VBox body = new VBox(9); body.setStyle("-fx-padding:14 16 16 16;");
+            body.getChildren().addAll(
+                detailRow("🪪", pay.getStaffEmployeeCode() != null ? pay.getStaffEmployeeCode() : "N/A", "#888"),
+                detailRow("📅", pay.getPeriodStart().format(DATE_FMT) + "  –  " + pay.getPeriodEnd().format(DATE_FMT), "#a0a0a0"),
+                detailRow("💴", String.format("Base: %.2f MAD", pay.getBaseSalary()), "#a0a0a0"),
+                detailRow("✅", String.format("Bonuses: +%.2f MAD", pay.getBonuses()), "#1e8449"),
+                detailRow("❌", String.format("Deductions: -%.2f MAD", pay.getDeductions()), "#e74c3c"),
+                detailRow("💰", String.format("NET: %.2f MAD", pay.getNetSalary()), "#c5a059")
+            );
+            if (pay.getPaidAt() != null)
+                body.getChildren().add(detailRow("✔", "Paid: " + pay.getPaidAt().toLocalDate().format(DATE_FMT), "#1e8449"));
+
+            card.getChildren().addAll(header, divider, body);
+            card.setOnMouseClicked(e -> {
+                if (selectedPayrollCard != null) selectedPayrollCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card"); selectedPayrollCard = card; selectedPayroll = pay;
+            });
             payrollGrid.getChildren().add(card);
         }
     }
