@@ -306,7 +306,7 @@ public class StaffProfileController {
 
     @FXML
     public void handleThemeToggle() {
-        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+        ThemeManager.toggle();
     }
 
 }

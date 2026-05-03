@@ -23,7 +23,6 @@ import ma.ensa.khouribga.smartstay.dao.MaintenanceDao;
 import ma.ensa.khouribga.smartstay.dao.ReservationDao;
 import ma.ensa.khouribga.smartstay.dao.RoomDao;
 import ma.ensa.khouribga.smartstay.dao.ServiceDao;
-import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.CleaningRequest;
 import ma.ensa.khouribga.smartstay.model.Guest;
 import ma.ensa.khouribga.smartstay.model.MaintenanceRequest;
@@ -33,9 +32,6 @@ import ma.ensa.khouribga.smartstay.model.Service;
 import ma.ensa.khouribga.smartstay.profile.StaffProfileController;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -350,25 +346,7 @@ public class ReceptionController {
                     ReservationDao.updateStatus(resId, room.getId(), Reservation.Status.CHECKED_IN);
 
                     // 4. Attach services
-                    if (!selectedSvcs.isEmpty()) {
-                        try (Connection conn = Database.getConnection()) {
-                            String svcSql = """
-                                INSERT INTO reservation_services
-                                  (reservation_id, service_id, quantity, unit_price, requested_at)
-                                VALUES (?, ?, ?, ?, NOW())
-                                """;
-                            try (PreparedStatement ps = conn.prepareStatement(svcSql)) {
-                                for (Service svc : selectedSvcs) {
-                                    ps.setInt(1, resId);
-                                    ps.setInt(2, svc.getId());
-                                    ps.setInt(3, svc.getQuantity());
-                                    ps.setDouble(4, svc.getUnitPrice());
-                                    ps.addBatch();
-                                }
-                                ps.executeBatch();
-                            }
-                        }
-                    }
+                    ReservationDao.addServices(resId, selectedSvcs);
 
                     final String code = res.getReservationCode();
                     Platform.runLater(() -> {
@@ -405,44 +383,31 @@ public class ReceptionController {
     // ── Dispatch Cleaning ─────────────────────────────────────────────────────
     @FXML
     public void requestCleaning() {
-        String room = txtCleanRoom.getText().trim();
-        if (room.isEmpty()) { showAlert(Alert.AlertType.WARNING, "Enter a room number to dispatch cleaning."); return; }
+        String roomNumber = txtCleanRoom.getText().trim();
+        if (roomNumber.isEmpty()) { showAlert(Alert.AlertType.WARNING, "Enter a room number to dispatch cleaning."); return; }
 
         new Thread(() -> {
-            try (Connection conn = Database.getConnection()) {
-                // Resolve room id
-                long roomId = -1;
-                try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM rooms WHERE room_number = ?")) {
-                    ps.setString(1, room);
-                    try (ResultSet rs = ps.executeQuery()) { if (rs.next()) roomId = rs.getLong("id"); }
-                }
-                if (roomId == -1) {
-                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Room " + room + " not found."));
+            try {
+                Room room = RoomDao.findByRoomNumber(roomNumber).orElse(null);
+                if (room == null) {
+                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Room " + roomNumber + " not found."));
                     return;
                 }
 
-                long userId = SessionManager.getCurrentUser().getId();
+                int userId = (int) SessionManager.getCurrentUser().getId();
 
-                // Insert cleaning request
-                try (PreparedStatement ps = conn.prepareStatement("""
-                    INSERT INTO cleaning_requests
-                      (room_id, requested_by_user_id, priority, status, request_note, created_at)
-                    VALUES (?, ?, 'HIGH', 'NEW', 'Reception dispatch — immediate cleaning required', NOW())
-                    """)) {
-                    ps.setLong(1, roomId);
-                    ps.setLong(2, userId);
-                    ps.executeUpdate();
-                }
+                CleaningRequest req = new CleaningRequest();
+                req.setRoomId(room.getId());
+                req.setRequestedByUserId(userId);
+                req.setPriority(CleaningRequest.Priority.HIGH);
+                req.setRequestNote("Reception dispatch — immediate cleaning required");
+                CleaningDao.create(req);
 
-                // Mark room CLEANING
-                try (PreparedStatement ps = conn.prepareStatement("UPDATE rooms SET status = 'CLEANING' WHERE id = ?")) {
-                    ps.setLong(1, roomId);
-                    ps.executeUpdate();
-                }
+                RoomDao.updateStatus(room.getId(), Room.Status.CLEANING);
 
                 Platform.runLater(() -> {
                     txtCleanRoom.clear();
-                    showAlert(Alert.AlertType.INFORMATION, "Cleaning crew dispatched to room " + room + ". Room marked CLEANING.");
+                    showAlert(Alert.AlertType.INFORMATION, "Cleaning crew dispatched to room " + roomNumber + ". Room marked CLEANING.");
                 });
             } catch (Exception e) {
                 e.printStackTrace();
@@ -464,39 +429,24 @@ public class ReceptionController {
         }
 
         new Thread(() -> {
-            try (Connection conn = Database.getConnection()) {
-                // Resolve room
-                long roomId = -1;
-                try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM rooms WHERE room_number = ?")) {
-                    ps.setString(1, roomStr);
-                    try (ResultSet rs = ps.executeQuery()) { if (rs.next()) roomId = rs.getLong("id"); }
-                }
-                if (roomId == -1) {
+            try {
+                Room room = RoomDao.findByRoomNumber(roomStr).orElse(null);
+                if (room == null) {
                     Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Room " + roomStr + " does not exist."));
                     return;
                 }
 
-                long userId = SessionManager.getCurrentUser().getId();
-                String title = "[" + category + "] Reception Dispatch";
+                int userId = (int) SessionManager.getCurrentUser().getId();
 
-                // Insert with all required NOT-NULL columns using valid status 'NEW'
-                try (PreparedStatement ps = conn.prepareStatement("""
-                    INSERT INTO maintenance_requests
-                      (room_id, reported_by_user_id, priority, status, title, description, created_at)
-                    VALUES (?, ?, 'HIGH', 'NEW', ?, ?, NOW())
-                    """)) {
-                    ps.setLong(1, roomId);
-                    ps.setLong(2, userId);
-                    ps.setString(3, title);
-                    ps.setString(4, desc);
-                    ps.executeUpdate();
-                }
+                MaintenanceRequest req = new MaintenanceRequest();
+                req.setRoomId(room.getId());
+                req.setReportedByUserId(userId);
+                req.setPriority(MaintenanceRequest.Priority.HIGH);
+                req.setTitle("[" + category + "] Reception Dispatch");
+                req.setDescription(desc);
+                MaintenanceDao.create(req);
 
-                // Mark room MAINTENANCE
-                try (PreparedStatement ps = conn.prepareStatement("UPDATE rooms SET status = 'MAINTENANCE' WHERE id = ?")) {
-                    ps.setLong(1, roomId);
-                    ps.executeUpdate();
-                }
+                RoomDao.updateStatus(room.getId(), Room.Status.MAINTENANCE);
 
                 Platform.runLater(() -> {
                     txtMaintRoom.clear();

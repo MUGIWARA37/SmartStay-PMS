@@ -18,16 +18,9 @@ import ma.ensa.khouribga.smartstay.dao.*;
 import ma.ensa.khouribga.smartstay.model.*;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class AdminController {
@@ -189,17 +182,7 @@ public class AdminController {
     private void refreshChartStyles() { styleChart(roomStatusChart); styleChart(clientChart); styleChart(staffStatusChart); styleChart(revenueChart); }
 
     private Map<String, Integer> fetchMonthlyCheckIns(int year) throws Exception {
-        String sql = "SELECT MONTH(check_in_date) AS m, COUNT(*) AS cnt FROM reservations WHERE YEAR(check_in_date) = ? AND status IN ('CHECKED_IN','CHECKED_OUT') GROUP BY MONTH(check_in_date) ORDER BY MONTH(check_in_date)";
-        Map<String, Integer> result = new LinkedHashMap<>();
-        for (Month m : Month.values()) result.put(m.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), 0);
-        try (Connection conn = ma.ensa.khouribga.smartstay.db.Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, year);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) result.put(Month.of(rs.getInt("m")).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), rs.getInt("cnt"));
-            }
-        }
-        return result;
+        return ReservationDao.countCheckInsByMonth(year);
     }
 
     // ── Filters ──────────────────────────────────────────────────────────────
@@ -372,14 +355,7 @@ public class AdminController {
     }
 
     private Map<String, Double> fetchMonthlyRevenue(int year) throws Exception {
-        String sql = "SELECT MONTH(r.check_out_date) AS month, SUM(DATEDIFF(r.check_out_date, r.check_in_date) * rt.price_per_night) AS total FROM reservations r JOIN rooms rm ON r.room_id = rm.id JOIN room_types rt ON rm.room_type_id = rt.id WHERE r.status IN ('CHECKED_OUT','CHECKED_IN') AND YEAR(r.check_out_date) = ? GROUP BY MONTH(r.check_out_date) ORDER BY MONTH(r.check_out_date)";
-        Map<String, Double> result = new LinkedHashMap<>();
-        for (Month m : Month.values()) result.put(m.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), 0.0);
-        try (Connection conn = ma.ensa.khouribga.smartstay.db.Database.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, year);
-            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.put(Month.of(rs.getInt("month")).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), rs.getDouble("total")); }
-        }
-        return result;
+        return ReservationDao.sumRevenueByMonth(year);
     }
 
     private void renderRevenueChart(Map<String, Double> data, int year) {

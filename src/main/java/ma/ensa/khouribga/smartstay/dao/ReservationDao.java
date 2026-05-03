@@ -4,12 +4,18 @@ import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.db.TxManager;
 import ma.ensa.khouribga.smartstay.model.Reservation;
 import ma.ensa.khouribga.smartstay.model.Room;
+import ma.ensa.khouribga.smartstay.model.Service;
 
 import java.security.SecureRandom;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -302,14 +308,117 @@ public class ReservationDao {
         });
     }
 
+    // ── Service attachments ───────────────────────────────────────────────────
+
+    /**
+     * Bulk-inserts rows into {@code reservation_services} for each service in the list
+     * that has {@code quantity > 0}.  Executed as a single JDBC batch.
+     *
+     * @param reservationId the parent reservation
+     * @param services      services to attach (only those with quantity &gt; 0 are inserted)
+     */
+    public static void addServices(int reservationId, List<Service> services) throws SQLException {
+        if (services == null || services.isEmpty()) return;
+        String sql = """
+                INSERT INTO reservation_services
+                  (reservation_id, service_id, quantity, unit_price, requested_at)
+                VALUES (?, ?, ?, ?, NOW())
+                """;
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (Service svc : services) {
+                if (svc.getQuantity() <= 0) continue;
+                ps.setInt(1, reservationId);
+                ps.setInt(2, svc.getId());
+                ps.setInt(3, svc.getQuantity());
+                ps.setDouble(4, svc.getUnitPrice());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    // ── Analytics / chart queries ─────────────────────────────────────────────
+
+    /**
+     * Returns a month-name → count map for check-ins (CHECKED_IN or CHECKED_OUT)
+     * in the given calendar year.  Every month is present in the map (count defaults to 0).
+     *
+     * @param year calendar year (e.g. 2025)
+     */
+    public static Map<String, Integer> countCheckInsByMonth(int year) throws SQLException {
+        String sql = """
+                SELECT MONTH(check_in_date) AS m, COUNT(*) AS cnt
+                FROM   reservations
+                WHERE  YEAR(check_in_date) = ?
+                  AND  status IN ('CHECKED_IN','CHECKED_OUT')
+                GROUP BY MONTH(check_in_date)
+                ORDER BY MONTH(check_in_date)
+                """;
+        Map<String, Integer> result = new LinkedHashMap<>();
+        for (Month m : Month.values()) {
+            result.put(m.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), 0);
+        }
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String key = Month.of(rs.getInt("m"))
+                                      .getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+                    result.put(key, rs.getInt("cnt"));
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns a month-name → revenue map (room nights × price) for CHECKED_OUT or CHECKED_IN
+     * reservations in the given calendar year.  Every month is present (revenue defaults to 0).
+     *
+     * @param year calendar year (e.g. 2025)
+     */
+    public static Map<String, Double> sumRevenueByMonth(int year) throws SQLException {
+        String sql = """
+                SELECT MONTH(r.check_out_date) AS month,
+                       SUM(DATEDIFF(r.check_out_date, r.check_in_date) * rt.price_per_night) AS total
+                FROM   reservations r
+                JOIN   rooms      rm ON r.room_id        = rm.id
+                JOIN   room_types rt ON rm.room_type_id  = rt.id
+                WHERE  r.status IN ('CHECKED_OUT','CHECKED_IN')
+                  AND  YEAR(r.check_out_date) = ?
+                GROUP BY MONTH(r.check_out_date)
+                ORDER BY MONTH(r.check_out_date)
+                """;
+        Map<String, Double> result = new LinkedHashMap<>();
+        for (Month m : Month.values()) {
+            result.put(m.getDisplayName(TextStyle.SHORT, Locale.ENGLISH), 0.0);
+        }
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String key = Month.of(rs.getInt("month"))
+                                       .getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
+                    result.put(key, rs.getDouble("total"));
+                }
+            }
+        }
+        return result;
+    }
+
     // ── Private utils ─────────────────────────────────────────────────────────
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    /** Upper bound (exclusive) for the 5-hex-digit suffix in a reservation code: 16^5 = 0x100000. */
+    private static final int CODE_RAND_BOUND = 0x100000;
 
     /** Generates a unique reservation code: {@code SS-YYYYMMDD-XXXXX}. */
     private static String generateCode() {
         String date = LocalDate.now().toString().replace("-", "");
-        String hex  = String.format("%05X", SECURE_RANDOM.nextInt(0x100000));
+        String hex  = String.format("%05X", SECURE_RANDOM.nextInt(CODE_RAND_BOUND));
         return "SS-" + date + "-" + hex;
     }
 }

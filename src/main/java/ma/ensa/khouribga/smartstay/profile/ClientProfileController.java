@@ -241,7 +241,7 @@ public class ClientProfileController {
 
     @FXML
     public void handleThemeToggle() {
-        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+        ThemeManager.toggle();
     }
 
 }

@@ -140,8 +140,14 @@ public class AdminProfileController {
     }
 
     @FXML
+    public void handleLogout(ActionEvent event) {
+        SessionManager.logout();
+        Navigator.goToLogin((Node) event.getSource());
+    }
+
+    @FXML
     public void handleThemeToggle() {
-        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+        ThemeManager.toggle();
     }
 
 }
