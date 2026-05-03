@@ -1,108 +1,156 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.media.MediaView?>
-<?import javafx.scene.layout.StackPane?>
 
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.home.HomeController">
-    <MediaView fx:id="bgMediaView" mouseTransparent="true"
-               preserveRatio="false" style="-fx-smooth: true;"/>
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ma.ensa.khouribga.smartstay.home.HomeController">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true" preserveRatio="false"/>
+
     <BorderPane styleClass="interior-root" prefWidth="1280" prefHeight="800">
 
-    <!-- ═════════════════════════════════════════════ SIDEBAR -->
-    <left>
-        <VBox styleClass="sidebar" prefWidth="220" spacing="4">
-            <!-- Brand — Guest uses 智 kanji (intelligence) -->
-            <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4">
-                <Label text="智" styleClass="sidebar-logo"/>
-                <Label text="SMARTSTAY" styleClass="app-title"/>
-                <Label text="GUEST PORTAL" styleClass="app-subtitle"/>
-                <Label text="智 Wisdom · 侍 Precision" styleClass="sidebar-sub-kanji"/>
+        <!-- ══════════════════════════════════ SIDEBAR -->
+        <left>
+            <VBox styleClass="sidebar" prefWidth="220" spacing="0">
+
+                <!-- Brand — Guest uses 智 (wisdom) kanji -->
+                <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4"
+                      style="-fx-padding: 28 16 24 16;">
+                    <Label text="智" styleClass="sidebar-logo"/>
+                    <Label text="SMARTSTAY"   styleClass="app-title"/>
+                    <Label text="GUEST PORTAL" styleClass="app-subtitle"/>
+                    <Label text="智 Wisdom · 侍 Precision"
+                           styleClass="sidebar-sub-kanji"/>
+                </VBox>
+
+                <!--
+                    showBrowseTab()   → shows panelBrowse, hides panelBookings,
+                                        marks Browse active
+                    showBookingsTab() → shows panelBookings, hides panelBrowse,
+                                        marks Bookings active
+                    Both already exist in HomeController.
+                -->
+                <Button fx:id="btnBrowse"
+                        text="🏠  Browse Rooms"
+                        onAction="#showBrowseTab"
+                        styleClass="nav-button-active" maxWidth="Infinity"/>
+                <Button fx:id="btnMyBookings"
+                        text="📋  My Bookings"
+                        onAction="#showBookingsTab"
+                        styleClass="nav-button" maxWidth="Infinity"/>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <!-- Theme toggle -->
+                <HBox style="-fx-padding: 0 16 10 16;">
+                    <Button text="☀ Light" onAction="#handleThemeToggle"
+                            styleClass="btn-theme" maxWidth="Infinity"
+                            HBox.hgrow="ALWAYS"/>
+                </HBox>
+
+                <!-- Avatar + sign-out -->
+                <HBox alignment="CENTER_LEFT" spacing="10"
+                      style="-fx-padding: 10 16 8 16; -fx-cursor: hand;">
+                    <StackPane styleClass="avatar-circle" prefWidth="34" prefHeight="34">
+                        <Label fx:id="avatarInitials" text="G"
+                               styleClass="avatar-initials"
+                               style="-fx-font-size: 14px;"/>
+                    </StackPane>
+                    <VBox alignment="CENTER_LEFT" spacing="1">
+                        <Label fx:id="welcomeLabel" text="Guest"
+                               style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:12px;"/>
+                        <Label text="GUEST PORTAL"
+                               styleClass="label-muted" style="-fx-font-size: 10px;"/>
+                    </VBox>
+                </HBox>
+                <VBox style="-fx-padding: 4 16 20 16;">
+                    <Button fx:id="btnLogout" text="⬅  Sign Out"
+                            onAction="#handleLogout"
+                            styleClass="btn-logout" maxWidth="Infinity"/>
+                </VBox>
             </VBox>
+        </left>
 
-            <!-- Nav items -->
-            <Button fx:id="btnBrowse"      text="🏠  Browse Rooms" styleClass="nav-button-active" maxWidth="Infinity" onAction="#showBrowseTab"/>
-            <Button fx:id="btnMyBookings"  text="📋  My Bookings"  styleClass="nav-button"        maxWidth="Infinity" onAction="#showBookingsTab"/>
-
-            <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Theme toggle -->
-            <HBox alignment="CENTER" style="-fx-padding: 0 16 8 16;">
-                <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-            </HBox>
-
-            <!-- Sign Out -->
-            <VBox style="-fx-padding: 0 16 16 16;">
-                <Button fx:id="btnLogout" text="⬅  Sign Out" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
-            </VBox>
-        </VBox>
-    </left>
-
-    <!-- ═════════════════════════════════════════════ CENTER -->
-    <center>
-        <VBox>
-            <!-- Header bar with breadcrumb -->
+        <!-- ══════════════════════════════════ HEADER -->
+        <top>
             <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
                 <Label text="GUEST PORTAL" styleClass="breadcrumb-label"/>
-                <Button text="Browse"     styleClass="header-nav-link-active"/>
-                <Button text="Bookings"   styleClass="header-nav-link"/>
+                <Label text="·" styleClass="label-muted"/>
+                <Label fx:id="headerPanelLabel" text="Browse Rooms"
+                       style="-fx-text-fill:#cc2222;-fx-font-size:11px;
+                              -fx-font-weight:bold;-fx-letter-spacing:2;"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <ProgressIndicator fx:id="spinner" prefWidth="22" prefHeight="22" visible="false"/>
+                <ProgressIndicator fx:id="spinner" prefWidth="22" prefHeight="22"
+                                   visible="false"/>
                 <Label fx:id="lblStatus" styleClass="label-muted"/>
-                <Label fx:id="welcomeLabel" text="Welcome" styleClass="welcome-label" style="-fx-font-size: 14px;"/>
             </HBox>
+        </top>
 
-            <!-- ── BROWSE ROOMS PANEL ── -->
-            <VBox fx:id="panelBrowse" VBox.vgrow="ALWAYS">
+        <!-- ══════════════════════════════════ CENTER -->
+        <center>
+            <VBox>
 
-                <!-- Filter bar (toolbar-bar style) -->
-                <HBox styleClass="toolbar-bar" spacing="16" alignment="CENTER_LEFT">
-                    <Label text="Type:" styleClass="form-label"/>
-                    <ComboBox fx:id="cbRoomType" prefWidth="160" styleClass="combo-box"/>
-                    <Label text="Max price / night:" styleClass="form-label"/>
-                    <Slider fx:id="priceSlider" prefWidth="160"/>
-                    <Label fx:id="priceLabel" styleClass="label-muted" prefWidth="140"/>
-                    <Label text="Check-in:" styleClass="form-label"/>
-                    <DatePicker fx:id="dpCheckIn" prefWidth="135" styleClass="date-picker"/>
-                    <Label text="Check-out:" styleClass="form-label"/>
-                    <DatePicker fx:id="dpCheckOut" prefWidth="135" styleClass="date-picker"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="btnSearch" text="🔍  Search" styleClass="btn-primary" onAction="#applyFilters"/>
-                </HBox>
+                <!-- ── BROWSE ROOMS PANEL ── -->
+                <VBox fx:id="panelBrowse" VBox.vgrow="ALWAYS">
 
-                <!-- Section title -->
-                <HBox style="-fx-padding: 18 24 8 24;">
-                    <Label text="Available Rooms" styleClass="section-title"/>
-                </HBox>
+                    <!-- Filter toolbar -->
+                    <HBox styleClass="toolbar-bar" spacing="14"
+                          alignment="CENTER_LEFT">
+                        <Label text="Type:" styleClass="form-label"/>
+                        <ComboBox fx:id="cbRoomType" prefWidth="150"
+                                  styleClass="combo-box"/>
+                        <Label text="Max price/night:" styleClass="form-label"/>
+                        <Slider fx:id="priceSlider" prefWidth="150"/>
+                        <Label fx:id="priceLabel" styleClass="label-muted"
+                               prefWidth="120"/>
+                        <Label text="Check-in:" styleClass="form-label"/>
+                        <DatePicker fx:id="dpCheckIn" prefWidth="132"
+                                    styleClass="date-picker"/>
+                        <Label text="Check-out:" styleClass="form-label"/>
+                        <DatePicker fx:id="dpCheckOut" prefWidth="132"
+                                    styleClass="date-picker"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="btnSearch" text="🔍  Search"
+                                onAction="#applyFilters"
+                                styleClass="btn-primary"/>
+                    </HBox>
 
-                <!-- Room grid -->
-                <ScrollPane styleClass="scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS">
-                    <FlowPane fx:id="roomGrid" styleClass="data-grid"
-                              hgap="18" vgap="18" prefWrapLength="900">
-                        <padding><Insets top="8" right="20" bottom="20" left="20"/></padding>
-                    </FlowPane>
-                </ScrollPane>
+                    <HBox style="-fx-padding: 16 24 8 24;">
+                        <Label text="Available Rooms" styleClass="section-title"/>
+                    </HBox>
+
+                    <ScrollPane styleClass="scroll-pane" fitToWidth="true"
+                                VBox.vgrow="ALWAYS">
+                        <FlowPane fx:id="roomGrid" styleClass="data-grid"
+                                  hgap="18" vgap="18" prefWrapLength="900">
+                            <padding><Insets top="8" right="20" bottom="20" left="20"/></padding>
+                        </FlowPane>
+                    </ScrollPane>
+                </VBox>
+
+                <!-- ── MY BOOKINGS PANEL ── -->
+                <VBox fx:id="panelBookings" VBox.vgrow="ALWAYS"
+                      visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT" spacing="16"
+                          style="-fx-padding: 16 24 8 24;">
+                        <Label text="My Reservations" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="↺  Refresh" onAction="#loadMyBookings"
+                                styleClass="btn-secondary"/>
+                    </HBox>
+                    <ScrollPane styleClass="scroll-pane" fitToWidth="true"
+                                VBox.vgrow="ALWAYS">
+                        <FlowPane fx:id="bookingsGrid" styleClass="data-grid"
+                                  hgap="18" vgap="18" prefWrapLength="900">
+                            <padding><Insets top="8" right="20" bottom="20" left="20"/></padding>
+                        </FlowPane>
+                    </ScrollPane>
+                </VBox>
+
             </VBox>
+        </center>
 
-            <!-- ── MY BOOKINGS PANEL ── -->
-            <VBox fx:id="panelBookings" VBox.vgrow="ALWAYS" visible="false" managed="false">
-                <HBox alignment="CENTER_LEFT" style="-fx-padding: 18 24 8 24;" spacing="16">
-                    <Label text="My Reservations" styleClass="section-title"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="↺  Refresh" styleClass="btn-secondary" onAction="#loadMyBookings"/>
-                </HBox>
-                <ScrollPane styleClass="scroll-pane" fitToWidth="true" VBox.vgrow="ALWAYS">
-                    <FlowPane fx:id="bookingsGrid" styleClass="data-grid"
-                              hgap="18" vgap="18" prefWrapLength="900">
-                        <padding><Insets top="8" right="20" bottom="20" left="20"/></padding>
-                    </FlowPane>
-                </ScrollPane>
-            </VBox>
-
-        </VBox>
-    </center>
-
-</BorderPane>
+    </BorderPane>
 </StackPane>
