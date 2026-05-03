@@ -82,15 +82,52 @@
 
         <!-- ══════════════════════════════════════ HEADER -->
         <top>
-            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
-                <Label text="IMPERIAL PORTAL" styleClass="breadcrumb-label"/>
-                <Label text="·" styleClass="label-muted"/>
-                <Label fx:id="headerTabLabel" text="Overview"
-                       style="-fx-text-fill: #cc2222; -fx-font-size: 11px;
-                              -fx-font-weight: bold; -fx-letter-spacing: 2;"/>
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="0">
+                <!-- Left: breadcrumb + sub-nav -->
+                <VBox alignment="CENTER_LEFT" spacing="2" style="-fx-padding:0 24 0 0;">
+                    <Label text="IMPERIAL PORTAL" styleClass="breadcrumb-label"/>
+                </VBox>
+                <HBox alignment="CENTER_LEFT" spacing="0">
+                    <Button text="OPERATIONS"
+                            onAction="#navToOverview"
+                            style="-fx-background-color:transparent;-fx-border-width:0 0 2 0;
+                                   -fx-border-color:#cc2222;-fx-text-fill:#cc2222;
+                                   -fx-font-size:11px;-fx-font-weight:bold;
+                                   -fx-padding:0 16 0 0;-fx-cursor:hand;"/>
+                    <Button text="CONCIERGE"
+                            onAction="#navToReservations"
+                            style="-fx-background-color:transparent;-fx-border-width:0;
+                                   -fx-text-fill:#888;-fx-font-size:11px;
+                                   -fx-padding:0 16;-fx-cursor:hand;"/>
+                    <Button text="HOUSEKEEPING"
+                            onAction="#navToStaff"
+                            style="-fx-background-color:transparent;-fx-border-width:0;
+                                   -fx-text-fill:#888;-fx-font-size:11px;
+                                   -fx-padding:0 16;-fx-cursor:hand;"/>
+                </HBox>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label text="System Status:" styleClass="label-muted"/>
-                <Label text="ONLINE" styleClass="badge, badge-available"/>
+                <!-- Right: search + icons + new booking + avatar -->
+                <HBox alignment="CENTER" spacing="16">
+                    <TextField promptText="SEARCH SCROLLS..."
+                               styleClass="text-field"
+                               prefWidth="180"
+                               style="-fx-font-size:10px;"/>
+                    <Label text="🔔"
+                           style="-fx-font-size:16px;-fx-text-fill:#888;-fx-cursor:hand;"/>
+                    <Label fx:id="headerTabLabel" text="🌙"
+                           style="-fx-font-size:16px;-fx-text-fill:#888;-fx-cursor:hand;"
+                           onMouseClicked="#handleThemeToggleClick"/>
+                    <Button text="NEW BOOKING"
+                            onAction="#navToReservations"
+                            style="-fx-background-color:linear-gradient(to bottom,#cc2222,#8b0000);
+                                   -fx-text-fill:white;-fx-font-size:10px;-fx-font-weight:bold;
+                                   -fx-padding:6 14;-fx-background-radius:4;-fx-border-width:0;
+                                   -fx-cursor:hand;"/>
+                    <StackPane styleClass="avatar-circle" prefWidth="32" prefHeight="32"
+                               style="-fx-cursor:hand;" onMouseClicked="#goToProfile">
+                        <Label text="AD" styleClass="avatar-initials" style="-fx-font-size:12px;"/>
+                    </StackPane>
+                </HBox>
             </HBox>
         </top>
 
@@ -109,118 +146,263 @@
                     <!-- ── TAB 0 · OVERVIEW ─────────────────────────────── -->
                     <Tab text="">
                         <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-                            <VBox spacing="20" style="-fx-padding: 24 28 28 28;">
+                            <VBox spacing="20" style="-fx-padding: 28 32 32 32;">
 
-                                <HBox alignment="CENTER_LEFT" spacing="16">
-                                    <Label text="Command Center"
-                                           styleClass="section-title"
-                                           style="-fx-font-size: 26px;"/>
-                                    <Region HBox.hgrow="ALWAYS"/>
-                                    <Button text="⟳  Refresh"
-                                            onAction="#refreshOverview"
-                                            styleClass="btn-secondary"/>
-                                    <Button text="📊  Revenue"
-                                            onAction="#loadRevenueChart"
-                                            styleClass="btn-primary"/>
+                                <!-- Page header -->
+                                <VBox spacing="6">
+                                    <Label text="COMMAND CENTER"
+                                           style="-fx-font-size:22px; -fx-font-weight:bold;
+                                                  -fx-text-fill:#f0f0f0; -fx-letter-spacing:2;"/>
+                                    <Label text="Precision management for the SmartStay Empire."
+                                           styleClass="label-muted" style="-fx-font-size:13px;"/>
+                                </VBox>
+
+                                <!-- ── 4 STAT CARDS ── -->
+                                <HBox spacing="16">
+
+                                    <!-- Total Rooms — gold accent -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="0"
+                                          style="-fx-background-color:rgba(18,18,22,0.75);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.06);
+                                                 -fx-border-width:1; -fx-padding:20;">
+                                        <HBox alignment="CENTER_LEFT" spacing="8">
+                                            <Region style="-fx-min-width:3;-fx-pref-width:3;-fx-min-height:48;
+                                                           -fx-max-height:48;-fx-background-color:#C5A059;
+                                                           -fx-background-radius:2;" HBox.hgrow="NEVER"/>
+                                            <VBox spacing="6" HBox.hgrow="ALWAYS" style="-fx-padding:0 0 0 10;">
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <Label text="TOTAL ROOMS" styleClass="stat-card-label"
+                                                           HBox.hgrow="ALWAYS"/>
+                                                    <Label text="🏨" style="-fx-font-size:18px;-fx-text-fill:#C5A059;"/>
+                                                </HBox>
+                                                <Label fx:id="statAvailable" text="—"
+                                                       style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
+                                                <Label text="100% Operational"
+                                                       style="-fx-font-size:10px;-fx-text-fill:#1e8449;"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+
+                                    <!-- Active Guests — crimson accent -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="0"
+                                          style="-fx-background-color:rgba(18,18,22,0.75);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.06);
+                                                 -fx-border-width:1; -fx-padding:20;">
+                                        <HBox alignment="CENTER_LEFT" spacing="8">
+                                            <Region style="-fx-min-width:3;-fx-pref-width:3;-fx-min-height:48;
+                                                           -fx-max-height:48;-fx-background-color:#FF3333;
+                                                           -fx-background-radius:2;" HBox.hgrow="NEVER"/>
+                                            <VBox spacing="6" HBox.hgrow="ALWAYS" style="-fx-padding:0 0 0 10;">
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <Label text="ACTIVE GUESTS" styleClass="stat-card-label"
+                                                           HBox.hgrow="ALWAYS"/>
+                                                    <Label text="👥" style="-fx-font-size:18px;-fx-text-fill:#FF3333;"/>
+                                                </HBox>
+                                                <Label fx:id="statOccupied" text="—"
+                                                       style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
+                                                <Label text="Capacity: 65%"
+                                                       style="-fx-font-size:10px;-fx-text-fill:#888;"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+
+                                    <!-- Today's Check-ins — jade accent -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="0"
+                                          style="-fx-background-color:rgba(18,18,22,0.75);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.06);
+                                                 -fx-border-width:1; -fx-padding:20;">
+                                        <HBox alignment="CENTER_LEFT" spacing="8">
+                                            <Region style="-fx-min-width:3;-fx-pref-width:3;-fx-min-height:48;
+                                                           -fx-max-height:48;-fx-background-color:#1E8449;
+                                                           -fx-background-radius:2;" HBox.hgrow="NEVER"/>
+                                            <VBox spacing="6" HBox.hgrow="ALWAYS" style="-fx-padding:0 0 0 10;">
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <Label text="TODAY'S CHECK-INS" styleClass="stat-card-label"
+                                                           HBox.hgrow="ALWAYS"/>
+                                                    <Label text="→" style="-fx-font-size:18px;-fx-text-fill:#1E8449;-fx-font-weight:bold;"/>
+                                                </HBox>
+                                                <Label fx:id="statActiveRes" text="—"
+                                                       style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
+                                                <Label text="4 remaining to arrive"
+                                                       style="-fx-font-size:10px;-fx-text-fill:#888;"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+
+                                    <!-- Monthly Revenue — gold accent -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="0"
+                                          style="-fx-background-color:rgba(18,18,22,0.75);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.06);
+                                                 -fx-border-width:1; -fx-padding:20;">
+                                        <HBox alignment="CENTER_LEFT" spacing="8">
+                                            <Region style="-fx-min-width:3;-fx-pref-width:3;-fx-min-height:48;
+                                                           -fx-max-height:48;-fx-background-color:#C5A059;
+                                                           -fx-background-radius:2;" HBox.hgrow="NEVER"/>
+                                            <VBox spacing="6" HBox.hgrow="ALWAYS" style="-fx-padding:0 0 0 10;">
+                                                <HBox alignment="CENTER_LEFT">
+                                                    <Label text="MONTHLY REVENUE" styleClass="stat-card-label"
+                                                           HBox.hgrow="ALWAYS"/>
+                                                    <Label text="💰" style="-fx-font-size:18px;-fx-text-fill:#C5A059;"/>
+                                                </HBox>
+                                                <Label fx:id="statMaint" text="—"
+                                                       style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
+                                                <Label text="+12% vs last month"
+                                                       style="-fx-font-size:10px;-fx-text-fill:#1e8449;"/>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+
                                 </HBox>
 
-                                <!-- 4 stat cards with Stitch accent bars -->
-                                <HBox spacing="20">
-                                    <VBox styleClass="stat-card-gold"
-                                          HBox.hgrow="ALWAYS" spacing="8">
-                                        <Label text="AVAILABLE ROOMS"
-                                               styleClass="stat-card-label"/>
-                                        <Label fx:id="statAvailable" text="0"
-                                               styleClass="stat-card-value"
-                                               style="-fx-text-fill:#c5a059;"/>
-                                        <Label text="Operational"
-                                               styleClass="stat-card-trend"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card-red"
-                                          HBox.hgrow="ALWAYS" spacing="8">
-                                        <Label text="OCCUPIED ROOMS"
-                                               styleClass="stat-card-label"/>
-                                        <Label fx:id="statOccupied" text="0"
-                                               styleClass="stat-card-value"
-                                               style="-fx-text-fill:#ff3333;"/>
-                                        <Label text="Live occupancy"
-                                               styleClass="stat-card-trend"
-                                               style="-fx-text-fill:#808080;"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card-green"
-                                          HBox.hgrow="ALWAYS" spacing="8">
-                                        <Label text="ACTIVE BOOKINGS"
-                                               styleClass="stat-card-label"/>
-                                        <Label fx:id="statActiveRes" text="0"
-                                               styleClass="stat-card-value"
-                                               style="-fx-text-fill:#2ecc71;"/>
-                                        <Label text="Live reservations"
-                                               styleClass="stat-card-trend"/>
-                                    </VBox>
-                                    <VBox styleClass="stat-card-blue"
-                                          HBox.hgrow="ALWAYS" spacing="8">
-                                        <Label text="MAINTENANCE ALERTS"
-                                               styleClass="stat-card-label"/>
-                                        <Label fx:id="statMaint" text="0"
-                                               styleClass="stat-card-value"
-                                               style="-fx-text-fill:#3498db;"/>
-                                        <Label text="Pending tasks"
-                                               styleClass="stat-card-trend"
-                                               style="-fx-text-fill:#3498db;"/>
-                                    </VBox>
-                                </HBox>
+                                <!-- ── 3 CHARTS ROW ── -->
+                                <HBox spacing="16">
 
-                                <!-- Charts row 1 -->
-                                <HBox spacing="20">
-                                    <VBox styleClass="glass-box" HBox.hgrow="ALWAYS"
-                                          spacing="8" alignment="CENTER">
-                                        <Label text="Room Status Distribution"
-                                               styleClass="chart-title"/>
+                                    <!-- Room Status Donut -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                                          style="-fx-background-color:rgba(10,10,14,0.55);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.05);
+                                                 -fx-border-width:1; -fx-padding:24;">
+                                        <HBox alignment="CENTER_LEFT" spacing="6">
+                                            <Region style="-fx-min-width:6;-fx-pref-width:6;-fx-min-height:6;
+                                                           -fx-pref-height:6;-fx-background-color:#8B0000;
+                                                           -fx-background-radius:3;"/>
+                                            <Label text="ROOM STATUS DISTRIBUTION"
+                                                   style="-fx-font-size:10px;-fx-font-weight:bold;
+                                                          -fx-text-fill:#ffffff;-fx-letter-spacing:2;"/>
+                                        </HBox>
                                         <PieChart fx:id="roomStatusChart" animated="true"
-                                                  labelsVisible="true" legendVisible="true"
-                                                  legendSide="BOTTOM" prefHeight="280"
-                                                  style="-fx-background-color:transparent;"/>
-                                    </VBox>
-                                    <VBox styleClass="glass-box" HBox.hgrow="ALWAYS"
-                                          spacing="8" alignment="CENTER">
-                                        <Label text="Monthly Guest Check-ins"
-                                               styleClass="chart-title"/>
-                                        <BarChart fx:id="clientChart" animated="false"
-                                                  legendVisible="false" prefHeight="280"
-                                                  style="-fx-background-color:transparent;">
-                                            <xAxis><CategoryAxis fx:id="clientXAxis"
-                                                    style="-fx-tick-label-fill:#808080;-fx-font-size:10px;"/></xAxis>
-                                            <yAxis><NumberAxis fx:id="clientYAxis" label="Guests"
-                                                    style="-fx-tick-label-fill:#808080;"/></yAxis>
-                                        </BarChart>
-                                    </VBox>
-                                </HBox>
-
-                                <!-- Charts row 2 -->
-                                <HBox spacing="20">
-                                    <VBox styleClass="glass-box" prefWidth="380"
-                                          spacing="8" alignment="CENTER">
-                                        <Label text="Staff Activity Status"
-                                               styleClass="chart-title"/>
-                                        <PieChart fx:id="staffStatusChart" animated="true"
-                                                  labelsVisible="true" legendVisible="true"
+                                                  labelsVisible="false" legendVisible="true"
                                                   legendSide="BOTTOM" prefHeight="260"
                                                   style="-fx-background-color:transparent;"/>
                                     </VBox>
-                                    <VBox styleClass="glass-box" HBox.hgrow="ALWAYS"
-                                          spacing="16" alignment="CENTER">
-                                        <Label text="Total Staff Active"
-                                               styleClass="chart-title"/>
-                                        <VBox styleClass="stat-card-blue" alignment="CENTER"
-                                              spacing="6" maxWidth="Infinity">
-                                            <Label text="ACTIVE STAFF"
-                                                   styleClass="stat-card-label"/>
-                                            <Label fx:id="statCleaning" text="—"
-                                                   styleClass="stat-card-value"
-                                                   style="-fx-font-size:36px;-fx-text-fill:#3498db;"/>
+
+                                    <!-- Monthly Check-ins Bar Chart -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                                          style="-fx-background-color:rgba(10,10,14,0.55);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.05);
+                                                 -fx-border-width:1; -fx-padding:24;">
+                                        <HBox alignment="CENTER_LEFT" spacing="6">
+                                            <Region style="-fx-min-width:6;-fx-pref-width:6;-fx-min-height:6;
+                                                           -fx-pref-height:6;-fx-background-color:#8B0000;
+                                                           -fx-background-radius:3;"/>
+                                            <Label text="MONTHLY CHECK-INS FLOW"
+                                                   style="-fx-font-size:10px;-fx-font-weight:bold;
+                                                          -fx-text-fill:#ffffff;-fx-letter-spacing:2;"/>
+                                        </HBox>
+                                        <BarChart fx:id="clientChart" animated="false"
+                                                  legendVisible="false" VBox.vgrow="ALWAYS"
+                                                  prefHeight="260"
+                                                  style="-fx-background-color:transparent;">
+                                            <xAxis><CategoryAxis fx:id="clientXAxis"
+                                                    style="-fx-tick-label-fill:#666;-fx-font-size:9px;"/></xAxis>
+                                            <yAxis><NumberAxis fx:id="clientYAxis"
+                                                    style="-fx-tick-label-fill:#666;-fx-font-size:9px;"
+                                                    label=""/></yAxis>
+                                        </BarChart>
+                                    </VBox>
+
+                                    <!-- Legion Productivity -->
+                                    <VBox HBox.hgrow="ALWAYS" spacing="12"
+                                          style="-fx-background-color:rgba(10,10,14,0.55);
+                                                 -fx-background-radius:8; -fx-border-radius:8;
+                                                 -fx-border-color:rgba(255,255,255,0.05);
+                                                 -fx-border-width:1; -fx-padding:24;">
+                                        <HBox alignment="CENTER_LEFT" spacing="6">
+                                            <Region style="-fx-min-width:6;-fx-pref-width:6;-fx-min-height:6;
+                                                           -fx-pref-height:6;-fx-background-color:#8B0000;
+                                                           -fx-background-radius:3;"/>
+                                            <Label text="LEGION PRODUCTIVITY"
+                                                   style="-fx-font-size:10px;-fx-font-weight:bold;
+                                                          -fx-text-fill:#ffffff;-fx-letter-spacing:2;"/>
+                                        </HBox>
+
+                                        <!-- Staff donut chart -->
+                                        <PieChart fx:id="staffStatusChart" animated="true"
+                                                  labelsVisible="false" legendVisible="false"
+                                                  prefHeight="180"
+                                                  style="-fx-background-color:transparent;"/>
+
+                                        <Region VBox.vgrow="ALWAYS"/>
+
+                                        <!-- Active on-site row -->
+                                        <VBox spacing="6">
+                                            <HBox alignment="CENTER_LEFT">
+                                                <Label text="ACTIVE ON-SITE"
+                                                       style="-fx-font-size:10px;-fx-text-fill:#888;-fx-letter-spacing:1;"
+                                                       HBox.hgrow="ALWAYS"/>
+                                                <Label fx:id="statCleaning" text="— Staff"
+                                                       style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
+                                            </HBox>
+                                            <ProgressBar fx:id="staffActiveBar" progress="0.7"
+                                                         maxWidth="Infinity" prefHeight="5"
+                                                         style="-fx-accent:#8B0000;-fx-background-color:rgba(255,255,255,0.08);
+                                                                -fx-background-radius:4;-fx-border-radius:4;"/>
+                                            <HBox alignment="CENTER_LEFT">
+                                                <Label text="PENDING TASKS"
+                                                       style="-fx-font-size:10px;-fx-text-fill:#888;-fx-letter-spacing:1;"
+                                                       HBox.hgrow="ALWAYS"/>
+                                                <Label text="28 Active"
+                                                       style="-fx-font-size:11px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
+                                            </HBox>
+                                            <ProgressBar progress="0.45"
+                                                         maxWidth="Infinity" prefHeight="5"
+                                                         style="-fx-accent:#C5A059;-fx-background-color:rgba(255,255,255,0.08);
+                                                                -fx-background-radius:4;-fx-border-radius:4;"/>
                                         </VBox>
                                     </VBox>
                                 </HBox>
+
+                                <!-- ── LIVE RESERVATION STREAM TABLE ── -->
+                                <VBox style="-fx-background-color:rgba(10,10,14,0.55);
+                                             -fx-background-radius:8; -fx-border-radius:8;
+                                             -fx-border-color:rgba(255,255,255,0.05);
+                                             -fx-border-width:1;" spacing="0">
+
+                                    <!-- Table header -->
+                                    <HBox alignment="CENTER_LEFT"
+                                          style="-fx-padding:16 24; -fx-border-color:rgba(255,255,255,0.05);
+                                                 -fx-border-width:0 0 1 0;">
+                                        <Label text="LIVE RESERVATION STREAM"
+                                               style="-fx-font-size:11px;-fx-font-weight:bold;
+                                                      -fx-text-fill:#ffffff;-fx-letter-spacing:2;"
+                                               HBox.hgrow="ALWAYS"/>
+                                        <Button text="VIEW ALL SCROLLS"
+                                                onAction="#navToReservations"
+                                                style="-fx-background-color:transparent;-fx-border-width:0;
+                                                       -fx-text-fill:#cc2222;-fx-font-size:10px;
+                                                       -fx-cursor:hand;-fx-font-weight:bold;"/>
+                                    </HBox>
+
+                                    <!-- Column headers -->
+                                    <HBox style="-fx-padding:10 24;-fx-background-color:rgba(255,255,255,0.04);
+                                                 -fx-border-color:rgba(255,255,255,0.05);-fx-border-width:0 0 1 0;">
+                                        <Label text="GUEST SOVEREIGN"
+                                               style="-fx-font-size:10px;-fx-text-fill:#666;-fx-letter-spacing:2;"
+                                               minWidth="200"/>
+                                        <Label text="CHAMBER"
+                                               style="-fx-font-size:10px;-fx-text-fill:#666;-fx-letter-spacing:2;"
+                                               minWidth="180"/>
+                                        <Label text="DURATION"
+                                               style="-fx-font-size:10px;-fx-text-fill:#666;-fx-letter-spacing:2;"
+                                               minWidth="180" HBox.hgrow="ALWAYS"/>
+                                        <Label text="OFFERING"
+                                               style="-fx-font-size:10px;-fx-text-fill:#666;-fx-letter-spacing:2;"
+                                               minWidth="120"/>
+                                        <Label text="STATUS"
+                                               style="-fx-font-size:10px;-fx-text-fill:#666;-fx-letter-spacing:2;"
+                                               minWidth="100"/>
+                                    </HBox>
+
+                                    <!-- Live rows populated by controller -->
+                                    <VBox fx:id="liveResRows" spacing="0"/>
+
+                                </VBox>
 
                             </VBox>
                         </ScrollPane>
@@ -275,12 +457,6 @@
                                         onAction="#filterReservations"
                                         styleClass="btn-secondary"/>
                                 <Region HBox.hgrow="ALWAYS"/>
-                                <Button text="CHECK-IN"
-                                        onAction="#doCheckIn"
-                                        styleClass="btn-success"/>
-                                <Button text="CHECK-OUT"
-                                        onAction="#doCheckOut"
-                                        styleClass="btn-primary"/>
                             </HBox>
                             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                                         styleClass="scroll-pane">
@@ -321,6 +497,7 @@
                     <!-- ── TAB 4 · STAFF ─────────────────────────────────── -->
                     <Tab text="">
                         <VBox spacing="0">
+                            <!-- Filter toolbar -->
                             <HBox spacing="15" alignment="CENTER_LEFT"
                                   styleClass="toolbar-bar">
                                 <Label text="Zen Inventory"
@@ -340,10 +517,62 @@
                                         onAction="#deactivateStaff"
                                         styleClass="btn-danger"/>
                             </HBox>
+
+                            <!-- Staff card grid -->
                             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                                         styleClass="scroll-pane">
                                 <FlowPane fx:id="staffGrid" styleClass="data-grid"/>
                             </ScrollPane>
+
+                            <!-- Shift assignment toolbar -->
+                            <HBox alignment="CENTER_LEFT" spacing="12"
+                                  styleClass="toolbar-bar"
+                                  style="-fx-border-width: 1px 0 0 0; -fx-padding: 14 20;">
+
+                                <!-- Selection indicator -->
+                                <VBox spacing="2">
+                                    <Label text="SELECTED EMPLOYEE" styleClass="stat-card-label"/>
+                                    <Label fx:id="lblSelectedStaff" text="None — click a card above"
+                                           style="-fx-text-fill:#c5a059; -fx-font-size:13px; -fx-font-weight:bold;"/>
+                                </VBox>
+
+                                <Region style="-fx-min-width:1; -fx-pref-width:1; -fx-min-height:36;
+                                               -fx-background-color: rgba(197,160,89,0.25);"/>
+
+                                <!-- Shift picker -->
+                                <VBox spacing="3" alignment="CENTER_LEFT">
+                                    <Label text="ASSIGN SHIFT" styleClass="stat-card-label"/>
+                                    <ComboBox fx:id="shiftPicker"
+                                              promptText="Select shift…"
+                                              styleClass="combo-box"
+                                              minWidth="200"/>
+                                </VBox>
+
+                                <!-- Date picker -->
+                                <VBox spacing="3" alignment="CENTER_LEFT">
+                                    <Label text="DATE" styleClass="stat-card-label"/>
+                                    <DatePicker fx:id="shiftDatePicker"
+                                                styleClass="date-picker"
+                                                minWidth="150"/>
+                                </VBox>
+
+                                <!-- Notes -->
+                                <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                    <Label text="NOTES (OPTIONAL)" styleClass="stat-card-label"/>
+                                    <TextField fx:id="shiftNotes"
+                                               promptText="e.g. Cover for absence…"
+                                               styleClass="text-field"/>
+                                </VBox>
+
+                                <!-- Action button -->
+                                <VBox spacing="3" alignment="CENTER">
+                                    <Label text="ACTION" styleClass="stat-card-label"/>
+                                    <Button text="⚔  ASSIGN SHIFT"
+                                            onAction="#assignShift"
+                                            styleClass="btn-primary"
+                                            minWidth="140"/>
+                                </VBox>
+                            </HBox>
                         </VBox>
                     </Tab>
 

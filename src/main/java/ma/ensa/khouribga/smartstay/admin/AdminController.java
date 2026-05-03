@@ -38,6 +38,8 @@ public class AdminController {
     @FXML private Label statCleaning;
     @FXML private Label statMaint;
     @FXML private Label statActiveRes;
+    @FXML private VBox  liveResRows;
+    @FXML private ProgressBar staffActiveBar;
 
     // Dashboard charts
     @FXML private PieChart roomStatusChart;
@@ -58,6 +60,10 @@ public class AdminController {
     @FXML private DatePicker resDateTo;
     @FXML private ComboBox<String> staffRoleFilter;
     @FXML private ComboBox<String> staffStatusFilter;
+    @FXML private Label            lblSelectedStaff;
+    @FXML private ComboBox<String> shiftPicker;
+    @FXML private DatePicker       shiftDatePicker;
+    @FXML private TextField        shiftNotes;
     @FXML private DatePicker payPeriodStart;
     @FXML private DatePicker payPeriodEnd;
 
@@ -94,6 +100,7 @@ public class AdminController {
         updateThemeButton();
         setupFilters();
         loadOverview();
+        loadLiveReservations();
         loadAllRooms();
         loadAllReservations();
         loadAllPayroll();
@@ -151,12 +158,13 @@ public class AdminController {
         updateThemeButton();
         Platform.runLater(this::refreshChartStyles);
     }
+    @FXML public void handleThemeToggleClick(javafx.scene.input.MouseEvent e) { handleThemeToggle(); }
     private void updateThemeButton() {
         if (btnThemeToggle != null) btnThemeToggle.setText(ThemeManager.getToggleLabel());
     }
 
     // ── Overview + Dashboard Charts ──────────────────────────────────────────
-    @FXML public void refreshOverview() { loadOverview(); }
+    @FXML public void refreshOverview() { loadOverview(); loadLiveReservations(); }
 
     private void loadOverview() {
         new Thread(() -> {
@@ -166,10 +174,18 @@ public class AdminController {
                 List<User> allUsers = UserDao.findAll();
                 Map<String, Integer> monthlyCheckIns = fetchMonthlyCheckIns(LocalDate.now().getYear());
                 Platform.runLater(() -> {
-                    if (statAvailable != null) statAvailable.setText(String.valueOf(counts[Room.Status.AVAILABLE.ordinal()]));
-                    if (statOccupied  != null) statOccupied .setText(String.valueOf(counts[Room.Status.OCCUPIED.ordinal()]));
-                    if (statMaint     != null) statMaint    .setText(String.valueOf(counts[Room.Status.MAINTENANCE.ordinal()]));
+                    // Card 1: Total Rooms
+                    int total = counts[Room.Status.AVAILABLE.ordinal()] + counts[Room.Status.OCCUPIED.ordinal()]
+                              + (counts.length > 2 ? counts[2] : 0) + counts[Room.Status.MAINTENANCE.ordinal()];
+                    if (statAvailable != null) statAvailable.setText(String.valueOf(total));
+                    // Card 2: Active Guests (occupied rooms)
+                    if (statOccupied  != null) statOccupied.setText(String.valueOf(counts[Room.Status.OCCUPIED.ordinal()]));
+                    // Card 3: Today's check-ins (active reservations)
                     if (statActiveRes != null) statActiveRes.setText(String.valueOf(active.size()));
+                    // Card 4: Monthly revenue placeholder — update via revenue query
+                    long activeStaff = allUsers.stream().filter(User::isActive).count();
+                    if (statCleaning  != null) statCleaning.setText(activeStaff + " Staff");
+                    if (staffActiveBar != null) staffActiveBar.setProgress(allUsers.isEmpty() ? 0 : (double) activeStaff / allUsers.size());
                     buildRoomStatusChart(counts);
                     buildClientChart(monthlyCheckIns);
                     buildStaffStatusChart(allUsers);
@@ -242,6 +258,72 @@ public class AdminController {
     private void styleChart(Chart c) { if (c != null) c.setStyle("-fx-background-color: transparent;"); }
     private void refreshChartStyles() { styleChart(roomStatusChart); styleChart(clientChart); styleChart(staffStatusChart); styleChart(revenueChart); }
 
+    private void loadLiveReservations() {
+        if (liveResRows == null) return;
+        new Thread(() -> {
+            try {
+                List<Reservation> recent = ReservationDao.findActive();
+                Platform.runLater(() -> {
+                    liveResRows.getChildren().clear();
+                    int shown = Math.min(recent.size(), 6);
+                    for (int i = 0; i < shown; i++) {
+                        Reservation r = recent.get(i);
+                        HBox row = new HBox();
+                        row.setStyle("-fx-padding:14 24;" +
+                            (i % 2 == 0 ? "" : "-fx-background-color:rgba(255,255,255,0.02);") +
+                            "-fx-border-color:rgba(255,255,255,0.04);-fx-border-width:0 0 1 0;");
+                        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                        // Avatar + name
+                        String name = r.getGuestFullName();
+                        String initials = name.length() >= 2 ? name.substring(0,2).toUpperCase() : name.toUpperCase();
+                        StackPane avatar = new StackPane();
+                        avatar.setPrefSize(28, 28);
+                        avatar.setMinSize(28, 28);
+                        avatar.setStyle("-fx-background-color:rgba(197,160,89,0.15);-fx-background-radius:14;" +
+                            "-fx-border-color:rgba(197,160,89,0.3);-fx-border-radius:14;-fx-border-width:1;");
+                        Label av = new Label(initials);
+                        av.setStyle("-fx-font-size:9px;-fx-font-weight:bold;-fx-text-fill:#c5a059;");
+                        avatar.getChildren().add(av);
+                        HBox nameBox = new HBox(8, avatar, new Label(name));
+                        nameBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                        ((Label)nameBox.getChildren().get(1)).setStyle("-fx-font-size:12px;-fx-text-fill:#e0e0e0;");
+                        nameBox.setMinWidth(200);
+
+                        Label room  = new Label(r.getRoomNumber());   room.setStyle("-fx-font-size:12px;-fx-text-fill:#aaa;"); room.setMinWidth(180);
+                        Label dates = new Label(r.getCheckInDate().format(DATE_FMT) + " – " + r.getCheckOutDate().format(DATE_FMT));
+                        dates.setStyle("-fx-font-size:12px;-fx-text-fill:#aaa;"); HBox.setHgrow(dates, javafx.scene.layout.Priority.ALWAYS); dates.setMinWidth(180);
+
+                        Label price = new Label(String.format("$%.2f", r.getBaseTotal()));
+                        price.setStyle("-fx-font-size:12px;-fx-font-weight:bold;-fx-text-fill:#fff;"); price.setMinWidth(120);
+
+                        // Status badge
+                        String status = r.getStatus().toString();
+                        String badgeColor = switch (status) {
+                            case "CONFIRMED"  -> "rgba(30,132,73,0.2); -fx-text-fill:#1e8449;";
+                            case "CHECKED_IN" -> "rgba(52,152,219,0.2); -fx-text-fill:#3498db;";
+                            case "CANCELLED"  -> "rgba(231,76,60,0.2); -fx-text-fill:#e74c3c;";
+                            default           -> "rgba(197,160,89,0.2); -fx-text-fill:#c5a059;";
+                        };
+                        Label badge = new Label(status.replace("_", " "));
+                        badge.setStyle("-fx-background-color:" + badgeColor +
+                            ";-fx-background-radius:12;-fx-font-size:9px;" +
+                            "-fx-font-weight:bold;-fx-padding:3 10;");
+                        badge.setMinWidth(100);
+
+                        row.getChildren().addAll(nameBox, room, dates, price, badge);
+                        liveResRows.getChildren().add(row);
+                    }
+                    if (recent.isEmpty()) {
+                        Label empty = new Label("No active reservations");
+                        empty.setStyle("-fx-text-fill:#666;-fx-font-size:12px;-fx-padding:20 24;");
+                        liveResRows.getChildren().add(empty);
+                    }
+                });
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }).start();
+    }
+
     private Map<String, Integer> fetchMonthlyCheckIns(int year) throws Exception {
         String sql = "SELECT MONTH(check_in_date) AS m, COUNT(*) AS cnt FROM reservations WHERE YEAR(check_in_date) = ? AND status IN ('CHECKED_IN','CHECKED_OUT') GROUP BY MONTH(check_in_date) ORDER BY m";
         Map<String, Integer> result = new LinkedHashMap<>();
@@ -267,6 +349,16 @@ public class AdminController {
         if (payPeriodEnd     != null) payPeriodEnd.setValue(LocalDate.now());
         if (staffRoleFilter  != null) { staffRoleFilter.setItems(FXCollections.observableArrayList("ALL","STAFF","ADMIN","CLIENT")); staffRoleFilter.setValue("ALL"); staffRoleFilter.setOnAction(e -> filterStaff()); }
         if (staffStatusFilter != null) { staffStatusFilter.setItems(FXCollections.observableArrayList("ALL","ACTIVE","INACTIVE")); staffStatusFilter.setValue("ALL"); staffStatusFilter.setOnAction(e -> filterStaff()); }
+        if (shiftDatePicker != null) shiftDatePicker.setValue(LocalDate.now());
+        if (shiftPicker != null) new Thread(() -> {
+            try (var conn = ma.ensa.khouribga.smartstay.db.Database.getConnection();
+                 var ps = conn.prepareStatement("SELECT shift_name, start_time, end_time FROM shifts ORDER BY start_time");
+                 var rs = ps.executeQuery()) {
+                var names = new java.util.ArrayList<String>();
+                while (rs.next()) names.add(rs.getString("shift_name") + "  (" + rs.getString("start_time").substring(0,5) + " – " + rs.getString("end_time").substring(0,5) + ")");
+                Platform.runLater(() -> shiftPicker.setItems(FXCollections.observableArrayList(names)));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }).start();
     }
 
     @FXML public void goToProfile(MouseEvent event) { Navigator.navigateTo((Node) event.getSource(), Navigator.ADMIN_PROFILE); }
@@ -343,8 +435,6 @@ public class AdminController {
         }
     }
 
-    @FXML public void doCheckIn() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_IN); Platform.runLater(this::filterReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
-    @FXML public void doCheckOut() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_OUT); Platform.runLater(this::filterReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
     @FXML public void doCancelReservation() {
         if (selectedRes == null) { showAlert("Select a reservation card."); return; }
         new Thread(() -> {
@@ -399,25 +489,205 @@ public class AdminController {
         if (staffGrid == null) return;
         staffGrid.getChildren().clear(); selectedStaff = null; selectedStaffCard = null;
         for (User user : users) {
-            VBox card = new VBox(8); card.getStyleClass().add("data-card");
-            HBox header = new HBox(); header.setAlignment(Pos.CENTER_LEFT);
-            StackPane avatar = new StackPane(); avatar.getStyleClass().add("avatar-circle"); avatar.setPrefWidth(38); avatar.setPrefHeight(38);
-            String initials = user.getUsername().length() >= 2 ? user.getUsername().substring(0, 2).toUpperCase() : user.getUsername().toUpperCase();
-            Label li = new Label(initials); li.getStyleClass().add("avatar-initials"); li.setStyle("-fx-font-size: 14px;"); avatar.getChildren().add(li);
-            Label lblName = new Label(user.getUsername()); lblName.getStyleClass().add("card-header-text"); lblName.setStyle("-fx-padding: 0 0 0 10;");
-            Region s = new Region(); HBox.setHgrow(s, Priority.ALWAYS);
-            header.getChildren().addAll(avatar, lblName, s, user.isActive() ? createBadge("ACTIVE") : createBadge("INACTIVE"));
-            Label em = new Label("✉ " + user.getEmail()); em.getStyleClass().add("card-detail-text");
-            Label rl = new Label("Role: " + user.getRole().name()); rl.getStyleClass().add("card-detail-text"); rl.setStyle("-fx-text-fill: #c5a059;");
-            Label id = new Label("ID: #" + user.getId()); id.getStyleClass().add("card-detail-text"); id.setStyle("-fx-text-fill: #606060; -fx-font-size: 11px;");
-            card.getChildren().addAll(header, new Separator(), em, rl, id);
-            card.setOnMouseClicked(e -> { if (selectedStaffCard != null) selectedStaffCard.getStyleClass().remove("selected-card"); card.getStyleClass().add("selected-card"); selectedStaffCard = card; selectedStaff = user; });
+            VBox card = new VBox(0);
+            card.getStyleClass().add("data-card");
+            card.setPrefWidth(340);
+            card.setMinWidth(300);
+            card.setMaxWidth(400);
+
+            // ── Header row ────────────────────────────────────────────────────
+            HBox header = new HBox(12);
+            header.setAlignment(Pos.CENTER_LEFT);
+            header.setStyle("-fx-padding: 16 16 12 16;");
+
+            String initials = user.getUsername().length() >= 2
+                ? user.getUsername().substring(0, 2).toUpperCase()
+                : user.getUsername().toUpperCase();
+            StackPane avatar = new StackPane();
+            avatar.setPrefSize(48, 48); avatar.setMinSize(48, 48);
+            avatar.getStyleClass().add("avatar-circle");
+            Label li = new Label(initials);
+            li.getStyleClass().add("avatar-initials");
+            li.setStyle("-fx-font-size: 17px;");
+            avatar.getChildren().add(li);
+
+            VBox nameCol = new VBox(4); HBox.setHgrow(nameCol, Priority.ALWAYS);
+            Label lblName = new Label(user.getUsername());
+            lblName.getStyleClass().add("card-header-text");
+            lblName.setStyle("-fx-font-size: 15px;");
+            Label lblRoleBadge = createBadge(user.getRole().name());
+            nameCol.getChildren().addAll(lblName, lblRoleBadge);
+
+            Label statusBadge = user.isActive() ? createBadge("ACTIVE") : createBadge("INACTIVE");
+            header.getChildren().addAll(avatar, nameCol, statusBadge);
+
+            // ── Gold divider ─────────────────────────────────────────────────
+            Region divider = new Region();
+            divider.setMaxWidth(Double.MAX_VALUE);
+            divider.setPrefHeight(1);
+            divider.setStyle("-fx-background-color: rgba(197,160,89,0.18);");
+
+            // ── Detail body ───────────────────────────────────────────────────
+            VBox body = new VBox(9);
+            body.setStyle("-fx-padding: 14 16 16 16;");
+
+            // Email
+            HBox emailRow = detailRow("✉", user.getEmail(), "#a0a0a0");
+            // ID
+            HBox idRow    = detailRow("#", "User ID: " + user.getId(), "#606060");
+
+            // Staff profile fields (loaded async per card)
+            Label lblPosition   = detailLabel("position", "Loading…", "#c5a059");
+            Label lblDept       = detailLabel("dept",     "—", "#888");
+            Label lblEmpCode    = detailLabel("code",     "—", "#888");
+            Label lblHire       = detailLabel("hire",     "—", "#888");
+            Label lblSalary     = detailLabel("salary",   "—", "#1e8449");
+            Label lblShift      = detailLabel("shift",    "—", "#3498db");
+
+            HBox posRow    = detailRow("🎯", "", "#c5a059");  posRow.getChildren().add(1, lblPosition);
+            HBox deptRow   = detailRow("🏛", "", "#888");     deptRow.getChildren().add(1, lblDept);
+            HBox codeRow   = detailRow("🪪", "", "#888");     codeRow.getChildren().add(1, lblEmpCode);
+            HBox hireRow   = detailRow("📅", "", "#888");     hireRow.getChildren().add(1, lblHire);
+            HBox salaryRow = detailRow("💴", "", "#1e8449");  salaryRow.getChildren().add(1, lblSalary);
+            HBox shiftRow  = detailRow("⏰", "", "#3498db");  shiftRow.getChildren().add(1, lblShift);
+
+            body.getChildren().addAll(emailRow, idRow, new Separator(),
+                posRow, deptRow, codeRow, hireRow, salaryRow, shiftRow);
+
+            card.getChildren().addAll(header, divider, body);
+            card.setOnMouseClicked(e -> {
+                if (selectedStaffCard != null) selectedStaffCard.getStyleClass().remove("selected-card");
+                card.getStyleClass().add("selected-card");
+                selectedStaffCard = card; selectedStaff = user;
+                if (lblSelectedStaff != null)
+                    lblSelectedStaff.setText(user.getUsername().toUpperCase() + "  ·  " + user.getRole());
+            });
             staffGrid.getChildren().add(card);
+
+            // Async enrich from staff_profiles + shift assignment
+            new Thread(() -> {
+                try (var conn = ma.ensa.khouribga.smartstay.db.Database.getConnection()) {
+                    String sql = """
+                        SELECT sp.position, sp.department, sp.employee_code,
+                               sp.hire_date, sp.salary_base,
+                               s.shift_name, s.start_time, s.end_time
+                        FROM staff_profiles sp
+                        LEFT JOIN staff_shift_assignments ssa
+                               ON ssa.staff_profile_id = sp.id
+                               AND ssa.assigned_date = CURDATE()
+                        LEFT JOIN shifts s ON s.id = ssa.shift_id
+                        WHERE sp.user_id = ?
+                        LIMIT 1
+                    """;
+                    try (var ps = conn.prepareStatement(sql)) {
+                        ps.setLong(1, user.getId());
+                        try (var rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                String pos      = rs.getString("position");
+                                String dept     = rs.getString("department");
+                                String code     = rs.getString("employee_code");
+                                String hire     = rs.getString("hire_date");
+                                double salary   = rs.getDouble("salary_base");
+                                String sName    = rs.getString("shift_name");
+                                String sStart   = rs.getString("start_time");
+                                String sEnd     = rs.getString("end_time");
+                                Platform.runLater(() -> {
+                                    lblPosition.setText(pos  != null ? pos  : "No position");
+                                    lblDept    .setText(dept != null ? dept : "No department");
+                                    lblEmpCode .setText(code != null ? code : "N/A");
+                                    lblHire    .setText("Hired: " + (hire != null ? hire : "unknown"));
+                                    lblSalary  .setText(String.format("%.2f MAD / month", salary));
+                                    lblShift   .setText(sName != null
+                                        ? sName + "  (" + sStart.substring(0,5) + " – " + sEnd.substring(0,5) + ")"
+                                        : "No shift today");
+                                });
+                            } else {
+                                Platform.runLater(() -> {
+                                    lblPosition.setText("No staff profile");
+                                    lblDept.setText("—"); lblEmpCode.setText("—");
+                                    lblHire.setText("—"); lblSalary.setText("—");
+                                    lblShift.setText("—");
+                                });
+                            }
+                        }
+                    }
+                } catch (Exception ex) { ex.printStackTrace(); }
+            }).start();
         }
+    }
+
+    /** Icon + text row helper */
+    private HBox detailRow(String icon, String text, String color) {
+        Label ico  = new Label(icon); ico.setStyle("-fx-font-size:13px; -fx-min-width:20;");
+        Label lbl  = new Label(text); lbl.setStyle("-fx-font-size:12px; -fx-text-fill:" + color + ";");
+        HBox row   = new HBox(8, ico, lbl);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
+    }
+
+    /** Standalone label used when the text is set async */
+    private Label detailLabel(String id, String text, String color) {
+        Label l = new Label(text);
+        l.setStyle("-fx-font-size:12px; -fx-text-fill:" + color + ";");
+        return l;
     }
 
     @FXML public void activateStaff() { if (selectedStaff == null) { showAlert("Select a staff card first."); return; } if (selectedStaff.isActive()) { showAlert(selectedStaff.getUsername() + " is already active."); return; } new Thread(() -> { try { UserDao.setActive(selectedStaff.getId(), true); Platform.runLater(this::loadAllStaff); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
     @FXML public void deactivateStaff() { if (selectedStaff == null) { showAlert("Select a staff card first."); return; } if (!selectedStaff.isActive()) { showAlert(selectedStaff.getUsername() + " is already inactive."); return; } new Thread(() -> { try { UserDao.setActive(selectedStaff.getId(), false); Platform.runLater(this::loadAllStaff); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
+
+    @FXML public void assignShift() {
+        if (selectedStaff == null) { showAlert("Select a staff card first."); return; }
+        String shiftEntry = shiftPicker != null ? shiftPicker.getValue() : null;
+        if (shiftEntry == null || shiftEntry.isBlank()) { showAlert("Please select a shift to assign."); return; }
+        LocalDate date = shiftDatePicker != null ? shiftDatePicker.getValue() : LocalDate.now();
+        if (date == null) { showAlert("Please select a date for the shift."); return; }
+        // Extract just the shift_name part (before the "  (" time display)
+        String shiftName = shiftEntry.contains("  (") ? shiftEntry.substring(0, shiftEntry.indexOf("  (")).trim() : shiftEntry.trim();
+        String notes = shiftNotes != null ? shiftNotes.getText().trim() : "";
+        long adminId = SessionManager.getCurrentUser().getId();
+        final long staffUserId = selectedStaff.getId();
+        final LocalDate assignDate = date;
+        new Thread(() -> {
+            try (var conn = ma.ensa.khouribga.smartstay.db.Database.getConnection()) {
+                // Resolve staff_profile_id from user id
+                long staffProfileId = -1;
+                try (var ps = conn.prepareStatement("SELECT id FROM staff_profiles WHERE user_id = ?")) {
+                    ps.setLong(1, staffUserId);
+                    try (var rs = ps.executeQuery()) { if (rs.next()) staffProfileId = rs.getLong("id"); }
+                }
+                if (staffProfileId < 0) { Platform.runLater(() -> showAlert("No staff profile found for this user.")); return; }
+                // Resolve shift_id by name
+                long shiftId = -1;
+                try (var ps = conn.prepareStatement("SELECT id FROM shifts WHERE shift_name = ?")) {
+                    ps.setString(1, shiftName);
+                    try (var rs = ps.executeQuery()) { if (rs.next()) shiftId = rs.getLong("id"); }
+                }
+                if (shiftId < 0) { Platform.runLater(() -> showAlert("Shift not found in database.")); return; }
+                // Insert assignment (replace existing on same date for this staff)
+                String sql = """
+                    INSERT INTO staff_shift_assignments (staff_profile_id, shift_id, assigned_date, assigned_by_user_id, notes)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE shift_id = VALUES(shift_id), assigned_by_user_id = VALUES(assigned_by_user_id), notes = VALUES(notes)
+                    """;
+                try (var ps = conn.prepareStatement(sql)) {
+                    ps.setLong(1, staffProfileId);
+                    ps.setLong(2, shiftId);
+                    ps.setDate(3, java.sql.Date.valueOf(assignDate));
+                    ps.setLong(4, adminId);
+                    ps.setString(5, notes.isEmpty() ? null : notes);
+                    ps.executeUpdate();
+                }
+                final String msg = "Shift '" + shiftName + "' assigned to " + selectedStaff.getUsername() + " on " + assignDate;
+                Platform.runLater(() -> {
+                    if (shiftNotes != null) shiftNotes.clear();
+                    showAlert(msg);
+                });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> showAlert("Error assigning shift: " + ex.getMessage()));
+            }
+        }).start();
+    }
 
     // ── Revenue Chart ────────────────────────────────────────────────────────
     private void setupRevenueYearPicker() {
