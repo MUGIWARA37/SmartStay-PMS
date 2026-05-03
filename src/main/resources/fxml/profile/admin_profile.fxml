@@ -3,97 +3,208 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
-<?import javafx.scene.layout.StackPane?>
 
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.profile.AdminProfileController">
-    <MediaView fx:id="bgMediaView" mouseTransparent="true"
-               preserveRatio="false" style="-fx-smooth: true;"/>
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ma.ensa.khouribga.smartstay.profile.AdminProfileController">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true" preserveRatio="false"/>
+
     <BorderPane styleClass="interior-root">
 
-    <!-- ═══════════ SIDEBAR -->
-    <left>
-        <VBox styleClass="sidebar" prefWidth="220" spacing="4">
-            <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4">
-                <Label text="侍" styleClass="sidebar-logo"/>
-                <Label text="SMARTSTAY" styleClass="app-title"/>
-                <Label text="ADMINISTRATOR" styleClass="app-subtitle"/>
-                <Label text="智 Wisdom · 侍 Precision" styleClass="sidebar-sub-kanji"/>
-            </VBox>
-            <Button text="⛩  Dashboard"   styleClass="nav-button" maxWidth="Infinity"/>
-            <Button text="👤  Profile"      styleClass="nav-button-active" maxWidth="Infinity"/>
-            <Region VBox.vgrow="ALWAYS"/>
-            <HBox alignment="CENTER" style="-fx-padding: 0 16 8 16;">
-                <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-            </HBox>
-            <VBox style="-fx-padding: 0 16 16 16;">
-                <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-logout" maxWidth="Infinity"/>
-            </VBox>
-        </VBox>
-    </left>
-
-    <!-- ═══════════ HEADER BAR -->
-    <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
-            <Button text="← Return to Command Center" onAction="#goBack" styleClass="btn-secondary"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Shogun Profile" styleClass="section-title" style="-fx-font-size: 22px;"/>
-        </HBox>
-    </top>
-
-    <center>
-        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-            <HBox spacing="30" alignment="TOP_CENTER" style="-fx-padding: 30;">
-
-                <!-- Avatar card -->
-                <VBox styleClass="glass-box" spacing="15" alignment="CENTER" prefWidth="300" maxHeight="420">
-                    <StackPane styleClass="avatar-circle" prefWidth="120" prefHeight="120" maxWidth="120" maxHeight="120">
-                        <Label fx:id="lblInitials" text="AD" styleClass="avatar-initials" style="-fx-font-size: 48px;"/>
+        <!-- SIDEBAR -->
+        <left>
+            <VBox styleClass="sidebar" prefWidth="250" spacing="0">
+                <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4"
+                      style="-fx-padding: 28 16 24 16;">
+                    <Label text="侍" styleClass="sidebar-logo"/>
+                    <Label text="SMARTSTAY"     styleClass="app-title"/>
+                    <Label text="ADMINISTRATOR" styleClass="app-subtitle"/>
+                    <Label text="智 Wisdom · 侍 Precision" styleClass="sidebar-sub-kanji"/>
+                </VBox>
+                <Button text="⛩  Dashboard"        onAction="#goBack" styleClass="nav-button" maxWidth="Infinity"/>
+                <Button text="🏯  Room Mastery"     onAction="#goBack" styleClass="nav-button" maxWidth="Infinity"/>
+                <Button text="📋  Guest Scrolls"    onAction="#goBack" styleClass="nav-button" maxWidth="Infinity"/>
+                <Button text="💴  Financial Katana" onAction="#goBack" styleClass="nav-button" maxWidth="Infinity"/>
+                <Button text="👥  Zen Inventory"    onAction="#goBack" styleClass="nav-button" maxWidth="Infinity"/>
+                <Button text="⚙  Settings"          styleClass="nav-button-active" maxWidth="Infinity"/>
+                <Region VBox.vgrow="ALWAYS"/>
+                <HBox style="-fx-padding: 0 16 10 16;">
+                    <Button text="☀ Light" onAction="#handleThemeToggle"
+                            styleClass="btn-theme" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10 16 8 16;">
+                    <StackPane styleClass="avatar-circle" prefWidth="34" prefHeight="34">
+                        <Label fx:id="lblInitials" text="AD" styleClass="avatar-initials" style="-fx-font-size: 14px;"/>
                     </StackPane>
-                    <Label fx:id="lblUsername" text="System Admin" styleClass="card-header-text" style="-fx-font-size: 22px;"/>
-                    <Label text="SHOGUN (ADMIN)" styleClass="badge, badge-occupied" style="-fx-font-size: 13px; -fx-padding: 6 15;"/>
-                    <Region styleClass="gold-divider" maxWidth="200"/>
-                    <VBox alignment="CENTER" spacing="5">
-                        <Label text="System Access Level" styleClass="label-muted"/>
-                        <Label text="Absolute (All Sectors Unlocked)" style="-fx-text-fill: #c5a059; -fx-font-weight: bold;"/>
+                    <VBox alignment="CENTER_LEFT" spacing="1">
+                        <Label fx:id="lblUsername" text="System Admin"
+                               style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:12px;"/>
+                        <Label text="SHOGUN (ADMIN)" styleClass="label-muted" style="-fx-font-size: 10px;"/>
                     </VBox>
+                </HBox>
+                <VBox style="-fx-padding: 4 16 20 16;">
+                    <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-logout" maxWidth="Infinity"/>
                 </VBox>
+            </VBox>
+        </left>
 
-                <!-- Forms -->
-                <VBox spacing="24" prefWidth="540">
-
-                    <VBox styleClass="glass-box" spacing="18">
-                        <Label text="Master Communications" styleClass="section-title" style="-fx-font-size: 18px;"/>
-                        <Region styleClass="gold-divider"/>
-                        <VBox spacing="5">
-                            <Label text="IMPERIAL EMAIL ADDRESS" styleClass="field-label"/>
-                            <TextField fx:id="txtEmail" promptText="Enter command email..." styleClass="text-field"/>
-                        </VBox>
-                        <Button text="UPDATE COMM LINK" onAction="#updateContact" styleClass="btn-primary" maxWidth="Infinity"/>
-                    </VBox>
-
-                    <VBox styleClass="glass-box" spacing="18">
-                        <Label text="Authentication Protocol" styleClass="section-title" style="-fx-font-size: 18px;"/>
-                        <Region styleClass="gold-divider"/>
-                        <VBox spacing="5">
-                            <Label text="CURRENT PASSPHRASE" styleClass="field-label"/>
-                            <PasswordField fx:id="txtOldPass" promptText="Verify current identity..." styleClass="password-field"/>
-                        </VBox>
-                        <HBox spacing="14">
-                            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                                <Label text="NEW PASSPHRASE" styleClass="field-label"/>
-                                <PasswordField fx:id="txtNewPass" promptText="At least 8 characters..." styleClass="password-field"/>
-                            </VBox>
-                            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                                <Label text="CONFIRM PASSPHRASE" styleClass="field-label"/>
-                                <PasswordField fx:id="txtConfirmPass" promptText="Type it again..." styleClass="password-field"/>
-                            </VBox>
-                        </HBox>
-                        <Button text="CHANGE MASTER PASSPHRASE" onAction="#updatePassword" styleClass="btn-danger" maxWidth="Infinity"/>
-                    </VBox>
-                </VBox>
-
+        <!-- HEADER -->
+        <top>
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+                <Button text="← Return to Command Center" onAction="#goBack" styleClass="btn-secondary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="IMPERIAL PORTAL" styleClass="breadcrumb-label"/>
+                <Label text="·" styleClass="label-muted"/>
+                <Label text="Settings"
+                       style="-fx-text-fill:#cc2222;-fx-font-size:11px;-fx-font-weight:bold;"/>
             </HBox>
-        </ScrollPane>
-    </center>
-</BorderPane>
+        </top>
+
+        <!-- CENTER — expandable info cards -->
+        <center>
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+                <VBox spacing="16" style="-fx-padding: 28;" maxWidth="Infinity">
+
+                    <!-- PROFILE HERO CARD -->
+                    <VBox fx:id="cardProfile" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleProfile" alignment="CENTER_LEFT" spacing="16"
+                              style="-fx-padding: 6 0 6 0;">
+                            <StackPane styleClass="avatar-circle" prefWidth="64" prefHeight="64">
+                                <Label text="AD" styleClass="avatar-initials" style="-fx-font-size: 26px;"/>
+                            </StackPane>
+                            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                                <Label text="System Admin" styleClass="card-header-text" style="-fx-font-size:18px;"/>
+                                <Label text="SHOGUN (ADMIN)" styleClass="badge, badge-occupied"
+                                       style="-fx-font-size:11px; -fx-padding: 3 10;"/>
+                            </VBox>
+                            <Label fx:id="arrowProfile" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyProfile" managed="false" visible="false"
+                              spacing="16" alignment="CENTER"
+                              style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox spacing="40" alignment="CENTER">
+                                <VBox alignment="CENTER" spacing="4">
+                                    <Label text="ACCESS LEVEL" styleClass="stat-card-label"/>
+                                    <Label text="Absolute" style="-fx-text-fill:#c5a059;-fx-font-weight:bold;-fx-font-size:16px;"/>
+                                    <Label text="All Sectors" styleClass="label-muted"/>
+                                </VBox>
+                                <Region style="-fx-min-width:1;-fx-pref-width:1;-fx-min-height:50;-fx-background-color:rgba(197,160,89,0.25);"/>
+                                <VBox alignment="CENTER" spacing="4">
+                                    <Label text="ROLE" styleClass="stat-card-label"/>
+                                    <Label text="ADMINISTRATOR" style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:16px;"/>
+                                    <Label text="Full control" styleClass="label-muted"/>
+                                </VBox>
+                                <Region style="-fx-min-width:1;-fx-pref-width:1;-fx-min-height:50;-fx-background-color:rgba(197,160,89,0.25);"/>
+                                <VBox alignment="CENTER" spacing="4">
+                                    <Label text="STATUS" styleClass="stat-card-label"/>
+                                    <Label text="● ACTIVE" style="-fx-text-fill:#1e8449;-fx-font-weight:bold;-fx-font-size:16px;"/>
+                                    <Label text="Session live" styleClass="label-muted"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- COMMUNICATIONS CARD -->
+                    <VBox fx:id="cardComms" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleComms" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="✉" style="-fx-font-size:24px; -fx-text-fill:#c5a059;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Master Communications" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Email address and contact settings" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowComms" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyComms" managed="false" visible="false"
+                              spacing="16" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <VBox spacing="6">
+                                <Label text="IMPERIAL EMAIL ADDRESS" styleClass="field-label"/>
+                                <TextField fx:id="txtEmail" promptText="Enter command email…" styleClass="text-field"/>
+                                <Label text="Used for system alerts and communications dispatch."
+                                       styleClass="label-muted" style="-fx-font-size:10px;"/>
+                            </VBox>
+                            <Button text="▶  UPDATE COMM LINK" onAction="#updateContact"
+                                    styleClass="btn-primary" maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- AUTHENTICATION CARD -->
+                    <VBox fx:id="cardAuth" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleAuth" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="🔐" style="-fx-font-size:24px;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Authentication Protocol" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Change master passphrase and security settings" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowAuth" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyAuth" managed="false" visible="false"
+                              spacing="16" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <VBox spacing="6">
+                                <Label text="CURRENT PASSPHRASE" styleClass="field-label"/>
+                                <PasswordField fx:id="txtOldPass" promptText="Verify current identity…" styleClass="password-field"/>
+                            </VBox>
+                            <HBox spacing="16">
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="NEW PASSPHRASE" styleClass="field-label"/>
+                                    <PasswordField fx:id="txtNewPass" promptText="At least 8 chars…" styleClass="password-field"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="CONFIRM PASSPHRASE" styleClass="field-label"/>
+                                    <PasswordField fx:id="txtConfirmPass" promptText="Repeat…" styleClass="password-field"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Passphrase must be at least 8 characters. Avoid common words."
+                                   styleClass="label-muted" style="-fx-font-size:10px;"/>
+                            <Button text="⚔  CHANGE MASTER PASSPHRASE" onAction="#updatePassword"
+                                    styleClass="btn-danger" maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- SESSION INFO CARD -->
+                    <VBox fx:id="cardSession" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleSession" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="⚡" style="-fx-font-size:24px;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Session and Access Info" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Current session details and permissions" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowSession" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodySession" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox spacing="16">
+                                <VBox styleClass="stat-card-gold" HBox.hgrow="ALWAYS" spacing="4"
+                                      style="-fx-padding:14 18; -fx-background-radius:8; -fx-border-radius:8;">
+                                    <Label text="PERMISSIONS" styleClass="stat-card-label"/>
+                                    <Label text="Unrestricted" styleClass="stat-card-value" style="-fx-font-size:17px;"/>
+                                    <Label text="Rooms · Guests · Finance · Staff"
+                                           styleClass="label-muted" style="-fx-font-size:10px;"/>
+                                </VBox>
+                                <VBox styleClass="stat-card-green" HBox.hgrow="ALWAYS" spacing="4"
+                                      style="-fx-padding:14 18; -fx-background-radius:8; -fx-border-radius:8;">
+                                    <Label text="SESSION STATUS" styleClass="stat-card-label"/>
+                                    <Label text="Active" styleClass="stat-card-value"
+                                           style="-fx-font-size:17px; -fx-text-fill:#1e8449;"/>
+                                    <Label fx:id="lblSessionUser" text="Logged in as: —"
+                                           styleClass="label-muted" style="-fx-font-size:10px;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                </VBox>
+            </ScrollPane>
+        </center>
+    </BorderPane>
 </StackPane>

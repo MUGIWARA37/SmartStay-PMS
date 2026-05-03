@@ -4,79 +4,143 @@
 <?import javafx.scene.shape.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
-<?import javafx.scene.layout.StackPane?>
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.profile.ClientProfileController">
-    <MediaView fx:id="bgMediaView" mouseTransparent="true"
-               preserveRatio="false" style="-fx-smooth: true;"/>
-    <BorderPane
-            styleClass="interior-root"
-            prefWidth="1100" prefHeight="760">
 
-    <!-- TOP BAR -->
-    <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
-            <Label text="⚔  MY PROFILE" styleClass="welcome-label"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Button text="← Back" styleClass="btn-secondary" onAction="#goBack"/>
-            <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity"/>
-                <Button text="Logout" styleClass="btn-logout" onAction="#onLogout"/>
-        </HBox>
-    </top>
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ma.ensa.khouribga.smartstay.profile.ClientProfileController">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true" preserveRatio="false"/>
 
-    <center>
-        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-            <VBox spacing="20" styleClass="content-area">
-                <padding><Insets top="28" right="32" bottom="32" left="32"/></padding>
+    <BorderPane styleClass="interior-root">
 
-                <!-- PROFILE HEADER CARD -->
-                <HBox styleClass="section-box" spacing="28" alignment="CENTER_LEFT">
-                    <padding><Insets top="24" right="28" bottom="24" left="28"/></padding>
-                    <StackPane>
-                        <Circle fx:id="avatarCircle" radius="54" styleClass="avatar-circle"/>
-                        <Label fx:id="avatarInitials" styleClass="avatar-initials" text="?"/>
-                    </StackPane>
-                    <VBox spacing="6">
-                        <Label fx:id="fullNameLabel" text="Loading..." styleClass="section-title"/>
-                        <Label fx:id="roleLabel" text="Guest" styleClass="label-muted"/>
-                        <Label fx:id="memberSinceLabel" text="" styleClass="label-muted"/>
+        <!-- HEADER -->
+        <top>
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+                <Button text="← Back" onAction="#goBack" styleClass="btn-secondary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="GUEST PORTAL" styleClass="breadcrumb-label"/>
+                <Label text="·" styleClass="label-muted"/>
+                <Label text="My Profile" style="-fx-text-fill:#cc2222;-fx-font-size:11px;-fx-font-weight:bold;"/>
+                <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme"/>
+                <Button text="Logout" onAction="#onLogout" styleClass="btn-logout"/>
+            </HBox>
+        </top>
+
+        <!-- CENTER -->
+        <center>
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+                <VBox spacing="16" style="-fx-padding: 28;" maxWidth="Infinity">
+
+                    <!-- PROFILE HERO CARD -->
+                    <VBox fx:id="cardHero" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleHero" alignment="CENTER_LEFT" spacing="16"
+                              style="-fx-padding: 6 0 6 0;">
+                            <StackPane styleClass="avatar-circle" prefWidth="64" prefHeight="64">
+                                <Label fx:id="avatarInitials" text="?" styleClass="avatar-initials" style="-fx-font-size:26px;"/>
+                            </StackPane>
+                            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                                <Label fx:id="fullNameLabel" text="Loading..." styleClass="card-header-text" style="-fx-font-size:18px;"/>
+                                <Label fx:id="roleLabel" text="🏯  Guest / Client" styleClass="label-muted" style="-fx-font-size:12px;"/>
+                            </VBox>
+                            <Label fx:id="arrowHero" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyHero" managed="false" visible="false"
+                              spacing="16" alignment="CENTER" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox spacing="40" alignment="CENTER">
+                                <VBox alignment="CENTER" spacing="4">
+                                    <Label text="ACCOUNT TYPE" styleClass="stat-card-label"/>
+                                    <Label text="Guest" style="-fx-text-fill:#c5a059;-fx-font-weight:bold;-fx-font-size:16px;"/>
+                                    <Label text="Standard access" styleClass="label-muted"/>
+                                </VBox>
+                                <Region style="-fx-min-width:1;-fx-pref-width:1;-fx-min-height:50;-fx-background-color:rgba(197,160,89,0.25);"/>
+                                <VBox alignment="CENTER" spacing="4">
+                                    <Label text="MEMBER SINCE" styleClass="stat-card-label"/>
+                                    <Label fx:id="memberSinceLabel" text="—" style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:15px;"/>
+                                    <Label text="Registration date" styleClass="label-muted"/>
+                                </VBox>
+                                <Region style="-fx-min-width:1;-fx-pref-width:1;-fx-min-height:50;-fx-background-color:rgba(197,160,89,0.25);"/>
+                                <VBox alignment="CENTER" spacing="4">
+                                    <Label text="STATUS" styleClass="stat-card-label"/>
+                                    <Label text="● ACTIVE" style="-fx-text-fill:#1e8449;-fx-font-weight:bold;-fx-font-size:16px;"/>
+                                    <Label text="Verified guest" styleClass="label-muted"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
                     </VBox>
-                </HBox>
 
-                <!-- TWO COLUMN ROW: Contact Info + Change Password -->
-                <HBox spacing="20">
-                    <!-- Contact Info -->
-                    <VBox styleClass="section-box" spacing="14" HBox.hgrow="ALWAYS">
-                        <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
-                        <Label text="📋  Contact Information" styleClass="section-title"/>
-                        <Separator/>
-                        <Label text="EMAIL" styleClass="form-label"/>
-                        <TextField fx:id="emailField" styleClass="interior-text-field" promptText="email@example.com"/>
-                        <Label text="PHONE" styleClass="form-label"/>
-                        <TextField fx:id="phoneField" styleClass="interior-text-field" promptText="+212 600 000 000"/>
-                        <Label text="NATIONALITY" styleClass="form-label"/>
-                        <TextField fx:id="nationalityField" styleClass="interior-text-field" promptText="e.g. Moroccan"/>
-                        <Label fx:id="contactMsg" text="" styleClass="error-label" wrapText="true"/>
-                        <Button text="💾  Save Contact Info" styleClass="btn-primary" onAction="#saveContactInfo" maxWidth="Infinity"/>
+                    <!-- CONTACT INFO CARD -->
+                    <VBox fx:id="cardContact" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleContact" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="📋" style="-fx-font-size:24px;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Contact Information" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Email, phone and nationality" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowContact" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyContact" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox spacing="16">
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="EMAIL" styleClass="field-label"/>
+                                    <TextField fx:id="emailField" styleClass="text-field" promptText="email@example.com"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="PHONE" styleClass="field-label"/>
+                                    <TextField fx:id="phoneField" styleClass="text-field" promptText="+212 600 000 000"/>
+                                </VBox>
+                            </HBox>
+                            <VBox spacing="6">
+                                <Label text="NATIONALITY" styleClass="field-label"/>
+                                <TextField fx:id="nationalityField" styleClass="text-field" promptText="e.g. Moroccan"/>
+                            </VBox>
+                            <Label fx:id="contactMsg" text="" styleClass="label-muted" wrapText="true"/>
+                            <Button text="💾  SAVE CONTACT INFO" onAction="#saveContactInfo"
+                                    styleClass="btn-primary" maxWidth="Infinity"/>
+                        </VBox>
                     </VBox>
 
-                    <!-- Change Password -->
-                    <VBox styleClass="section-box" spacing="14" HBox.hgrow="ALWAYS">
-                        <padding><Insets top="20" right="22" bottom="20" left="22"/></padding>
-                        <Label text="🔐  Change Password" styleClass="section-title"/>
-                        <Separator/>
-                        <Label text="CURRENT PASSWORD" styleClass="form-label"/>
-                        <PasswordField fx:id="oldPassField" styleClass="interior-text-field" promptText="Current password"/>
-                        <Label text="NEW PASSWORD" styleClass="form-label"/>
-                        <PasswordField fx:id="newPassField" styleClass="interior-text-field" promptText="New password (min 8 chars)"/>
-                        <Label text="CONFIRM NEW PASSWORD" styleClass="form-label"/>
-                        <PasswordField fx:id="confirmPassField" styleClass="interior-text-field" promptText="Repeat new password"/>
-                        <Label fx:id="passMsg" text="" styleClass="error-label" wrapText="true"/>
-                        <Button text="🔒  Update Password" styleClass="btn-primary" onAction="#changePassword" maxWidth="Infinity"/>
+                    <!-- CHANGE PASSWORD CARD -->
+                    <VBox fx:id="cardPassword" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#togglePassword" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="🔐" style="-fx-font-size:24px;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Change Password" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Update your account password" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowPassword" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyPassword" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <VBox spacing="6">
+                                <Label text="CURRENT PASSWORD" styleClass="field-label"/>
+                                <PasswordField fx:id="oldPassField" styleClass="password-field" promptText="Current password"/>
+                            </VBox>
+                            <HBox spacing="16">
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="NEW PASSWORD" styleClass="field-label"/>
+                                    <PasswordField fx:id="newPassField" styleClass="password-field" promptText="Min 8 characters…"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="CONFIRM PASSWORD" styleClass="field-label"/>
+                                    <PasswordField fx:id="confirmPassField" styleClass="password-field" promptText="Repeat…"/>
+                                </VBox>
+                            </HBox>
+                            <Label fx:id="passMsg" text="" styleClass="label-muted" wrapText="true"/>
+                            <Button text="🔒  UPDATE PASSWORD" onAction="#changePassword"
+                                    styleClass="btn-danger" maxWidth="Infinity"/>
+                        </VBox>
                     </VBox>
-                </HBox>
 
-            </VBox>
-        </ScrollPane>
-    </center>
-</BorderPane>
+                </VBox>
+            </ScrollPane>
+        </center>
+    </BorderPane>
 </StackPane>

@@ -3,122 +3,228 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
-<?import javafx.scene.layout.StackPane?>
 
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.staff.ReceptionController">
-    <MediaView fx:id="bgMediaView" mouseTransparent="true"
-               preserveRatio="false" style="-fx-smooth: true;"/>
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ma.ensa.khouribga.smartstay.staff.ReceptionController">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true" preserveRatio="false"/>
+
     <BorderPane styleClass="interior-root">
 
-    <!-- ═══════════════════════════ SIDEBAR -->
-    <left>
-        <VBox styleClass="sidebar" prefWidth="220" spacing="4">
-            <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4">
-                <Label text="侍" styleClass="sidebar-logo"/>
-                <Label text="SMARTSTAY" styleClass="app-title"/>
-                <Label text="RECEPTION" styleClass="app-subtitle"/>
-                <Label text="智 Wisdom · 侍 Precision" styleClass="sidebar-sub-kanji"/>
-            </VBox>
+        <!-- ══════════════════════════════════ SIDEBAR -->
+        <left>
+            <VBox styleClass="sidebar" prefWidth="220" spacing="0">
 
-            <Button text="🏠  Front Desk"   styleClass="nav-button-active" maxWidth="Infinity"/>
-            <Button text="📋  Reservations" styleClass="nav-button"        maxWidth="Infinity"/>
+                <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4"
+                      style="-fx-padding: 28 16 24 16;">
+                    <Label text="侍" styleClass="sidebar-logo"/>
+                    <Label text="SMARTSTAY"   styleClass="app-title"/>
+                    <Label text="RECEPTION"    styleClass="app-subtitle"/>
+                    <Label text="智 Wisdom · 侍 Precision"
+                           styleClass="sidebar-sub-kanji"/>
+                </VBox>
 
-            <Region VBox.vgrow="ALWAYS"/>
+                <!--
+                    Reception has 3 real nav sections (matching Stitch design):
+                    • Reservations  → the main reservation grid (default view)
+                    • Rooms         → loadReservations() filtered by room (reuse)
+                    • Settings      → goToProfile()
+                    The "Reservations" item is active by default.
+                -->
+                <Button fx:id="navBtnReservations"
+                        text="📋  Reservations"
+                        onAction="#loadReservations"
+                        styleClass="nav-button-active" maxWidth="Infinity"/>
+                <Button fx:id="navBtnRooms"
+                        text="🏯  Rooms"
+                        onAction="#loadReservations"
+                        styleClass="nav-button" maxWidth="Infinity"/>
+                <Button fx:id="navBtnSettings"
+                        text="⚙  Settings"
+                        onAction="#goToProfile"
+                        styleClass="nav-button" maxWidth="Infinity"/>
 
-            <HBox alignment="CENTER" style="-fx-padding: 0 16 8 16;">
-                <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-            </HBox>
+                <Region VBox.vgrow="ALWAYS"/>
 
-            <VBox spacing="8" style="-fx-padding: 0 16 16 16;">
-                <HBox alignment="CENTER" spacing="10" style="-fx-cursor: hand;" onMouseClicked="#goToProfile">
-                    <StackPane styleClass="avatar-circle" prefWidth="36" prefHeight="36">
-                        <Label text="RC" styleClass="avatar-initials" style="-fx-font-size: 14px;"/>
+                <!-- Theme toggle -->
+                <HBox style="-fx-padding: 0 16 10 16;">
+                    <Button text="☀ Light" onAction="#handleThemeToggle"
+                            styleClass="btn-theme" maxWidth="Infinity"
+                            HBox.hgrow="ALWAYS"/>
+                </HBox>
+
+                <!-- Avatar -->
+                <HBox alignment="CENTER_LEFT" spacing="10"
+                      style="-fx-padding: 10 16 8 16; -fx-cursor: hand;"
+                      onMouseClicked="#goToProfile">
+                    <StackPane styleClass="avatar-circle" prefWidth="34" prefHeight="34">
+                        <Label text="RC" styleClass="avatar-initials"
+                               style="-fx-font-size: 13px;"/>
                     </StackPane>
-                    <VBox alignment="CENTER_LEFT">
-                        <Label text="Receptionist" style="-fx-text-fill: #e0e0e0; -fx-font-weight: bold; -fx-font-size: 12px;"/>
-                        <Label text="View Profile →" styleClass="label-muted" style="-fx-font-size: 10px;"/>
+                    <VBox alignment="CENTER_LEFT" spacing="1">
+                        <Label text="Receptionist"
+                               style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:12px;"/>
+                        <Label text="View Profile →"
+                               styleClass="label-muted" style="-fx-font-size: 10px;"/>
                     </VBox>
                 </HBox>
-                <Button text="LOGOUT" onAction="#handleLogout" styleClass="btn-logout" maxWidth="Infinity"/>
+                <VBox style="-fx-padding: 4 16 20 16;">
+                    <Button text="LOGOUT" onAction="#handleLogout"
+                            styleClass="btn-logout" maxWidth="Infinity"/>
+                </VBox>
             </VBox>
-        </VBox>
-    </left>
+        </left>
 
-    <!-- ═══════════════════════════ HEADER BAR -->
-    <top>
-        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
-            <Label text="FRONT DESK COMMAND" styleClass="breadcrumb-label"/>
-            <Button text="Operations"  styleClass="header-nav-link-active"/>
-            <Button text="Logistics"   styleClass="header-nav-link"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="GUEST LOGISTICS &amp; OPERATIONS" styleClass="label-muted"/>
-        </HBox>
-    </top>
-
-    <!-- ═══════════════════════════ CENTER -->
-    <center>
-        <ScrollPane fitToWidth="true" styleClass="scroll-pane" style="-fx-padding: 20;">
-            <HBox spacing="25" alignment="TOP_CENTER" style="-fx-padding: 20;">
-
-                <!-- Left panel: walk-in + dispatch -->
-                <VBox spacing="20" minWidth="340" maxWidth="390">
-
-                    <VBox styleClass="glass-box" spacing="15">
-                        <Label text="Walk-In Registration" styleClass="section-title" style="-fx-font-size: 18px;"/>
-                        <Label text="Process unregistered arrivals." styleClass="label-muted"/>
-                        <Button text="NEW WALK-IN" onAction="#doWalkIn" styleClass="btn-primary" maxWidth="Infinity"/>
-                    </VBox>
-
-                    <VBox styleClass="glass-box" spacing="15">
-                        <Label text="Dispatch Cleaning" styleClass="section-title" style="-fx-font-size: 18px;"/>
-                        <HBox spacing="10">
-                            <TextField fx:id="txtCleanRoom" promptText="Room #" styleClass="text-field" HBox.hgrow="ALWAYS"/>
-                            <Button text="REQUEST" onAction="#requestCleaning" styleClass="btn-secondary"/>
-                        </HBox>
-                    </VBox>
-
-                    <VBox styleClass="glass-box" spacing="15">
-                        <Label text="Dispatch Maintenance" styleClass="section-title" style="-fx-font-size: 18px;"/>
-                        <HBox spacing="10">
-                            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                                <Label text="TARGET ROOM" styleClass="field-label"/>
-                                <TextField fx:id="txtMaintRoom" promptText="e.g. 104" styleClass="text-field"/>
-                            </VBox>
-                            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                                <Label text="HAZARD TYPE" styleClass="field-label"/>
-                                <ComboBox fx:id="cmbMaintCategory" promptText="Select..." styleClass="combo-box" maxWidth="Infinity"/>
-                            </VBox>
-                        </HBox>
-                        <VBox spacing="5">
-                            <Label text="SITUATION REPORT" styleClass="field-label"/>
-                            <TextArea fx:id="txtMaintDesc" promptText="Describe the issue..." styleClass="text-area" prefRowCount="2" wrapText="true"/>
-                        </VBox>
-                        <Button text="DISPATCH CREW" onAction="#dispatchMaintenance" styleClass="btn-primary" maxWidth="Infinity"/>
-                    </VBox>
-                </VBox>
-
-                <!-- Right panel: reservation grid -->
-                <VBox spacing="0" HBox.hgrow="ALWAYS">
-                    <HBox alignment="CENTER_LEFT" spacing="15" styleClass="toolbar-bar">
-                        <Label text="Today's Logistics" styleClass="section-title" style="-fx-font-size: 16px;"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <TextField fx:id="txtSearch" promptText="🔍  Search code, guest, room…"
-                                   styleClass="text-field" prefWidth="240" onKeyReleased="#filterReservations"/>
-                        <Button text="REFRESH" onAction="#loadReservations" styleClass="btn-secondary"/>
-                    </HBox>
-
-                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane" minHeight="400">
-                        <FlowPane fx:id="resGrid" styleClass="data-grid"/>
-                    </ScrollPane>
-
-                    <HBox spacing="15" alignment="CENTER_RIGHT" styleClass="toolbar-bar">
-                        <Button text="CHECK IN SELECTED"  onAction="#doCheckIn"  styleClass="btn-success"/>
-                        <Button text="CHECK OUT SELECTED" onAction="#doCheckOut" styleClass="btn-primary"/>
-                    </HBox>
-                </VBox>
-
+        <!-- ══════════════════════════════════ HEADER -->
+        <top>
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+                <Label text="FRONT DESK" styleClass="breadcrumb-label"/>
+                <Label text="·" styleClass="label-muted"/>
+                <Label text="Reservations"
+                       style="-fx-text-fill:#cc2222;-fx-font-size:11px;
+                              -fx-font-weight:bold;-fx-letter-spacing:2;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="GUEST LOGISTICS &amp; OPERATIONS"
+                       styleClass="label-muted"/>
             </HBox>
-        </ScrollPane>
-    </center>
-</BorderPane>
+        </top>
+
+        <!-- ══════════════════════════════════ CENTER -->
+        <center>
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane"
+                        style="-fx-padding: 0;">
+                <HBox spacing="24" alignment="TOP_CENTER"
+                      style="-fx-padding: 20;">
+
+                    <!-- ── Left panel: actions ── -->
+                    <VBox spacing="20" minWidth="320" maxWidth="370">
+
+                        <!-- Walk-In -->
+                        <VBox styleClass="glass-box" spacing="14">
+                            <Label text="Walk-In Registration"
+                                   styleClass="section-title"
+                                   style="-fx-font-size: 17px;"/>
+                            <Label text="Process unregistered arrivals."
+                                   styleClass="label-muted"/>
+                            <Button text="NEW WALK-IN" onAction="#doWalkIn"
+                                    styleClass="btn-primary" maxWidth="Infinity"/>
+                        </VBox>
+
+                        <!-- Cleaning dispatch -->
+                        <VBox styleClass="glass-box" spacing="14">
+                            <Label text="Dispatch Cleaning"
+                                   styleClass="section-title"
+                                   style="-fx-font-size: 17px;"/>
+                            <HBox spacing="10">
+                                <TextField fx:id="txtCleanRoom"
+                                           promptText="Room #"
+                                           styleClass="text-field"
+                                           HBox.hgrow="ALWAYS"/>
+                                <Button text="REQUEST"
+                                        onAction="#requestCleaning"
+                                        styleClass="btn-secondary"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Maintenance dispatch -->
+                        <VBox styleClass="glass-box" spacing="14">
+                            <Label text="Dispatch Maintenance"
+                                   styleClass="section-title"
+                                   style="-fx-font-size: 17px;"/>
+                            <HBox spacing="10">
+                                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                    <Label text="TARGET ROOM"
+                                           styleClass="field-label"/>
+                                    <TextField fx:id="txtMaintRoom"
+                                               promptText="e.g. 104"
+                                               styleClass="text-field"/>
+                                </VBox>
+                                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                    <Label text="HAZARD TYPE"
+                                           styleClass="field-label"/>
+                                    <ComboBox fx:id="cmbMaintCategory"
+                                              promptText="Select…"
+                                              styleClass="combo-box"
+                                              maxWidth="Infinity"/>
+                                </VBox>
+                            </HBox>
+                            <VBox spacing="5">
+                                <Label text="SITUATION REPORT"
+                                       styleClass="field-label"/>
+                                <TextArea fx:id="txtMaintDesc"
+                                          promptText="Describe the issue…"
+                                          styleClass="text-area"
+                                          prefRowCount="2" wrapText="true"/>
+                            </VBox>
+                            <Button text="DISPATCH CREW"
+                                    onAction="#dispatchMaintenance"
+                                    styleClass="btn-primary"
+                                    maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- ── Right panel: reservation grid ── -->
+                    <VBox spacing="0" HBox.hgrow="ALWAYS">
+                        <!-- Search + refresh toolbar -->
+                        <HBox alignment="CENTER_LEFT" spacing="14"
+                              styleClass="toolbar-bar">
+                            <Label text="Today's Logistics"
+                                   styleClass="section-title"
+                                   style="-fx-font-size: 15px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="txtSearch"
+                                       promptText="🔍  Search guest, room, code…"
+                                       styleClass="text-field" prefWidth="240"
+                                       onKeyReleased="#filterReservations"/>
+                            <Button text="REFRESH" onAction="#loadReservations"
+                                    styleClass="btn-secondary"/>
+                        </HBox>
+
+                        <!-- Card grid -->
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                                    styleClass="scroll-pane" minHeight="380">
+                            <FlowPane fx:id="resGrid" styleClass="data-grid"/>
+                        </ScrollPane>
+
+                        <!-- Action toolbar -->
+                        <HBox alignment="CENTER_LEFT" spacing="12"
+                              styleClass="toolbar-bar"
+                              style="-fx-border-width: 1px 0 0 0; -fx-padding: 14 20;">
+
+                            <!-- Selection indicator -->
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="SELECTED RESERVATION"
+                                       styleClass="stat-card-label"/>
+                                <Label fx:id="lblSelectedRes" text="None — click a card above"
+                                       style="-fx-text-fill:#c5a059; -fx-font-size:13px; -fx-font-weight:bold;"/>
+                            </VBox>
+
+                            <!-- Divider -->
+                            <Region style="-fx-min-width:1; -fx-pref-width:1; -fx-min-height:36;
+                                           -fx-background-color: rgba(197,160,89,0.25);"/>
+
+                            <!-- Check In -->
+                            <VBox spacing="3" alignment="CENTER">
+                                <Label text="ARRIVAL" styleClass="stat-card-label"/>
+                                <Button text="✔  CHECK IN"
+                                        onAction="#doCheckIn"
+                                        styleClass="btn-success"
+                                        minWidth="140"/>
+                            </VBox>
+
+                            <!-- Check Out -->
+                            <VBox spacing="3" alignment="CENTER">
+                                <Label text="DEPARTURE" styleClass="stat-card-label"/>
+                                <Button text="✖  CHECK OUT"
+                                        onAction="#doCheckOut"
+                                        styleClass="btn-danger"
+                                        minWidth="140"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                </HBox>
+            </ScrollPane>
+        </center>
+    </BorderPane>
 </StackPane>

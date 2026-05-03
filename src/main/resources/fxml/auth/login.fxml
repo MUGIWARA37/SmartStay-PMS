@@ -4,50 +4,64 @@
 <?import javafx.scene.media.MediaView?>
 <?import javafx.geometry.Insets?>
 
-<StackPane styleClass="samurai-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.auth.LoginController">
+<StackPane styleClass="samurai-root" stylesheets="@/styles/samurai.css"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ma.ensa.khouribga.smartstay.auth.LoginController">
 
-    <MediaView fx:id="bgVideo" fitWidth="1920" fitHeight="1080" preserveRatio="false" />
+    <!-- Cinematic video background -->
+    <MediaView fx:id="bgVideo" fitWidth="1920" fitHeight="1080" preserveRatio="false"/>
 
-    <!-- Centered glass login card -->
-    <VBox alignment="CENTER" spacing="0" maxWidth="450" maxHeight="600">
-        <VBox styleClass="glass-box" alignment="CENTER" spacing="22" style="-fx-padding: 40;">
+    <!-- Centered glass card 450 × auto -->
+    <VBox alignment="CENTER" spacing="0" maxWidth="450">
+        <VBox styleClass="glass-box" alignment="CENTER" spacing="22"
+              style="-fx-padding: 44 40 40 40;">
 
-            <!-- Brand section -->
+            <!-- Brand block -->
             <VBox alignment="CENTER" spacing="6">
-                <Label text="侍" styleClass="sidebar-logo" style="-fx-font-size: 48px;"/>
+                <Label text="侍" styleClass="sidebar-logo" style="-fx-font-size: 52px;"/>
                 <Label text="SMARTSTAY" styleClass="app-title"/>
                 <Label text="PROPERTY MANAGEMENT SYSTEM" styleClass="app-subtitle"/>
-                <!-- Gold divider (Stitch pattern — replaces plain Separator) -->
-                <Region styleClass="gold-divider" maxWidth="160" style="-fx-margin: 8 0;"/>
+                <!-- Stitch gold divider replaces plain Separator -->
+                <Region styleClass="gold-divider" maxWidth="160"
+                        style="-fx-margin: 6 0 0 0;"/>
             </VBox>
 
-            <!-- LOGIN PANEL -->
-            <VBox fx:id="loginPanel" spacing="18" maxWidth="350" alignment="CENTER_LEFT">
-                <VBox spacing="5" styleClass="field-group">
+            <!-- ── LOGIN PANEL ── -->
+            <VBox fx:id="loginPanel" spacing="18" maxWidth="340" alignment="CENTER_LEFT">
+
+                <VBox spacing="5">
                     <Label text="USERNAME / IDENTIFIER" styleClass="field-label"/>
-                    <TextField fx:id="txtUsername" promptText="Enter your identifier..." styleClass="text-field"/>
+                    <TextField fx:id="txtUsername"
+                               promptText="Enter your identifier…"
+                               styleClass="text-field"/>
                 </VBox>
 
-                <VBox spacing="5" styleClass="field-group">
+                <VBox spacing="5">
                     <Label text="PASSWORD" styleClass="field-label"/>
-                    <PasswordField fx:id="txtPassword" promptText="Enter your passcode..." styleClass="password-field"/>
+                    <PasswordField fx:id="txtPassword"
+                                   promptText="Enter your passcode…"
+                                   styleClass="password-field"/>
                 </VBox>
 
-                <Label fx:id="lblError" styleClass="error-label" visible="false" managed="false"/>
+                <Label fx:id="lblError" styleClass="error-label"
+                       visible="false" managed="false"/>
 
-                <Button text="AUTHENTICATE" onAction="#handleLogin" styleClass="btn-primary, samurai-button"
-                        maxWidth="Infinity" style="-fx-padding: 12 0;"/>
+                <Button text="AUTHENTICATE" onAction="#handleLogin"
+                        styleClass="btn-primary, samurai-button"
+                        maxWidth="Infinity" style="-fx-padding: 13 0;"/>
 
-                <HBox alignment="CENTER" spacing="5" style="-fx-padding: 6 0 0 0;">
+                <HBox alignment="CENTER" spacing="6" style="-fx-padding: 4 0 0 0;">
                     <Label text="New Guest?" styleClass="label-muted"/>
-                    <Button text="Create an Account" onAction="#toggleRegister" styleClass="btn-link"/>
+                    <Button text="Create an Account" onAction="#toggleRegister"
+                            styleClass="btn-link"/>
                 </HBox>
             </VBox>
 
-            <!-- REGISTER PANEL -->
-            <VBox fx:id="registerPanel" spacing="14" maxWidth="350" alignment="CENTER_LEFT"
-                  visible="false" managed="false">
-                <HBox spacing="10">
+            <!-- ── REGISTER PANEL ── -->
+            <VBox fx:id="registerPanel" spacing="14" maxWidth="340"
+                  alignment="CENTER_LEFT" visible="false" managed="false">
+
+                <HBox spacing="12">
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <Label text="FIRST NAME" styleClass="field-label"/>
                         <TextField fx:id="txtRegFirst" styleClass="text-field"/>
@@ -74,18 +88,20 @@
                 </VBox>
 
                 <Button text="REGISTER IDENTITY" onAction="#handleRegister"
-                        styleClass="btn-primary, samurai-button" maxWidth="Infinity" style="-fx-padding: 12 0;"/>
+                        styleClass="btn-primary, samurai-button"
+                        maxWidth="Infinity" style="-fx-padding: 13 0;"/>
 
-                <HBox alignment="CENTER" spacing="5">
+                <HBox alignment="CENTER" spacing="6">
                     <Label text="Already inducted?" styleClass="label-muted"/>
-                    <Button text="Sign In" onAction="#toggleRegister" styleClass="btn-link"/>
+                    <Button text="Sign In" onAction="#toggleRegister"
+                            styleClass="btn-link"/>
                 </HBox>
             </VBox>
 
         </VBox>
     </VBox>
 
-    <!-- Theme toggle pill — top right corner -->
+    <!-- Theme toggle pill — top-right corner -->
     <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme"
             StackPane.alignment="TOP_RIGHT"
             style="-fx-translate-x: -20; -fx-translate-y: 20;"/>

@@ -62,6 +62,16 @@ public class AdminController {
 
     @FXML private Button btnThemeToggle;
 
+    @FXML private TabPane mainTabPane;
+    @FXML private Label   headerTabLabel;
+
+    @FXML private Button navBtnOverview;
+    @FXML private Button navBtnRooms;
+    @FXML private Button navBtnReservations;
+    @FXML private Button navBtnPayroll;
+    @FXML private Button navBtnStaff;
+    @FXML private Button navBtnRevenue;
+
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private Room selectedRoom; private VBox selectedRoomCard;
@@ -82,7 +92,51 @@ public class AdminController {
         loadAllPayroll();
         loadAllStaff();
         setupRevenueYearPicker();
+        selectTab(0);
     }
+
+    // ── Sidebar Navigation ───────────────────────────────────────────────────
+    /** All nav buttons in sidebar order — used to reset active style. */
+    private java.util.List<Button> sideNavButtons() {
+        return java.util.List.of(
+            navBtnOverview, navBtnRooms, navBtnReservations,
+            navBtnPayroll, navBtnStaff, navBtnRevenue
+        );
+    }
+
+    /** Tab labels matching Stitch sidebar names. */
+    private static final String[] TAB_LABELS = {
+        "Overview", "Room Mastery", "Guest Scrolls",
+        "Financial Katana", "Zen Inventory", "Revenue Chart"
+    };
+
+    /**
+     * Central tab switcher. Updates the active nav button style and the
+     * header breadcrumb label, then selects the correct TabPane tab.
+     */
+    private void selectTab(int index) {
+        java.util.List<Button> btns = sideNavButtons();
+        for (int i = 0; i < btns.size(); i++) {
+            Button b = btns.get(i);
+            b.getStyleClass().remove("nav-button-active");
+            if (!b.getStyleClass().contains("nav-button"))
+                b.getStyleClass().add("nav-button");
+            if (i == index) {
+                b.getStyleClass().remove("nav-button");
+                b.getStyleClass().add("nav-button-active");
+            }
+        }
+        if (headerTabLabel != null)
+            headerTabLabel.setText(TAB_LABELS[index]);
+        mainTabPane.getSelectionModel().select(index);
+    }
+
+    @FXML public void navToOverview()     { selectTab(0); refreshOverview(); }
+    @FXML public void navToRooms()        { selectTab(1); loadAllRooms(); }
+    @FXML public void navToReservations() { selectTab(2); loadAllReservations(); }
+    @FXML public void navToPayroll()      { selectTab(3); loadAllPayroll(); }
+    @FXML public void navToStaff()        { selectTab(4); loadAllStaff(); }
+    @FXML public void navToRevenue()      { selectTab(5); }
 
     // ── Theme ────────────────────────────────────────────────────────────────
     @FXML public void handleThemeToggle() {
@@ -185,7 +239,7 @@ public class AdminController {
         return ReservationDao.countCheckInsByMonth(year);
     }
 
-    // ── Filters ──────────────────────────────────────────────────────────────
+    // ── Filters ───────────────────────────────────────────────────────────────
     private void setupFilters() {
         if (roomStatusFilter != null) { roomStatusFilter.setItems(FXCollections.observableArrayList(Room.Status.values())); roomStatusFilter.setOnAction(e -> filterRooms()); }
         if (roomStatusEdit   != null) roomStatusEdit.setItems(FXCollections.observableArrayList(Room.Status.values()));
@@ -201,7 +255,7 @@ public class AdminController {
     @FXML public void goToProfile(MouseEvent event) { Navigator.navigateTo((Node) event.getSource(), Navigator.ADMIN_PROFILE); }
     @FXML public void handleLogout(ActionEvent event) { SessionManager.logout(); Navigator.goToLogin(statAvailable); }
 
-    // ── Rooms ─────────────────────────────────────────────────────────────────
+    // ── Rooms ────────────────────────────────────────────────────────────────
     @FXML public void loadAllRooms() { new Thread(() -> { try { List<Room> rooms = RoomDao.findAll(); Platform.runLater(() -> populateRoomGrid(rooms)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }
     @FXML public void filterRooms() { if (roomStatusFilter.getValue() == null) { loadAllRooms(); return; } new Thread(() -> { try { List<Room> rooms = RoomDao.findByStatus(roomStatusFilter.getValue()); Platform.runLater(() -> populateRoomGrid(rooms)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }
     
@@ -229,7 +283,6 @@ public class AdminController {
 
     // ── Reservations ──────────────────────────────────────────────────────────
     @FXML public void loadAllReservations() {
-        // Default: show only reservations whose check-in falls in the current year
         LocalDate yearStart = LocalDate.now().withDayOfYear(1);
         LocalDate yearEnd   = LocalDate.now().withMonth(12).withDayOfMonth(31);
         new Thread(() -> {
@@ -275,6 +328,15 @@ public class AdminController {
 
     @FXML public void doCheckIn() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_IN); Platform.runLater(this::filterReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
     @FXML public void doCheckOut() { if (selectedRes == null) { showAlert("Select a reservation card."); return; } new Thread(() -> { try { ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CHECKED_OUT); Platform.runLater(this::filterReservations); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
+    @FXML public void doCancelReservation() {
+        if (selectedRes == null) { showAlert("Select a reservation card."); return; }
+        new Thread(() -> {
+            try {
+                ReservationDao.updateStatus(selectedRes.getId(), selectedRes.getRoomId(), Reservation.Status.CANCELLED);
+                Platform.runLater(this::filterReservations);
+            } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); }
+        }).start();
+    }
 
     // ── Payroll ───────────────────────────────────────────────────────────────
     @FXML public void loadAllPayroll() { new Thread(() -> { try { List<Payroll> list = PayrollDao.findAll(); Platform.runLater(() -> populatePayrollGrid(list)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }
@@ -289,7 +351,7 @@ public class AdminController {
             Region s = new Region(); HBox.setHgrow(s, Priority.ALWAYS);
             header.getChildren().addAll(lbl, s, createBadge(pay.getStatus().toString()));
             Label net = new Label(String.format("Net Salary: %.2f MAD", pay.getNetSalary())); net.getStyleClass().add("card-detail-text"); net.setStyle("-fx-text-fill: #c5a059; -fx-font-weight: bold;");
-            card.getChildren().addAll(header, new Separator(), label("Position: " + pay.getStaffPosition()), label("Period: " + pay.getPeriodStart().format(DATE_FMT) + " - " + pay.getPeriodEnd().format(DATE_FMT)), net);
+            card.getChildren().addAll(header, new Separator(), label("Position: " + pay.getStaffPosition()), label("Period: " + pay.getPeriodStart().format(DATE_FMT) + " - " + pay.getPeriodEnd().format(DATE_FMT)));
             card.setOnMouseClicked(e -> { if (selectedPayrollCard != null) selectedPayrollCard.getStyleClass().remove("selected-card"); card.getStyleClass().add("selected-card"); selectedPayrollCard = card; selectedPayroll = pay; });
             payrollGrid.getChildren().add(card);
         }
@@ -307,7 +369,7 @@ public class AdminController {
         new Thread(() -> { try { PayrollDao.markPaid(selectedPayroll.getId()); Platform.runLater(this::loadAllPayroll); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start();
     }
 
-    // ── Staff ──────────────────────────────────────────────────────────────────
+    // ── Staff ────────────────────────────────────────────────────────────────
     @FXML public void loadAllStaff() { new Thread(() -> { try { List<User> users = UserDao.findAll(); Platform.runLater(() -> populateStaffGrid(users)); } catch (Exception ex) { ex.printStackTrace(); } }).start(); }
 
     @FXML public void filterStaff() {
@@ -337,10 +399,10 @@ public class AdminController {
         }
     }
 
-    @FXML public void activateStaff() { if (selectedStaff == null) { showAlert("Select a staff card first."); return; } if (selectedStaff.isActive()) { showAlert(selectedStaff.getUsername() + " is already active."); return; } new Thread(() -> { try { UserDao.setActive(selectedStaff.getId(), true); Platform.runLater(() -> { loadAllStaff(); showAlert(selectedStaff.getUsername() + " activated."); }); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
-    @FXML public void deactivateStaff() { if (selectedStaff == null) { showAlert("Select a staff card first."); return; } if (!selectedStaff.isActive()) { showAlert(selectedStaff.getUsername() + " is already inactive."); return; } if (selectedStaff.getRole() == User.Role.ADMIN) { showAlert("Cannot deactivate an ADMIN account."); return; } new Thread(() -> { try { UserDao.setActive(selectedStaff.getId(), false); Platform.runLater(() -> { loadAllStaff(); showAlert(selectedStaff.getUsername() + " deactivated."); }); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
+    @FXML public void activateStaff() { if (selectedStaff == null) { showAlert("Select a staff card first."); return; } if (selectedStaff.isActive()) { showAlert(selectedStaff.getUsername() + " is already active."); return; } new Thread(() -> { try { UserDao.setActive(selectedStaff.getId(), true); Platform.runLater(this::loadAllStaff); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
+    @FXML public void deactivateStaff() { if (selectedStaff == null) { showAlert("Select a staff card first."); return; } if (!selectedStaff.isActive()) { showAlert(selectedStaff.getUsername() + " is already inactive."); return; } new Thread(() -> { try { UserDao.setActive(selectedStaff.getId(), false); Platform.runLater(this::loadAllStaff); } catch (Exception ex) { Platform.runLater(() -> showAlert("Error: " + ex.getMessage())); } }).start(); }
 
-    // ── Revenue Chart ──────────────────────────────────────────────────────────
+    // ── Revenue Chart ────────────────────────────────────────────────────────
     private void setupRevenueYearPicker() {
         if (revenueYearPicker == null) return;
         int currentYear = LocalDate.now().getYear();
@@ -365,7 +427,7 @@ public class AdminController {
         data.forEach((k, v) -> { series.getData().add(new XYChart.Data<>(k, v)); total[0] += v; });
         revenueChart.getData().add(series);
         Platform.runLater(() -> {
-            for (var d : series.getData()) { if (d.getNode() != null) d.getNode().setStyle("-fx-bar-fill: #c5a059; -fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: rgba(255,255,255,0.15); -fx-border-width: 1; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 6, 0.2, 0, 2);"); }
+            for (var d : series.getData()) { if (d.getNode() != null) d.getNode().setStyle("-fx-bar-fill: #c5a059; -fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: rgba(255,255,255,0.15);"); }
             if (revenueTotalLabel != null) revenueTotalLabel.setText(String.format("Annual Total: %.2f MAD", total[0]));
             styleChart(revenueChart);
         });

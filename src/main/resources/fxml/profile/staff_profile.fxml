@@ -3,121 +3,194 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
-<?import javafx.scene.layout.StackPane?>
 
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.profile.StaffProfileController">
-    <MediaView fx:id="bgMediaView" mouseTransparent="true"
-               preserveRatio="false" style="-fx-smooth: true;"/>
+<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css"
+           xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="ma.ensa.khouribga.smartstay.profile.StaffProfileController">
+    <MediaView fx:id="bgMediaView" mouseTransparent="true" preserveRatio="false"/>
+
     <BorderPane styleClass="interior-root">
 
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 30 40 10 40;">
-            <Button text="← Return to Duty" onAction="#goBack" styleClass="btn-secondary"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Retainer Profile" styleClass="section-title" style="-fx-font-size: 28px;"/>
-        </HBox>
-    </top>
-
-    <center>
-        <ScrollPane fitToWidth="true" styleClass="scroll-pane" style="-fx-padding: 20;">
-            <HBox spacing="30" alignment="TOP_CENTER">
-                
-                <VBox styleClass="glass-box" spacing="15" alignment="CENTER" prefWidth="320" minWidth="320">
-                    <StackPane styleClass="avatar-circle" prefWidth="120" prefHeight="120" maxWidth="120" maxHeight="120">
-                        <Label fx:id="lblInitials" text="ST" styleClass="avatar-initials" style="-fx-font-size: 48px;"/>
-                    </StackPane>
-                    
-                    <Label fx:id="lblFullName" text="Loading..." styleClass="card-header-text" style="-fx-font-size: 24px;"/>
-                    <Label fx:id="lblRole" text="STAFF MEMBER" styleClass="badge, badge-assigned" style="-fx-font-size: 14px; -fx-padding: 6 15;"/>
-                    
-                    <Separator style="-fx-padding: 10 0;"/>
-                    
-                    <GridPane hgap="10" vgap="15" alignment="CENTER_LEFT">
-                        <columnConstraints>
-                            <ColumnConstraints minWidth="100"/>
-                            <ColumnConstraints hgrow="ALWAYS"/>
-                        </columnConstraints>
-                        
-                        <Label text="POSITION:" styleClass="label-muted" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                        <Label fx:id="lblPosition" text="-" style="-fx-text-fill: #e0e0e0; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-                        
-                        <Label text="DEPT:" styleClass="label-muted" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                        <Label fx:id="lblDepartment" text="-" style="-fx-text-fill: #e0e0e0;" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
-                        <Label text="CODE:" styleClass="label-muted" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                        <Label fx:id="lblEmpCode" text="-" style="-fx-text-fill: #c5a059;" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
-                        <Label text="HIRED:" styleClass="label-muted" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                        <Label fx:id="lblHireDate" text="-" style="-fx-text-fill: #e0e0e0;" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-
-                        <Label text="BASE WAGE:" styleClass="label-muted" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                        <Label fx:id="lblSalary" text="-" style="-fx-text-fill: #2ecc71; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                    </GridPane>
-                </VBox>
-
-                <VBox spacing="25" HBox.hgrow="ALWAYS" maxWidth="800">
-                    
-                    <HBox spacing="25">
-                        <VBox styleClass="glass-box" spacing="15" HBox.hgrow="ALWAYS">
-                            <Label text="Communications" styleClass="section-title" style="-fx-font-size: 20px;"/>
-                            <VBox spacing="5">
-                                <Label text="EMAIL ADDRESS" styleClass="field-label"/>
-                                <TextField fx:id="txtEmail" styleClass="text-field"/>
-                            </VBox>
-                            <VBox spacing="5">
-                                <Label text="PHONE NUMBER" styleClass="field-label"/>
-                                <TextField fx:id="txtPhone" styleClass="text-field"/>
-                            </VBox>
-                            <VBox spacing="5">
-                                <Label text="EMERGENCY CONTACT" styleClass="field-label"/>
-                                <TextField fx:id="txtEmergency" styleClass="text-field"/>
-                            </VBox>
-                            <Button text="UPDATE CONTACTS" onAction="#updateContact" styleClass="btn-primary" maxWidth="Infinity"/>
-                        </VBox>
-
-                        <VBox styleClass="glass-box" spacing="15" HBox.hgrow="ALWAYS">
-                            <Label text="Security Protocol" styleClass="section-title" style="-fx-font-size: 20px;"/>
-                            <VBox spacing="5">
-                                <Label text="CURRENT PASSPHRASE" styleClass="field-label"/>
-                                <PasswordField fx:id="txtOldPass" styleClass="password-field"/>
-                            </VBox>
-                            <VBox spacing="5">
-                                <Label text="NEW PASSPHRASE" styleClass="field-label"/>
-                                <PasswordField fx:id="txtNewPass" styleClass="password-field"/>
-                            </VBox>
-                            <VBox spacing="5">
-                                <Label text="CONFIRM PASSPHRASE" styleClass="field-label"/>
-                                <PasswordField fx:id="txtConfirmPass" styleClass="password-field"/>
-                            </VBox>
-                            <Button text="CHANGE PASSPHRASE" onAction="#updatePassword" styleClass="samurai-button" maxWidth="Infinity" style="-fx-border-color: #e74c3c; -fx-text-fill: #e74c3c; -fx-background-color: transparent;"/>
-                        </VBox>
-                    </HBox>
-
-                    <VBox styleClass="glass-box" spacing="15">
-                        <Label text="Duty Roster (This Week)" styleClass="section-title" style="-fx-font-size: 20px;"/>
-                        <HBox fx:id="shiftsContainer" spacing="10" alignment="CENTER_LEFT">
-                            </HBox>
-                    </VBox>
-
-                    <VBox styleClass="glass-box" spacing="15">
-                        <Label text="Report System Anomaly" styleClass="section-title" style="-fx-font-size: 20px;"/>
-                        <Label text="Directly alert maintenance to an issue anywhere in the compound." styleClass="label-muted"/>
-                        
-                        <VBox spacing="5">
-                            <Label text="ANOMALY CLASSIFICATION" styleClass="field-label"/>
-                            <ComboBox fx:id="cmbIssueCategory" promptText="Select Classification..." styleClass="combo-box" maxWidth="Infinity"/>
-                        </VBox>
-
-                        <VBox spacing="5">
-                            <Label text="ANOMALY DESCRIPTION" styleClass="field-label"/>
-                            <TextArea fx:id="txtIssueDesc" promptText="Describe the issue..." styleClass="text-area" prefRowCount="3" wrapText="true"/>
-                        </VBox>
-                        <Button text="SUBMIT REPORT" onAction="#reportIssue" styleClass="btn-secondary"/>
-                    </VBox>
-
-                </VBox>
+        <!-- HEADER -->
+        <top>
+            <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+                <Button text="← Return to Duty" onAction="#goBack" styleClass="btn-secondary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="RETAINER PORTAL" styleClass="breadcrumb-label"/>
+                <Label text="·" styleClass="label-muted"/>
+                <Label text="Profile" style="-fx-text-fill:#cc2222;-fx-font-size:11px;-fx-font-weight:bold;"/>
+                <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme"/>
             </HBox>
-        </ScrollPane>
-    </center>
-</BorderPane>
+        </top>
+
+        <!-- CENTER -->
+        <center>
+            <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+                <VBox spacing="16" style="-fx-padding: 28;" maxWidth="Infinity">
+
+                    <!-- IDENTITY CARD -->
+                    <VBox fx:id="cardIdentity" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleIdentity" alignment="CENTER_LEFT" spacing="16"
+                              style="-fx-padding: 6 0 6 0;">
+                            <StackPane styleClass="avatar-circle" prefWidth="64" prefHeight="64">
+                                <Label fx:id="lblInitials" text="ST" styleClass="avatar-initials" style="-fx-font-size: 26px;"/>
+                            </StackPane>
+                            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                                <Label fx:id="lblFullName" text="Loading..." styleClass="card-header-text" style="-fx-font-size:18px;"/>
+                                <Label fx:id="lblRole" text="STAFF MEMBER" styleClass="badge, badge-assigned"
+                                       style="-fx-font-size:11px; -fx-padding: 3 10;"/>
+                            </VBox>
+                            <Label fx:id="arrowIdentity" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyIdentity" managed="false" visible="false"
+                              spacing="16" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox spacing="16">
+                                <VBox styleClass="stat-card-gold" HBox.hgrow="ALWAYS" spacing="4"
+                                      style="-fx-padding:14 18; -fx-background-radius:8; -fx-border-radius:8;">
+                                    <Label text="POSITION" styleClass="stat-card-label"/>
+                                    <Label fx:id="lblPosition" text="—" styleClass="stat-card-value" style="-fx-font-size:16px;"/>
+                                </VBox>
+                                <VBox styleClass="stat-card-blue" HBox.hgrow="ALWAYS" spacing="4"
+                                      style="-fx-padding:14 18; -fx-background-radius:8; -fx-border-radius:8;">
+                                    <Label text="DEPARTMENT" styleClass="stat-card-label"/>
+                                    <Label fx:id="lblDepartment" text="—" styleClass="stat-card-value" style="-fx-font-size:16px;"/>
+                                </VBox>
+                            </HBox>
+                            <HBox spacing="16">
+                                <VBox styleClass="stat-card-green" HBox.hgrow="ALWAYS" spacing="4"
+                                      style="-fx-padding:14 18; -fx-background-radius:8; -fx-border-radius:8;">
+                                    <Label text="BASE WAGE" styleClass="stat-card-label"/>
+                                    <Label fx:id="lblSalary" text="—" styleClass="stat-card-value"
+                                           style="-fx-font-size:16px; -fx-text-fill:#1e8449;"/>
+                                </VBox>
+                                <VBox styleClass="stat-card-red" HBox.hgrow="ALWAYS" spacing="4"
+                                      style="-fx-padding:14 18; -fx-background-radius:8; -fx-border-radius:8;">
+                                    <Label text="EMP CODE" styleClass="stat-card-label"/>
+                                    <Label fx:id="lblEmpCode" text="—" styleClass="stat-card-value" style="-fx-font-size:16px;"/>
+                                    <Label fx:id="lblHireDate" text="Hired: —" styleClass="label-muted" style="-fx-font-size:10px;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- COMMUNICATIONS CARD -->
+                    <VBox fx:id="cardComms" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleComms" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="✉" style="-fx-font-size:24px; -fx-text-fill:#c5a059;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Communications" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Email, phone and emergency contact" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowComms" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyComms" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox spacing="16">
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="EMAIL ADDRESS" styleClass="field-label"/>
+                                    <TextField fx:id="txtEmail" styleClass="text-field" promptText="Enter email…"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="PHONE NUMBER" styleClass="field-label"/>
+                                    <TextField fx:id="txtPhone" styleClass="text-field" promptText="Enter phone…"/>
+                                </VBox>
+                            </HBox>
+                            <VBox spacing="6">
+                                <Label text="EMERGENCY CONTACT" styleClass="field-label"/>
+                                <TextField fx:id="txtEmergency" styleClass="text-field" promptText="Name and number…"/>
+                                <Label text="This contact will be reached in case of emergency."
+                                       styleClass="label-muted" style="-fx-font-size:10px;"/>
+                            </VBox>
+                            <Button text="▶  UPDATE CONTACTS" onAction="#updateContact"
+                                    styleClass="btn-primary" maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- SECURITY CARD -->
+                    <VBox fx:id="cardSecurity" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleSecurity" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="🔐" style="-fx-font-size:24px;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Security Protocol" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Change your passphrase" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowSecurity" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodySecurity" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <VBox spacing="6">
+                                <Label text="CURRENT PASSPHRASE" styleClass="field-label"/>
+                                <PasswordField fx:id="txtOldPass" styleClass="password-field" promptText="Current passphrase…"/>
+                            </VBox>
+                            <HBox spacing="16">
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="NEW PASSPHRASE" styleClass="field-label"/>
+                                    <PasswordField fx:id="txtNewPass" styleClass="password-field" promptText="At least 8 chars…"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="CONFIRM PASSPHRASE" styleClass="field-label"/>
+                                    <PasswordField fx:id="txtConfirmPass" styleClass="password-field" promptText="Repeat…"/>
+                                </VBox>
+                            </HBox>
+                            <Button text="⚔  CHANGE PASSPHRASE" onAction="#updatePassword"
+                                    styleClass="btn-danger" maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- DUTY ROSTER CARD -->
+                    <VBox fx:id="cardRoster" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleRoster" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="📅" style="-fx-font-size:24px;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Duty Roster — This Week" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Your shift schedule for the current week" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowRoster" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyRoster" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <HBox fx:id="shiftsContainer" spacing="10" alignment="CENTER_LEFT"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- REPORT ANOMALY CARD -->
+                    <VBox fx:id="cardReport" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
+                        <HBox onMouseClicked="#toggleReport" alignment="CENTER_LEFT" spacing="14"
+                              style="-fx-padding: 6 0 6 0;">
+                            <Label text="⚠" style="-fx-font-size:24px; -fx-text-fill:#e74c3c;"/>
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <Label text="Report System Anomaly" styleClass="section-title" style="-fx-font-size:16px;"/>
+                                <Label text="Alert maintenance to an issue in the compound" styleClass="label-muted" style="-fx-font-size:11px;"/>
+                            </VBox>
+                            <Label fx:id="arrowReport" text="▸"
+                                   style="-fx-font-size:18px; -fx-text-fill:#c5a059; -fx-font-weight:bold;"/>
+                        </HBox>
+                        <VBox fx:id="bodyReport" managed="false" visible="false"
+                              spacing="14" style="-fx-padding: 16 0 8 0;">
+                            <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                            <VBox spacing="6">
+                                <Label text="ANOMALY DESCRIPTION" styleClass="field-label"/>
+                                <TextArea fx:id="txtIssueDesc" promptText="Describe the issue in detail…"
+                                          styleClass="text-area" prefRowCount="4" wrapText="true"/>
+                            </VBox>
+                            <Button text="📡  SUBMIT ANOMALY REPORT" onAction="#reportIssue"
+                                    styleClass="btn-secondary" maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+                </VBox>
+            </ScrollPane>
+        </center>
+    </BorderPane>
 </StackPane>
