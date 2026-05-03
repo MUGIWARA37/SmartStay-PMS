@@ -24,6 +24,8 @@ public class InvoiceDao {
         inv.setId((int) rs.getLong("id"));
         inv.setReservationId((int) rs.getLong("reservation_id"));
         inv.setInvoiceNumber(rs.getString("invoice_number"));
+        inv.setSubtotalAmount(rs.getDouble("subtotal_amount"));
+        inv.setTaxAmount(rs.getDouble("tax_amount"));
         inv.setTotalAmount(rs.getDouble("total_amount"));
         inv.setStatus(Invoice.Status.valueOf(rs.getString("status")));
         Timestamp issuedAt = rs.getTimestamp("issued_at");
@@ -141,8 +143,9 @@ public class InvoiceDao {
             String invoiceNumber = "INV-" + LocalDate.now().toString().replace("-", "")
                     + "-" + invoice.getReservationId();
             String insertHeader = """
-                    INSERT INTO invoices (reservation_id, invoice_number, total_amount, status, issued_at)
-                    VALUES (?, ?, 0.00, 'DRAFT', NOW())
+                    INSERT INTO invoices
+                        (reservation_id, invoice_number, subtotal_amount, tax_amount, total_amount, status, issued_at)
+                    VALUES (?, ?, 0.00, 0.00, 0.00, 'DRAFT', NOW())
                     """;
             long invoiceId;
             try (PreparedStatement ps = conn.prepareStatement(insertHeader, Statement.RETURN_GENERATED_KEYS)) {

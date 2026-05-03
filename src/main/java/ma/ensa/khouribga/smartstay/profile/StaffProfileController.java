@@ -19,6 +19,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
@@ -253,18 +254,19 @@ public class StaffProfileController {
         if (!newPass.equals(confirmPass)) { showAlert(Alert.AlertType.ERROR, "Mismatch", "New passphrases do not match."); return; }
         new Thread(() -> {
             try {
-                String currentHash = "";
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement("SELECT password_hash FROM users WHERE id = ?")) {
-                    ps.setLong(1, currentUser.getId());
-                    try (ResultSet rs = ps.executeQuery()) { if (rs.next()) currentHash = rs.getString("password_hash"); }
+                String currentHash = UserDao.findById(currentUser.getId())
+                        .map(User::getPasswordHash)
+                        .orElse("");
+
+                if (!BCrypt.checkpw(oldPass, currentHash)) {
+                    Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Authentication Failed", "Current passphrase is incorrect."));
+                    return;
                 }
-                if (!BCrypt.checkpw(oldPass, currentHash)) { Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Authentication Failed", "Current passphrase is incorrect.")); return; }
+
                 String newHash = BCrypt.hashpw(newPass, BCrypt.gensalt(12));
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement("UPDATE users SET password_hash = ? WHERE id = ?")) {
-                    ps.setString(1, newHash); ps.setLong(2, currentUser.getId()); ps.executeUpdate();
-                }
+                UserDao.updatePasswordHash(currentUser.getId(), newHash);
+
+
                 currentUser.setPasswordHash(newHash);
                 Platform.runLater(() -> { txtOldPass.clear(); txtNewPass.clear(); txtConfirmPass.clear(); showAlert(Alert.AlertType.INFORMATION, "Success", "Passphrase successfully updated."); });
             } catch (Exception e) { Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to alter passphrase.")); }
@@ -275,10 +277,16 @@ public class StaffProfileController {
         String desc = txtIssueDesc.getText().trim();
         if (desc.isEmpty()) { showAlert(Alert.AlertType.WARNING, "Empty Report", "Please describe the anomaly before submitting."); return; }
         new Thread(() -> {
-            String sql = "INSERT INTO maintenance_requests (room_id, title, priority, status, description) VALUES (1, ?, 'MEDIUM', 'PENDING', ?)";
-            try (Connection conn = Database.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, "[APP] Staff Alert: " + currentUser.getUsername());
-                ps.setString(2, desc);
+            String sql = """
+                    INSERT INTO maintenance_requests
+                        (room_id, reported_by_user_id, title, priority, status, description)
+                    VALUES (1, ?, ?, 'MEDIUM', 'NEW', ?)
+                    """;
+            try (Connection conn = Database.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, currentUser.getId());
+                ps.setString(2, "[APP] Staff Alert: " + currentUser.getUsername());
+                ps.setString(3, desc);
                 ps.executeUpdate();
                 Platform.runLater(() -> { txtIssueDesc.clear(); showAlert(Alert.AlertType.INFORMATION, "Report Filed", "Maintenance has been alerted to the anomaly."); });
             } catch (Exception e) { Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Transmission Failed", "Could not send report.")); }
@@ -293,5 +301,9 @@ public class StaffProfileController {
         alert.showAndWait();
     }
 
-    @FXML public void handleThemeToggle() { ThemeManager.toggle(); }
+    @FXML
+    public void handleThemeToggle() {
+        ThemeManager.toggle();
+    }
+
 }

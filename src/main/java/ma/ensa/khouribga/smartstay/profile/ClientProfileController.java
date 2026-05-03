@@ -17,6 +17,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
@@ -232,10 +233,7 @@ public class ClientProfileController {
 
         Task<Void> task = new Task<>() {
             @Override protected Void call() throws Exception {
-                try (Connection conn = Database.getConnection();
-                     PreparedStatement ps = conn.prepareStatement("UPDATE users SET password_hash = ? WHERE id = ?")) {
-                    ps.setString(1, newHash); ps.setLong(2, userId); ps.executeUpdate();
-                }
+                UserDao.updatePasswordHash(userId, newHash);
                 return null;
             }
         };
@@ -267,5 +265,9 @@ public class ClientProfileController {
         });
     }
 
-    @FXML public void handleThemeToggle() { ThemeManager.toggle(); }
+    @FXML
+    public void handleThemeToggle() {
+        ThemeManager.toggle();
+    }
+
 }

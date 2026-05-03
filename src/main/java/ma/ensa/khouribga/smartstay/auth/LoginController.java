@@ -7,26 +7,23 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 
 import ma.ensa.khouribga.smartstay.Navigator;
 import ma.ensa.khouribga.smartstay.VideoBackground;
+import ma.ensa.khouribga.smartstay.dao.GuestDao;
 import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
+import ma.ensa.khouribga.smartstay.model.Guest;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
 
 public class LoginController {
 
@@ -73,12 +70,12 @@ public class LoginController {
 
         Thread authThread = new Thread(() -> {
             try {
-                User user = findActiveUser(username);
+                User user = UserDao.findByUsername(username).orElse(null);
                 if (user == null || !BCrypt.checkpw(password, user.getPasswordHash())) {
                     Platform.runLater(() -> { showError("Invalid username or password."); resetFields(); });
                     return;
                 }
-                updateLastLogin(user.getId());
+                UserDao.updateLastLogin(user.getId());
                 SessionManager.setCurrentUser(user);
                 Platform.runLater(() -> routeByRole(user.getRole()));
             } catch (Exception ex) {
@@ -115,14 +112,21 @@ public class LoginController {
 
         Thread t = new Thread(() -> {
             try {
-                boolean taken = checkUsernameTaken(username);
+                boolean taken = UserDao.existsByUsername(username);
                 if (taken) {
                     Platform.runLater(() -> { showRegError("Username already taken. Try another."); resetRegFields(); });
                     return;
                 }
-                long userId = UserDao.insert(username, email, hash, User.Role.CLIENT);
-                insertGuest(userId, firstName, lastName, email);
-                User user = findActiveUser(username);
+                UserDao.insert(username, email, hash, User.Role.CLIENT);
+                // The guests table has no user_id FK; the link between a guest record
+                // and its user account is established through the shared email address
+                // (see schema: guests.email ↔ users.email).
+                Guest g = new Guest();
+                g.setFirstName(firstName);
+                g.setLastName(lastName);
+                g.setEmail(email);
+                GuestDao.create(g);
+                User user = UserDao.findByUsername(username).orElse(null);
                 if (user != null) {
                     SessionManager.setCurrentUser(user);
                     Platform.runLater(() -> Navigator.navigateTo(txtRegUser, Navigator.HOME));
@@ -134,59 +138,6 @@ public class LoginController {
         }, "register-thread");
         t.setDaemon(true);
         t.start();
-    }
-
-    private User findActiveUser(String username) throws SQLException {
-        String sql = "SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = ? AND is_active = TRUE LIMIT 1";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) return null;
-                User user = new User();
-                user.setId(rs.getLong("id"));
-                user.setUsername(rs.getString("username"));
-                user.setEmail(rs.getString("email"));
-                user.setPasswordHash(rs.getString("password_hash"));
-                user.setRole(User.Role.valueOf(rs.getString("role")));
-                user.setActive(rs.getBoolean("is_active"));
-                return user;
-            }
-        }
-    }
-
-    private boolean checkUsernameTaken(String username) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
-            }
-        }
-    }
-
-    private void insertGuest(long userId, String firstName, String lastName, String email) throws SQLException {
-        String sql = "INSERT INTO guests (first_name, last_name, email, created_at) VALUES (?, ?, ?, NOW())";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, firstName);
-            ps.setString(2, lastName);
-            ps.setString(3, email);
-            ps.executeUpdate();
-        }
-    }
-
-    private void updateLastLogin(long userId) {
-        String sql = "UPDATE users SET last_login_at = ? WHERE id = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setTimestamp(1, Timestamp.from(Instant.now()));
-            ps.setLong(2, userId);
-            ps.executeUpdate();
-        } catch (SQLException ex) {
-            System.err.println("[LoginController] last_login_at update failed: " + ex.getMessage());
-        }
     }
 
     private void routeByRole(User.Role role) {

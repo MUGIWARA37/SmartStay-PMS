@@ -5,6 +5,7 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,9 @@ import java.util.List;
  *
  * Dark  mode → bloodborne.mp4  ("Bloody Samurai")
  * Light mode → sakura.mp4      ("Pink Blossom")
+ *
+ * MediaView references are held weakly so that navigating away does not
+ * prevent garbage-collection of old scenes and their media views.
  *
  * Usage — in each controller's initialize():
  *   VideoBackground.register(bgMediaView);
@@ -26,13 +30,14 @@ public class VideoBackground {
     private static final String DARK_VIDEO  = "/videos/bloodborne.mp4";
     private static final String LIGHT_VIDEO = "/videos/sakura.mp4";
 
-    private static final List<MediaView> views = new ArrayList<>();
+    private static final List<WeakReference<MediaView>> views = new ArrayList<>();
 
     /** Register a MediaView to be managed. Call once per controller init. */
     public static void register(MediaView view) {
         if (view == null) return;
-        views.removeIf(v -> v == null || v.getScene() == null);
-        if (!views.contains(view)) views.add(view);
+        // Remove stale refs and any existing registration for this view
+        views.removeIf(ref -> ref.get() == null || ref.get() == view);
+        views.add(new WeakReference<>(view));
         applyVideo(view, ThemeManager.isDarkMode());
 
         // Bind size to scene when scene becomes available
@@ -51,9 +56,10 @@ public class VideoBackground {
     /** Called by ThemeManager.toggle() — swaps video on every registered view. */
     public static void syncAll(boolean darkMode) {
         Platform.runLater(() -> {
-            views.removeIf(v -> v == null);
-            for (MediaView view : views) {
-                applyVideo(view, darkMode);
+            views.removeIf(ref -> ref.get() == null);
+            for (WeakReference<MediaView> ref : views) {
+                MediaView view = ref.get();
+                if (view != null) applyVideo(view, darkMode);
             }
         });
     }
