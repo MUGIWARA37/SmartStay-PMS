@@ -46,6 +46,7 @@ public class ReceptionController {
     // ── FXML Bindings ─────────────────────────────────────────────────────────
     @FXML private MediaView bgMediaView;
     @FXML private FlowPane  resGrid;
+    @FXML private Label     lblSelectedRes;
     @FXML private TextField txtSearch;
     @FXML private TextField txtCleanRoom;
     @FXML private TextField txtMaintRoom;
@@ -106,30 +107,54 @@ public class ReceptionController {
         resGrid.getChildren().clear();
         selectedRes = null; selectedResCard = null;
         for (Reservation res : list) {
-            VBox card = new VBox(8);
+            VBox card = new VBox(0);
             card.getStyleClass().add("data-card");
-            HBox header = new HBox();
-            header.setAlignment(Pos.CENTER_LEFT);
-            Label lblCode = new Label(res.getReservationCode());
-            lblCode.getStyleClass().add("card-header-text");
-            Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
-            Label badge = createBadge(res.getStatus().toString());
-            header.getChildren().addAll(lblCode, spacer, badge);
-            Label lblGuest = new Label("Guest: " + res.getGuestFullName());
-            lblGuest.getStyleClass().add("card-detail-text");
-            Label lblRoom  = new Label("Room: "  + res.getRoomNumber());
-            lblRoom.getStyleClass().add("card-detail-text");
-            Label lblDates = new Label(res.getCheckInDate().format(DATE_FMT) + " → " + res.getCheckOutDate().format(DATE_FMT));
-            lblDates.getStyleClass().add("card-detail-text");
-            lblDates.setStyle("-fx-text-fill: #a0a0a0; -fx-font-size: 11px;");
-            card.getChildren().addAll(header, new Separator(), lblGuest, lblRoom, lblDates);
+            card.setPrefWidth(320); card.setMinWidth(280); card.setMaxWidth(380);
+
+            // Header
+            HBox header = new HBox(12); header.setAlignment(Pos.CENTER_LEFT);
+            header.setStyle("-fx-padding: 16 16 12 16;");
+            String gName = res.getGuestFullName();
+            String initials = gName != null && gName.length() >= 2 ? gName.substring(0,2).toUpperCase() : "??";
+            StackPane avatar = new StackPane(); avatar.setPrefSize(48,48); avatar.setMinSize(48,48);
+            avatar.getStyleClass().add("avatar-circle");
+            Label avLbl = new Label(initials); avLbl.getStyleClass().add("avatar-initials"); avLbl.setStyle("-fx-font-size:16px;");
+            avatar.getChildren().add(avLbl);
+            VBox nameCol = new VBox(4); HBox.setHgrow(nameCol, Priority.ALWAYS);
+            Label lblCode = new Label(res.getReservationCode()); lblCode.setStyle("-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#f0f0f0;");
+            Label lblGuest = new Label(gName); lblGuest.setStyle("-fx-font-size:11px;-fx-text-fill:#a0a0a0;");
+            nameCol.getChildren().addAll(lblCode, lblGuest);
+            header.getChildren().addAll(avatar, nameCol, createBadge(res.getStatus().toString()));
+
+            Region divider = new Region(); divider.setMaxWidth(Double.MAX_VALUE); divider.setPrefHeight(1);
+            divider.setStyle("-fx-background-color:rgba(197,160,89,0.18);");
+
+            long nights = res.getCheckInDate() != null && res.getCheckOutDate() != null
+                ? res.getCheckOutDate().toEpochDay() - res.getCheckInDate().toEpochDay() : 0;
+            VBox body = new VBox(9); body.setStyle("-fx-padding:14 16 16 16;");
+            body.getChildren().addAll(
+                detailRow("🏯", "Room " + res.getRoomNumber(), "#c5a059"),
+                detailRow("📅", res.getCheckInDate().format(DATE_FMT) + "  →  " + res.getCheckOutDate().format(DATE_FMT), "#a0a0a0"),
+                detailRow("🌙", nights + " night" + (nights == 1 ? "" : "s"), "#888"),
+                detailRow("💴", String.format("%.2f MAD", res.getBaseTotal()), "#1e8449")
+            );
+
+            card.getChildren().addAll(header, divider, body);
             card.setOnMouseClicked(e -> {
                 if (selectedResCard != null) selectedResCard.getStyleClass().remove("selected-card");
                 card.getStyleClass().add("selected-card");
                 selectedResCard = card; selectedRes = res;
+                if (lblSelectedRes != null) lblSelectedRes.setText(res.getReservationCode() + "  ·  " + gName);
             });
             resGrid.getChildren().add(card);
         }
+    }
+
+    private HBox detailRow(String icon, String text, String color) {
+        Label ico = new Label(icon); ico.setStyle("-fx-font-size:13px;-fx-min-width:20;");
+        Label lbl = new Label(text); lbl.setStyle("-fx-font-size:12px;-fx-text-fill:" + color + ";");
+        HBox row  = new HBox(8, ico, lbl); row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
     }
 
     private Label createBadge(String s) {

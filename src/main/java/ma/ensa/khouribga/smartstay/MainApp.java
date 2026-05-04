@@ -13,10 +13,12 @@ import java.net.URL;
 
 public class MainApp extends Application {
 
-    private static final String APP_TITLE = "SmartStay PMS - Khouribga Edition";
-    private static final String LOGIN_FXML = "/fxml/auth/login.fxml";
-    
-    private static final double APP_WIDTH = 1100;
+    private static final String APP_TITLE   = "SmartStay PMS - Khouribga Edition";
+
+    // ── App starts on the landing / home page ──────────────────────────────
+    private static final String LANDING_FXML = "/fxml/landing.fxml";
+
+    private static final double APP_WIDTH  = 1100;
     private static final double APP_HEIGHT = 700;
 
     @Override
@@ -24,16 +26,17 @@ public class MainApp extends Application {
         installGlobalExceptionHandlers();
 
         try {
-            URL loginResource = getClass().getResource(LOGIN_FXML);
-            if (loginResource == null) {
-                System.err.println("CRITICAL: FXML file not found at " + LOGIN_FXML);
+            URL resource = getClass().getResource(LANDING_FXML);
+            if (resource == null) {
+                System.err.println("CRITICAL: FXML file not found at " + LANDING_FXML);
                 return;
             }
 
-            FXMLLoader loader = new FXMLLoader(loginResource);
+            FXMLLoader loader = new FXMLLoader(resource);
             Parent root = loader.load();
 
             Scene scene = new Scene(root, APP_WIDTH, APP_HEIGHT);
+            ThemeManager.applyToScene(scene);
 
             stage.setTitle(APP_TITLE);
             stage.setMinWidth(1000);
@@ -49,18 +52,12 @@ public class MainApp extends Application {
         }
     }
 
-    /**
-     * Installs themed alert dialogs for any unhandled exceptions,
-     * both on the JavaFX thread and background threads.
-     */
     private void installGlobalExceptionHandlers() {
-        // ── JavaFX thread exceptions ──────────────────────────────────────────
-        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) ->
-                showUncaughtError(throwable));
+        Thread.currentThread().setUncaughtExceptionHandler(
+                (thread, throwable) -> showUncaughtError(throwable));
 
-        // ── Background thread exceptions ──────────────────────────────────────
-        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) ->
-                Platform.runLater(() -> showUncaughtError(throwable)));
+        Thread.setDefaultUncaughtExceptionHandler(
+                (thread, throwable) -> Platform.runLater(() -> showUncaughtError(throwable)));
     }
 
     private static void showUncaughtError(Throwable t) {
@@ -76,9 +73,9 @@ public class MainApp extends Application {
                 alert.getDialogPane().getStylesheets()
                         .add(MainApp.class.getResource("/styles/samurai.css").toExternalForm());
                 alert.getDialogPane().getStyleClass().add("dialog-pane");
-            } catch (Exception ignored) { /* stylesheet not critical */ }
+            } catch (Exception ignored) {}
             alert.showAndWait();
-        } catch (Exception ignored) { /* do not recurse */ }
+        } catch (Exception ignored) {}
     }
 
     public static void main(String[] args) {

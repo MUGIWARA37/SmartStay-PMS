@@ -15,27 +15,22 @@
         <left>
             <VBox styleClass="sidebar" prefWidth="220" spacing="0">
 
-                <!-- Brand — Guest uses 智 (wisdom) kanji -->
                 <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4"
                       style="-fx-padding: 28 16 24 16;">
                     <Label text="智" styleClass="sidebar-logo"/>
-                    <Label text="SMARTSTAY"   styleClass="app-title"/>
+                    <Label text="SMARTSTAY"    styleClass="app-title"/>
                     <Label text="GUEST PORTAL" styleClass="app-subtitle"/>
-                    <Label text="智 Wisdom · 侍 Precision"
-                           styleClass="sidebar-sub-kanji"/>
+                    <Label text="智 Wisdom · 侍 Precision" styleClass="sidebar-sub-kanji"/>
                 </VBox>
 
-                <!--
-                    showBrowseTab()   → shows panelBrowse, hides panelBookings,
-                                        marks Browse active
-                    showBookingsTab() → shows panelBookings, hides panelBrowse,
-                                        marks Bookings active
-                    Both already exist in HomeController.
-                -->
+                <!-- Browse Rooms — always visible (public) -->
                 <Button fx:id="btnBrowse"
                         text="🏠  Browse Rooms"
                         onAction="#showBrowseTab"
                         styleClass="nav-button-active" maxWidth="Infinity"/>
+
+                <!-- My Bookings — only meaningful when logged in;
+                     controller redirects to login if no session -->
                 <Button fx:id="btnMyBookings"
                         text="📋  My Bookings"
                         onAction="#showBookingsTab"
@@ -50,26 +45,45 @@
                             HBox.hgrow="ALWAYS"/>
                 </HBox>
 
-                <!-- Avatar + sign-out -->
-                <HBox alignment="CENTER_LEFT" spacing="10"
-                      style="-fx-padding: 10 16 8 16; -fx-cursor: hand;">
-                    <StackPane styleClass="avatar-circle" prefWidth="34" prefHeight="34">
-                        <Label fx:id="avatarInitials" text="G"
-                               styleClass="avatar-initials"
-                               style="-fx-font-size: 14px;"/>
-                    </StackPane>
-                    <VBox alignment="CENTER_LEFT" spacing="1">
-                        <Label fx:id="welcomeLabel" text="Guest"
-                               style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:12px;"/>
-                        <Label text="GUEST PORTAL"
-                               styleClass="label-muted" style="-fx-font-size: 10px;"/>
-                    </VBox>
-                </HBox>
-                <VBox style="-fx-padding: 4 16 20 16;">
-                    <Button fx:id="btnLogout" text="⬅  Sign Out"
-                            onAction="#handleLogout"
-                            styleClass="btn-logout" maxWidth="Infinity"/>
+                <!--
+                    When NOT logged in: show "Sign In" button.
+                    When logged in: show avatar + username + Sign Out button.
+                    Controller toggles visibility of guestActions vs userActions.
+                -->
+
+                <!-- NOT logged in -->
+                <VBox fx:id="guestActions" spacing="8"
+                      style="-fx-padding: 8 16 20 16;">
+                    <Button text="🔑  Sign In"
+                            onAction="#handleLogin"
+                            styleClass="btn-primary" maxWidth="Infinity"/>
                 </VBox>
+
+                <!-- Logged in -->
+                <VBox fx:id="userActions" spacing="0"
+                      visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT" spacing="10"
+                          style="-fx-padding: 10 16 8 16; -fx-cursor: hand;"
+                          onMouseClicked="#goToProfile">
+                        <StackPane styleClass="avatar-circle" prefWidth="34" prefHeight="34">
+                            <Label fx:id="avatarInitials" text="G"
+                                   styleClass="avatar-initials"
+                                   style="-fx-font-size: 14px;"/>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="1">
+                            <Label fx:id="welcomeLabel" text="Guest"
+                                   style="-fx-text-fill:#e0e0e0;-fx-font-weight:bold;-fx-font-size:12px;"/>
+                            <Label text="View Profile →"
+                                   styleClass="label-muted" style="-fx-font-size: 10px;"/>
+                        </VBox>
+                    </HBox>
+                    <VBox style="-fx-padding: 4 16 20 16;">
+                        <Button fx:id="btnLogout" text="⬅  Sign Out"
+                                onAction="#handleLogout"
+                                styleClass="btn-logout" maxWidth="Infinity"/>
+                    </VBox>
+                </VBox>
+
             </VBox>
         </left>
 
@@ -95,26 +109,19 @@
                 <!-- ── BROWSE ROOMS PANEL ── -->
                 <VBox fx:id="panelBrowse" VBox.vgrow="ALWAYS">
 
-                    <!-- Filter toolbar -->
-                    <HBox styleClass="toolbar-bar" spacing="14"
-                          alignment="CENTER_LEFT">
+                    <HBox styleClass="toolbar-bar" spacing="14" alignment="CENTER_LEFT">
                         <Label text="Type:" styleClass="form-label"/>
-                        <ComboBox fx:id="cbRoomType" prefWidth="150"
-                                  styleClass="combo-box"/>
+                        <ComboBox fx:id="cbRoomType" prefWidth="150" styleClass="combo-box"/>
                         <Label text="Max price/night:" styleClass="form-label"/>
                         <Slider fx:id="priceSlider" prefWidth="150"/>
-                        <Label fx:id="priceLabel" styleClass="label-muted"
-                               prefWidth="120"/>
-                        <Label text="Check-in:" styleClass="form-label"/>
-                        <DatePicker fx:id="dpCheckIn" prefWidth="132"
-                                    styleClass="date-picker"/>
+                        <Label fx:id="priceLabel" styleClass="label-muted" prefWidth="120"/>
+                        <Label text="Check-in:"  styleClass="form-label"/>
+                        <DatePicker fx:id="dpCheckIn"  prefWidth="132" styleClass="date-picker"/>
                         <Label text="Check-out:" styleClass="form-label"/>
-                        <DatePicker fx:id="dpCheckOut" prefWidth="132"
-                                    styleClass="date-picker"/>
+                        <DatePicker fx:id="dpCheckOut" prefWidth="132" styleClass="date-picker"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Button fx:id="btnSearch" text="🔍  Search"
-                                onAction="#applyFilters"
-                                styleClass="btn-primary"/>
+                                onAction="#applyFilters" styleClass="btn-primary"/>
                     </HBox>
 
                     <HBox style="-fx-padding: 16 24 8 24;">

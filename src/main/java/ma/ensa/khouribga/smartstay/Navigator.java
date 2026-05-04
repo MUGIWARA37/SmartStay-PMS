@@ -12,38 +12,25 @@ import java.util.function.Consumer;
 public class Navigator {
 
     // ── FXML route constants ──────────────────────────────────────────────────
-    public static final String LOGIN       = "/fxml/auth/login.fxml";
-    public static final String HOME        = "/fxml/home/home.fxml";
-    public static final String ROOM_DETAIL = "/fxml/guest/room_detail.fxml";
-    public static final String PAYMENT     = "/fxml/guest/payment.fxml";
-    public static final String CLEANING    = "/fxml/staff/cleaning.fxml";
-    public static final String MAINTENANCE = "/fxml/staff/maintenance.fxml";
-    public static final String RECEPTION   = "/fxml/staff/reception.fxml";
-    public static final String ADMIN           = "/fxml/admin/admin.fxml";
-    public static final String STAFF_PROFILE   = "/fxml/profile/staff_profile.fxml";
-    public static final String CLIENT_PROFILE  = "/fxml/profile/client_profile.fxml";
-    public static final String ADMIN_PROFILE = "/fxml/profile/admin_profile.fxml";
+    public static final String LANDING      = "/fxml/landing.fxml";   // ← NEW: welcome screen
+    public static final String LOGIN        = "/fxml/auth/login.fxml";
+    public static final String HOME         = "/fxml/home/home.fxml";
+    public static final String ROOM_DETAIL  = "/fxml/guest/room_detail.fxml";
+    public static final String PAYMENT      = "/fxml/guest/payment.fxml";
+    public static final String CLEANING     = "/fxml/staff/cleaning.fxml";
+    public static final String MAINTENANCE  = "/fxml/staff/maintenance.fxml";
+    public static final String RECEPTION    = "/fxml/staff/reception.fxml";
+    public static final String ADMIN        = "/fxml/admin/admin.fxml";
+    public static final String STAFF_PROFILE  = "/fxml/profile/staff_profile.fxml";
+    public static final String CLIENT_PROFILE = "/fxml/profile/client_profile.fxml";
+    public static final String ADMIN_PROFILE  = "/fxml/profile/admin_profile.fxml";
 
-    // ── Core navigation (replaces current scene content) ─────────────────────
+    // ── Core navigation ───────────────────────────────────────────────────────
 
-    /**
-     * Navigate to a new screen by replacing the current scene.
-     *
-     * @param sourceNode any @FXML node in the current controller (used to get the Stage)
-     * @param fxmlPath   one of the route constants above
-     */
     public static void navigateTo(Node sourceNode, String fxmlPath) {
         navigateTo(sourceNode, fxmlPath, null);
     }
 
-    /**
-     * Navigate and pass data to the destination controller before it is shown.
-     *
-     * @param sourceNode    any @FXML node in the current controller
-     * @param fxmlPath      one of the route constants above
-     * @param controllerConsumer lambda that receives the destination controller, e.g.:
-     *                           {@code ctrl -> ((RoomDetailController) ctrl).setRoom(room)}
-     */
     public static void navigateTo(Node sourceNode, String fxmlPath,
                                   Consumer<Object> controllerConsumer) {
         try {
@@ -54,9 +41,6 @@ public class Navigator {
         }
     }
 
-    /**
-     * Navigate directly from a {@link Stage} reference (used in MainApp).
-     */
     public static void navigateOnStage(Stage stage, String fxmlPath) {
         try {
             loadIntoStage(stage, fxmlPath, null);
@@ -67,7 +51,12 @@ public class Navigator {
 
     // ── Convenience shortcuts ─────────────────────────────────────────────────
 
-    /** Redirect to the login screen (e.g. on session expiry or unauthorized access). */
+    /** Go back to the landing/home page (e.g. on logout). */
+    public static void goToLanding(Node sourceNode) {
+        navigateTo(sourceNode, LANDING);
+    }
+
+    /** Redirect to the login screen. */
     public static void goToLogin(Node sourceNode) {
         navigateTo(sourceNode, LOGIN);
     }
@@ -80,11 +69,9 @@ public class Navigator {
         Parent root = loader.load();
 
         if (controllerConsumer != null) {
-            Object controller = loader.getController();
-            controllerConsumer.accept(controller);
+            controllerConsumer.accept(loader.getController());
         }
 
-        // Preserve current stage dimensions
         Scene currentScene = stage.getScene();
         double width  = (currentScene != null) ? currentScene.getWidth()  : 1100;
         double height = (currentScene != null) ? currentScene.getHeight() : 700;
