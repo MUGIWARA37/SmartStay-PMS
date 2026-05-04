@@ -8,100 +8,177 @@
            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="ma.ensa.khouribga.smartstay.auth.LoginController">
 
-    <!-- Cinematic video background -->
     <MediaView fx:id="bgVideo" fitWidth="1920" fitHeight="1080" preserveRatio="false"/>
 
-    <!-- Centered glass card 450 × auto -->
-    <VBox alignment="CENTER" spacing="0" maxWidth="450">
-        <VBox styleClass="glass-box" alignment="CENTER" spacing="22"
-              style="-fx-padding: 44 40 40 40;">
+    <StackPane alignment="CENTER">
+        <ScrollPane fitToWidth="true" fitToHeight="true"
+                    style="-fx-background-color:transparent;-fx-background:transparent;
+                           -fx-hbar-policy:never;-fx-vbar-policy:as-needed;">
+            <VBox alignment="CENTER" style="-fx-padding: 40 0; -fx-min-height: 700;">
+                <VBox styleClass="glass-box" alignment="CENTER" spacing="22"
+                      maxWidth="460" style="-fx-padding: 40 40 36 40;"
+                      VBox.vgrow="NEVER">
 
-            <!-- Brand block -->
-            <VBox alignment="CENTER" spacing="6">
-                <Label text="侍" styleClass="sidebar-logo" style="-fx-font-size: 52px;"/>
-                <Label text="SMARTSTAY" styleClass="app-title"/>
-                <Label text="PROPERTY MANAGEMENT SYSTEM" styleClass="app-subtitle"/>
-                <!-- Stitch gold divider replaces plain Separator -->
-                <Region styleClass="gold-divider" maxWidth="160"
-                        style="-fx-margin: 6 0 0 0;"/>
-            </VBox>
-
-            <!-- ── LOGIN PANEL ── -->
-            <VBox fx:id="loginPanel" spacing="18" maxWidth="340" alignment="CENTER_LEFT">
-
-                <VBox spacing="5">
-                    <Label text="USERNAME / IDENTIFIER" styleClass="field-label"/>
-                    <TextField fx:id="txtUsername"
-                               promptText="Enter your identifier…"
-                               styleClass="text-field"/>
+                <!-- Brand -->
+                <VBox alignment="CENTER" spacing="6">
+                    <Label text="侍" styleClass="sidebar-logo" style="-fx-font-size:52px;"/>
+                    <Label text="SMARTSTAY" styleClass="app-title"/>
+                    <Label text="PROPERTY MANAGEMENT SYSTEM" styleClass="app-subtitle"/>
+                    <Region styleClass="gold-divider" maxWidth="160"/>
                 </VBox>
 
-                <VBox spacing="5">
-                    <Label text="PASSWORD" styleClass="field-label"/>
-                    <PasswordField fx:id="txtPassword"
-                                   promptText="Enter your passcode…"
-                                   styleClass="password-field"/>
-                </VBox>
-
-                <Label fx:id="lblError" styleClass="error-label"
-                       visible="false" managed="false"/>
-
-                <Button text="AUTHENTICATE" onAction="#handleLogin"
-                        styleClass="btn-primary, samurai-button"
-                        maxWidth="Infinity" style="-fx-padding: 13 0;"/>
-
-                <HBox alignment="CENTER" spacing="6" style="-fx-padding: 4 0 0 0;">
-                    <Label text="New Guest?" styleClass="label-muted"/>
-                    <Button text="Create an Account" onAction="#toggleRegister"
-                            styleClass="btn-link"/>
-                </HBox>
-            </VBox>
-
-            <!-- ── REGISTER PANEL ── -->
-            <VBox fx:id="registerPanel" spacing="14" maxWidth="340"
-                  alignment="CENTER_LEFT" visible="false" managed="false">
-
-                <HBox spacing="12">
-                    <VBox spacing="5" HBox.hgrow="ALWAYS">
-                        <Label text="FIRST NAME" styleClass="field-label"/>
-                        <TextField fx:id="txtRegFirst" styleClass="text-field"/>
+                <!-- ── PANEL 1: LOGIN ── -->
+                <VBox fx:id="loginPanel" spacing="18" maxWidth="360" alignment="CENTER_LEFT">
+                    <Label text="SIGN IN" style="-fx-font-size:13px;-fx-font-weight:bold;
+                                                  -fx-text-fill:#c5a059;-fx-letter-spacing:3;"/>
+                    <VBox spacing="5">
+                        <Label text="USERNAME" styleClass="field-label"/>
+                        <TextField fx:id="txtUsername" promptText="Enter your identifier…" styleClass="text-field"/>
                     </VBox>
-                    <VBox spacing="5" HBox.hgrow="ALWAYS">
-                        <Label text="LAST NAME" styleClass="field-label"/>
-                        <TextField fx:id="txtRegLast" styleClass="text-field"/>
+                    <VBox spacing="5">
+                        <Label text="PASSWORD" styleClass="field-label"/>
+                        <PasswordField fx:id="txtPassword" promptText="Enter your passcode…" styleClass="password-field"/>
                     </VBox>
-                </HBox>
-
-                <VBox spacing="5">
-                    <Label text="EMAIL ADDRESS" styleClass="field-label"/>
-                    <TextField fx:id="txtRegEmail" styleClass="text-field"/>
+                    <Label fx:id="lblError" styleClass="error-label" visible="false" managed="false"/>
+                    <Button text="AUTHENTICATE" onAction="#handleLogin"
+                            styleClass="btn-primary,samurai-button"
+                            maxWidth="Infinity" style="-fx-padding:13 0;"/>
+                    <HBox alignment="CENTER_LEFT" spacing="16">
+                        <Button text="Forgot Password?" onAction="#showForgot"
+                                styleClass="btn-link" style="-fx-text-fill:#888;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Create Account" onAction="#showRegister" styleClass="btn-link"/>
+                    </HBox>
                 </VBox>
 
-                <VBox spacing="5">
-                    <Label text="USERNAME" styleClass="field-label"/>
-                    <TextField fx:id="txtRegUser" styleClass="text-field"/>
+                <!-- ── PANEL 2: REGISTER ── -->
+                <VBox fx:id="registerPanel" spacing="14" maxWidth="360"
+                      alignment="CENTER_LEFT" visible="false" managed="false">
+                    <Label text="CREATE ACCOUNT" style="-fx-font-size:13px;-fx-font-weight:bold;
+                                                         -fx-text-fill:#c5a059;-fx-letter-spacing:3;"/>
+                    <HBox spacing="12">
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="FIRST NAME" styleClass="field-label"/>
+                            <TextField fx:id="txtRegFirst" styleClass="text-field"/>
+                        </VBox>
+                        <VBox spacing="5" HBox.hgrow="ALWAYS">
+                            <Label text="LAST NAME" styleClass="field-label"/>
+                            <TextField fx:id="txtRegLast" styleClass="text-field"/>
+                        </VBox>
+                    </HBox>
+                    <VBox spacing="5">
+                        <Label text="EMAIL" styleClass="field-label"/>
+                        <TextField fx:id="txtRegEmail" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="USERNAME" styleClass="field-label"/>
+                        <TextField fx:id="txtRegUser" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="PASSWORD (min 8 chars)" styleClass="field-label"/>
+                        <PasswordField fx:id="txtRegPass" styleClass="password-field"/>
+                    </VBox>
+
+                    <!-- Security Questions section -->
+                    <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                    <Label text="🔐  SECURITY QUESTIONS — for account recovery"
+                           style="-fx-font-size:11px;-fx-text-fill:#c5a059;-fx-font-weight:bold;"/>
+                    <Label text="Choose 3 questions and provide your answers. These will be used if you forget your password."
+                           styleClass="label-muted" style="-fx-font-size:10px;" wrapText="true"/>
+
+                    <VBox spacing="5">
+                        <Label text="QUESTION 1" styleClass="field-label"/>
+                        <ComboBox fx:id="cbQ1" promptText="Select a question…"
+                                  styleClass="combo-box" maxWidth="Infinity"/>
+                        <TextField fx:id="txtA1" promptText="Your answer…" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="QUESTION 2" styleClass="field-label"/>
+                        <ComboBox fx:id="cbQ2" promptText="Select a question…"
+                                  styleClass="combo-box" maxWidth="Infinity"/>
+                        <TextField fx:id="txtA2" promptText="Your answer…" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="QUESTION 3" styleClass="field-label"/>
+                        <ComboBox fx:id="cbQ3" promptText="Select a question…"
+                                  styleClass="combo-box" maxWidth="Infinity"/>
+                        <TextField fx:id="txtA3" promptText="Your answer…" styleClass="text-field"/>
+                    </VBox>
+
+                    <Label fx:id="lblRegError" styleClass="error-label" visible="false" managed="false"/>
+                    <Button text="REGISTER IDENTITY" onAction="#handleRegister"
+                            styleClass="btn-primary,samurai-button"
+                            maxWidth="Infinity" style="-fx-padding:13 0;"/>
+                    <HBox alignment="CENTER" spacing="6">
+                        <Label text="Already inducted?" styleClass="label-muted"/>
+                        <Button text="Sign In" onAction="#showLogin" styleClass="btn-link"/>
+                    </HBox>
                 </VBox>
 
-                <VBox spacing="5">
-                    <Label text="SECURE PASSWORD" styleClass="field-label"/>
-                    <PasswordField fx:id="txtRegPass" styleClass="password-field"/>
+                <!-- ── PANEL 3: FORGOT — enter username ── -->
+                <VBox fx:id="forgotPanel" spacing="18" maxWidth="360"
+                      alignment="CENTER_LEFT" visible="false" managed="false">
+                    <Label text="ACCOUNT RECOVERY" style="-fx-font-size:13px;-fx-font-weight:bold;
+                                                           -fx-text-fill:#c5a059;-fx-letter-spacing:3;"/>
+                    <Label text="Enter your username to begin the recovery challenge."
+                           styleClass="label-muted" style="-fx-font-size:11px;" wrapText="true"/>
+                    <VBox spacing="5">
+                        <Label text="YOUR USERNAME" styleClass="field-label"/>
+                        <TextField fx:id="txtForgotUser" promptText="Enter your username…" styleClass="text-field"/>
+                    </VBox>
+                    <Label fx:id="lblForgotError" styleClass="error-label" visible="false" managed="false"/>
+                    <Button text="⚔  BEGIN CHALLENGE" onAction="#handleForgotNext"
+                            styleClass="btn-primary" maxWidth="Infinity" style="-fx-padding:13 0;"/>
+                    <HBox alignment="CENTER" spacing="6">
+                        <Button text="← Back to Sign In" onAction="#showLogin" styleClass="btn-link"/>
+                    </HBox>
                 </VBox>
 
-                <Button text="REGISTER IDENTITY" onAction="#handleRegister"
-                        styleClass="btn-primary, samurai-button"
-                        maxWidth="Infinity" style="-fx-padding: 13 0;"/>
+                <!-- ── PANEL 4: RECOVERY — answer questions + new password ── -->
+                <VBox fx:id="recoveryPanel" spacing="14" maxWidth="360"
+                      alignment="CENTER_LEFT" visible="false" managed="false">
+                    <Label text="IDENTITY CHALLENGE" style="-fx-font-size:13px;-fx-font-weight:bold;
+                                                             -fx-text-fill:#c5a059;-fx-letter-spacing:3;"/>
+                    <Label text="Answer all 3 questions exactly as you entered them during registration."
+                           styleClass="label-muted" style="-fx-font-size:10px;" wrapText="true"/>
 
-                <HBox alignment="CENTER" spacing="6">
-                    <Label text="Already inducted?" styleClass="label-muted"/>
-                    <Button text="Sign In" onAction="#toggleRegister"
-                            styleClass="btn-link"/>
-                </HBox>
+                    <VBox spacing="4">
+                        <Label fx:id="lblRQ1" text="Question 1" styleClass="field-label"/>
+                        <TextField fx:id="txtRA1" promptText="Your answer…" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label fx:id="lblRQ2" text="Question 2" styleClass="field-label"/>
+                        <TextField fx:id="txtRA2" promptText="Your answer…" styleClass="text-field"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label fx:id="lblRQ3" text="Question 3" styleClass="field-label"/>
+                        <TextField fx:id="txtRA3" promptText="Your answer…" styleClass="text-field"/>
+                    </VBox>
+
+                    <Region styleClass="gold-divider" maxWidth="Infinity"/>
+                    <Label text="NEW PASSWORD" style="-fx-font-size:11px;-fx-text-fill:#c5a059;-fx-font-weight:bold;"/>
+                    <VBox spacing="5">
+                        <Label text="NEW PASSWORD (min 8 chars)" styleClass="field-label"/>
+                        <PasswordField fx:id="txtNewPass" promptText="Choose a new password…" styleClass="password-field"/>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="CONFIRM NEW PASSWORD" styleClass="field-label"/>
+                        <PasswordField fx:id="txtConfirmPass" promptText="Repeat password…" styleClass="password-field"/>
+                    </VBox>
+
+                    <Label fx:id="lblRecoveryError" styleClass="error-label" visible="false" managed="false"/>
+                    <Button text="🔓  RESET PASSWORD" onAction="#handleRecoverySubmit"
+                            styleClass="btn-success" maxWidth="Infinity" style="-fx-padding:13 0;"/>
+                    <HBox alignment="CENTER" spacing="6">
+                        <Button text="← Back" onAction="#showForgot" styleClass="btn-link"/>
+                    </HBox>
+                </VBox>
+
             </VBox>
-
         </VBox>
-    </VBox>
+        </ScrollPane>
+    </StackPane>
 
-    <!-- Theme toggle pill — top-right corner -->
     <Button text="☀ Light" onAction="#handleThemeToggle" styleClass="btn-theme"
             StackPane.alignment="TOP_RIGHT"
             style="-fx-translate-x: -20; -fx-translate-y: 20;"/>
