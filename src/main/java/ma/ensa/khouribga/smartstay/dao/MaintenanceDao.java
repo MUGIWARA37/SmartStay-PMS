@@ -44,6 +44,7 @@ public class MaintenanceDao {
         return m;
     }
 
+    /** Admin view — all requests, all statuses. */
     public static List<MaintenanceRequest> findAll() throws SQLException {
         List<MaintenanceRequest> list = new ArrayList<>();
         String sql = SELECT_JOINED + " ORDER BY mr.created_at DESC";
@@ -55,12 +56,50 @@ public class MaintenanceDao {
         return list;
     }
 
-    public static List<MaintenanceRequest> findByStaff(int staffProfileId) throws SQLException {
+    /**
+     * Staff view — shows:
+     *   (a) tasks explicitly assigned to this staff member, AND
+     *   (b) unassigned tasks (assigned_to_staff_id IS NULL) that are still active.
+     *
+     * FIX: Previously used WHERE assigned_to_staff_id = ? only.
+     * Reception dispatches are inserted with assigned_to_staff_id = NULL,
+     * so they were invisible to every maintenance staff member.
+     * Sorted by priority (URGENT first) then creation time (oldest first).
+     */
+    public static List<MaintenanceRequest> findByStaffOrUnassigned(int staffProfileId) throws SQLException {
         List<MaintenanceRequest> list = new ArrayList<>();
-        String sql = SELECT_JOINED + " WHERE mr.assigned_to_staff_id = ? ORDER BY mr.created_at DESC";
+        String sql = SELECT_JOINED + """
+                WHERE (mr.assigned_to_staff_id = ?
+                       OR mr.assigned_to_staff_id IS NULL)
+                  AND mr.status NOT IN ('RESOLVED', 'CANCELLED')
+                ORDER BY
+                  FIELD(mr.priority,'URGENT','HIGH','MEDIUM','LOW'),
+                  mr.created_at ASC
+                """;
         try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, staffProfileId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Filtering by status — keeps the same OR logic for staff. */
+    public static List<MaintenanceRequest> findByStaffOrUnassignedAndStatus(
+            int staffProfileId, MaintenanceRequest.Status status) throws SQLException {
+        List<MaintenanceRequest> list = new ArrayList<>();
+        String sql = SELECT_JOINED + """
+                WHERE (mr.assigned_to_staff_id = ?
+                       OR mr.assigned_to_staff_id IS NULL)
+                  AND mr.status = ?
+                ORDER BY mr.created_at ASC
+                """;
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, staffProfileId);
+            ps.setString(2, status.name());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }

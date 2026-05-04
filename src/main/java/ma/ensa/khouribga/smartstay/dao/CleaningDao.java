@@ -6,7 +6,6 @@ import ma.ensa.khouribga.smartstay.model.CleaningRequest;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class CleaningDao {
 
@@ -48,6 +47,7 @@ public class CleaningDao {
         return c;
     }
 
+    /** Admin view — all requests, all statuses. */
     public static List<CleaningRequest> findAll() throws SQLException {
         List<CleaningRequest> list = new ArrayList<>();
         String sql = SELECT_JOINED + " ORDER BY cr.created_at DESC";
@@ -59,12 +59,50 @@ public class CleaningDao {
         return list;
     }
 
-    public static List<CleaningRequest> findByStaff(int staffProfileId) throws SQLException {
+    /**
+     * Staff view — shows:
+     *   (a) tasks explicitly assigned to this staff member, AND
+     *   (b) unassigned tasks (assigned_to_staff_id IS NULL) that are still active.
+     *
+     * FIX: Previously only returned (a), so reception dispatches — which are
+     * inserted with assigned_to_staff_id = NULL — were invisible to all staff.
+     * Results are ordered by priority (highest first) then creation time (oldest first)
+     * so urgent unassigned tasks float to the top.
+     */
+    public static List<CleaningRequest> findByStaffOrUnassigned(int staffProfileId) throws SQLException {
         List<CleaningRequest> list = new ArrayList<>();
-        String sql = SELECT_JOINED + " WHERE cr.assigned_to_staff_id = ? ORDER BY cr.created_at DESC";
+        String sql = SELECT_JOINED + """
+                WHERE (cr.assigned_to_staff_id = ?
+                       OR cr.assigned_to_staff_id IS NULL)
+                  AND cr.status NOT IN ('DONE', 'CANCELLED')
+                ORDER BY
+                  FIELD(cr.priority,'URGENT','HIGH','MEDIUM','LOW'),
+                  cr.created_at ASC
+                """;
         try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, staffProfileId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Filtering by status — used by applyFilter(). Keeps the same OR logic for staff. */
+    public static List<CleaningRequest> findByStaffOrUnassignedAndStatus(
+            int staffProfileId, CleaningRequest.Status status) throws SQLException {
+        List<CleaningRequest> list = new ArrayList<>();
+        String sql = SELECT_JOINED + """
+                WHERE (cr.assigned_to_staff_id = ?
+                       OR cr.assigned_to_staff_id IS NULL)
+                  AND cr.status = ?
+                ORDER BY cr.created_at ASC
+                """;
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, staffProfileId);
+            ps.setString(2, status.name());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
@@ -137,7 +175,7 @@ public class CleaningDao {
         }
     }
 
-    /** Returns the staff_profile id for a given user_id, or -1 if not found */
+    /** Returns the staff_profile id for a given user_id, or -1 if not found. */
     public static int findStaffProfileId(int userId) throws SQLException {
         String sql = "SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1";
         try (Connection conn = Database.getConnection();

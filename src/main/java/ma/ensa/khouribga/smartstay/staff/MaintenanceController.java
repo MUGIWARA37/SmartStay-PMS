@@ -27,12 +27,12 @@ public class MaintenanceController {
     @FXML private Label welcomeLabel;
     @FXML private ComboBox<String> statusFilter;
     @FXML private TableView<MaintenanceRequest> taskTable;
-    @FXML private TableColumn<MaintenanceRequest, String> colRoom;
-    @FXML private TableColumn<MaintenanceRequest, String> colTitle;
+    @FXML private TableColumn<MaintenanceRequest, String>                    colRoom;
+    @FXML private TableColumn<MaintenanceRequest, String>                    colTitle;
     @FXML private TableColumn<MaintenanceRequest, MaintenanceRequest.Priority> colPriority;
-    @FXML private TableColumn<MaintenanceRequest, MaintenanceRequest.Status> colStatus;
-    @FXML private TableColumn<MaintenanceRequest, String> colDesc;
-    @FXML private TableColumn<MaintenanceRequest, LocalDateTime> colCreated;
+    @FXML private TableColumn<MaintenanceRequest, MaintenanceRequest.Status>   colStatus;
+    @FXML private TableColumn<MaintenanceRequest, String>                    colDesc;
+    @FXML private TableColumn<MaintenanceRequest, LocalDateTime>             colCreated;
 
     // Report form
     @FXML private ComboBox<Room> roomCombo;
@@ -99,24 +99,33 @@ public class MaintenanceController {
         }, "maint-init").start();
     }
 
+    /**
+     * FIX: Use findByStaffOrUnassigned() so reception dispatches (NULL assigned_to)
+     * appear in the maintenance staff task list.
+     */
     @FXML public void loadTasks() {
         new Thread(() -> {
             try {
-                List<MaintenanceRequest> all = staffProfileId > 0
-                        ? MaintenanceDao.findByStaff(staffProfileId)
+                List<MaintenanceRequest> all = (staffProfileId > 0)
+                        ? MaintenanceDao.findByStaffOrUnassigned(staffProfileId)
                         : MaintenanceDao.findAll();
                 Platform.runLater(() -> taskTable.setItems(FXCollections.observableArrayList(all)));
             } catch (Exception ex) { ex.printStackTrace(); }
         }, "maint-load").start();
     }
 
+    /**
+     * FIX: Status filter now also uses the OR-unassigned logic.
+     */
     @FXML public void applyFilter() {
         String sel = statusFilter.getValue();
         if (sel == null || sel.equals("ALL")) { loadTasks(); return; }
         new Thread(() -> {
             try {
-                List<MaintenanceRequest> filtered =
-                        MaintenanceDao.findByStatus(MaintenanceRequest.Status.valueOf(sel));
+                MaintenanceRequest.Status status = MaintenanceRequest.Status.valueOf(sel);
+                List<MaintenanceRequest> filtered = (staffProfileId > 0)
+                        ? MaintenanceDao.findByStaffOrUnassignedAndStatus(staffProfileId, status)
+                        : MaintenanceDao.findByStatus(status);
                 Platform.runLater(() -> taskTable.setItems(FXCollections.observableArrayList(filtered)));
             } catch (Exception ex) { ex.printStackTrace(); }
         }, "maint-filter").start();
@@ -132,8 +141,8 @@ public class MaintenanceController {
             try {
                 MaintenanceDao.updateStatus(sel.getId(), newStatus);
                 if (newStatus == MaintenanceRequest.Status.RESOLVED) {
-                    // Re-mark room as AVAILABLE after maintenance resolved
-                    ma.ensa.khouribga.smartstay.dao.RoomDao.updateStatus(sel.getRoomId(), Room.Status.AVAILABLE);
+                    // Re-mark room as AVAILABLE after maintenance is resolved
+                    RoomDao.updateStatus(sel.getRoomId(), Room.Status.AVAILABLE);
                 }
                 Platform.runLater(this::loadTasks);
             } catch (Exception ex) {
@@ -153,7 +162,8 @@ public class MaintenanceController {
         MaintenanceRequest req = new MaintenanceRequest();
         req.setRoomId(room.getId());
         req.setReportedByUserId((int) SessionManager.getCurrentUser().getId());
-        req.setPriority(priorityCombo.getValue() != null ? priorityCombo.getValue() : MaintenanceRequest.Priority.MEDIUM);
+        req.setPriority(priorityCombo.getValue() != null
+                ? priorityCombo.getValue() : MaintenanceRequest.Priority.MEDIUM);
         req.setTitle(title);
         req.setDescription(descField.getText().trim());
         if (staffProfileId > 0) req.setAssignedToStaffId(staffProfileId);
@@ -184,15 +194,14 @@ public class MaintenanceController {
         SessionManager.logout();
         Navigator.goToLogin(welcomeLabel);
     }
+
     @FXML public void goToProfile() {
         Navigator.navigateTo(welcomeLabel, Navigator.STAFF_PROFILE,
             ctrl -> ((ma.ensa.khouribga.smartstay.profile.StaffProfileController) ctrl)
                         .setPreviousRoute(Navigator.MAINTENANCE));
     }
 
-    @FXML
-    public void handleThemeToggle() {
-        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    @FXML public void handleThemeToggle() {
+        ThemeManager.toggle();
     }
-
 }

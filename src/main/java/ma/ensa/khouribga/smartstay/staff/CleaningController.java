@@ -4,7 +4,6 @@ import ma.ensa.khouribga.smartstay.VideoBackground;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.media.MediaView;
 import javafx.scene.control.*;
@@ -25,12 +24,12 @@ public class CleaningController {
     @FXML private Label welcomeLabel;
     @FXML private ComboBox<String> statusFilter;
     @FXML private TableView<CleaningRequest> taskTable;
-    @FXML private TableColumn<CleaningRequest, String> colRoom;
+    @FXML private TableColumn<CleaningRequest, String>                colRoom;
     @FXML private TableColumn<CleaningRequest, CleaningRequest.Priority> colPriority;
-    @FXML private TableColumn<CleaningRequest, CleaningRequest.Status> colStatus;
-    @FXML private TableColumn<CleaningRequest, String> colNote;
-    @FXML private TableColumn<CleaningRequest, LocalDateTime> colCreated;
-    @FXML private TableColumn<CleaningRequest, LocalDateTime> colCompleted;
+    @FXML private TableColumn<CleaningRequest, CleaningRequest.Status>   colStatus;
+    @FXML private TableColumn<CleaningRequest, String>                colNote;
+    @FXML private TableColumn<CleaningRequest, LocalDateTime>         colCreated;
+    @FXML private TableColumn<CleaningRequest, LocalDateTime>         colCompleted;
 
     private int staffProfileId = -1;
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("dd MMM HH:mm");
@@ -75,24 +74,35 @@ public class CleaningController {
         });
     }
 
+    /**
+     * FIX: Use findByStaffOrUnassigned() so reception dispatches (NULL assigned_to)
+     * appear in the cleaning staff task list.
+     * Falls back to findAll() only when no staff profile exists (should not happen).
+     */
     @FXML public void loadTasks() {
         new Thread(() -> {
             try {
-                List<CleaningRequest> all = staffProfileId > 0
-                        ? CleaningDao.findByStaff(staffProfileId)
+                List<CleaningRequest> all = (staffProfileId > 0)
+                        ? CleaningDao.findByStaffOrUnassigned(staffProfileId)
                         : CleaningDao.findAll();
                 Platform.runLater(() -> taskTable.setItems(FXCollections.observableArrayList(all)));
             } catch (Exception ex) { ex.printStackTrace(); }
         }, "cleaning-load").start();
     }
 
+    /**
+     * FIX: Status filter now also uses the OR-unassigned logic so filtered
+     * views still include unassigned reception dispatches.
+     */
     @FXML public void applyFilter() {
         String sel = statusFilter.getValue();
         if (sel == null || sel.equals("ALL")) { loadTasks(); return; }
         new Thread(() -> {
             try {
-                List<CleaningRequest> filtered =
-                        CleaningDao.findByStatus(CleaningRequest.Status.valueOf(sel));
+                CleaningRequest.Status status = CleaningRequest.Status.valueOf(sel);
+                List<CleaningRequest> filtered = (staffProfileId > 0)
+                        ? CleaningDao.findByStaffOrUnassignedAndStatus(staffProfileId, status)
+                        : CleaningDao.findByStatus(status);
                 Platform.runLater(() -> taskTable.setItems(FXCollections.observableArrayList(filtered)));
             } catch (Exception ex) { ex.printStackTrace(); }
         }, "cleaning-filter").start();
@@ -124,15 +134,14 @@ public class CleaningController {
         SessionManager.logout();
         Navigator.goToLogin(welcomeLabel);
     }
+
     @FXML public void goToProfile() {
         Navigator.navigateTo(welcomeLabel, Navigator.STAFF_PROFILE,
             ctrl -> ((ma.ensa.khouribga.smartstay.profile.StaffProfileController) ctrl)
                         .setPreviousRoute(Navigator.CLEANING));
     }
 
-    @FXML
-    public void handleThemeToggle() {
-        ma.ensa.khouribga.smartstay.ThemeManager.toggle();
+    @FXML public void handleThemeToggle() {
+        ThemeManager.toggle();
     }
-
 }
