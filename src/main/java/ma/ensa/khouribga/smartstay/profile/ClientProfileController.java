@@ -2,6 +2,8 @@ package ma.ensa.khouribga.smartstay.profile;
 
 import ma.ensa.khouribga.smartstay.ThemeManager;
 import ma.ensa.khouribga.smartstay.VideoBackground;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
+import ma.ensa.khouribga.smartstay.util.ProfilePictureUtil;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -13,6 +15,7 @@ import javafx.scene.media.MediaView;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
@@ -29,6 +32,7 @@ import java.util.Map;
 public class ClientProfileController {
 
     @FXML private MediaView bgMediaView;
+    @FXML private StackPane heroAvatarPane;
     @FXML private Circle    avatarCircle;
     @FXML private Label     avatarInitials;
     @FXML private Label     fullNameLabel;
@@ -62,6 +66,22 @@ public class ClientProfileController {
     public void initialize() {
         VideoBackground.register(bgMediaView);
         loadProfile();
+    }
+
+    @FXML public void changeProfilePicture(MouseEvent e) {
+        e.consume();
+        User user = SessionManager.getCurrentUser();
+        if (user == null) return;
+        String path = ProfilePictureUtil.chooseAndSave(
+            heroAvatarPane.getScene().getWindow(), user.getUsername());
+        if (path == null) return;
+        new Thread(() -> {
+            try {
+                UserDao.updateProfilePicture(user.getId(), path);
+                user.setProfilePicture(path);
+                Platform.runLater(() -> ProfilePictureUtil.applyToAvatar(heroAvatarPane, path));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }).start();
     }
 
     // ── Expand / Collapse ─────────────────────────────────────────────────────
@@ -177,6 +197,8 @@ public class ClientProfileController {
             emailField.setText(d.getOrDefault("email", ""));
             phoneField.setText(d.getOrDefault("phone", ""));
             nationalityField.setText(d.getOrDefault("nationality", ""));
+            // Load profile picture
+            ProfilePictureUtil.applyToAvatar(heroAvatarPane, SessionManager.getCurrentUser().getProfilePicture());
         });
 
         task.setOnFailed(e -> showMsg(contactMsg, "Failed to load profile.", true));

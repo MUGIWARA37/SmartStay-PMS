@@ -21,7 +21,7 @@ public class UserDao {
 
     /** Full SELECT including all columns used by the User model. */
     private static final String SELECT_ALL =
-            "SELECT id, username, email, password_hash, role, is_active FROM users";
+            "SELECT id, username, email, password_hash, role, is_active, profile_picture FROM users";
 
     private static User mapRow(ResultSet rs) throws SQLException {
         User u = new User();
@@ -31,7 +31,19 @@ public class UserDao {
         u.setPasswordHash(rs.getString("password_hash"));
         u.setRole(User.Role.valueOf(rs.getString("role")));
         u.setActive(rs.getBoolean("is_active"));
+        u.setProfilePicture(rs.getString("profile_picture"));
         return u;
+    }
+
+    /** Persists a new profile picture path for a user. */
+    public static void updateProfilePicture(long userId, String picturePath) throws SQLException {
+        String sql = "UPDATE users SET profile_picture = ? WHERE id = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, picturePath);
+            ps.setLong(2, userId);
+            ps.executeUpdate();
+        }
     }
 
     // ── Queries ───────────────────────────────────────────────────────────────
@@ -136,9 +148,15 @@ public class UserDao {
      */
     public static long insert(String username, String email,
                               String passwordHash, User.Role role) throws SQLException {
+        return insert(username, email, passwordHash, role, null);
+    }
+
+    public static long insert(String username, String email,
+                              String passwordHash, User.Role role,
+                              String profilePicture) throws SQLException {
         String sql = """
-                INSERT INTO users (username, email, password_hash, role, is_active, created_at)
-                VALUES (?, ?, ?, ?, TRUE, NOW())
+                INSERT INTO users (username, email, password_hash, role, is_active, profile_picture, created_at)
+                VALUES (?, ?, ?, ?, TRUE, ?, NOW())
                 """;
         try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -146,6 +164,7 @@ public class UserDao {
             ps.setString(2, email);
             ps.setString(3, passwordHash);
             ps.setString(4, role.name());
+            ps.setString(5, profilePicture);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) return keys.getLong(1);

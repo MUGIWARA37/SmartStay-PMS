@@ -34,6 +34,7 @@ CREATE TABLE users (
   password_hash VARCHAR(100) NOT NULL,
   role ENUM('ADMIN','STAFF','CLIENT') NOT NULL,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
+  profile_picture VARCHAR(512) NULL,
   last_login_at DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

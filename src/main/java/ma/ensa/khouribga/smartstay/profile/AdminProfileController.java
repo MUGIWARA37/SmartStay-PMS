@@ -1,8 +1,5 @@
 package ma.ensa.khouribga.smartstay.profile;
 
-import ma.ensa.khouribga.smartstay.ThemeManager;
-import ma.ensa.khouribga.smartstay.VideoBackground;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -14,12 +11,17 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import ma.ensa.khouribga.smartstay.Navigator;
+import ma.ensa.khouribga.smartstay.ThemeManager;
+import ma.ensa.khouribga.smartstay.VideoBackground;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
+import ma.ensa.khouribga.smartstay.util.ProfilePictureUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
@@ -29,6 +31,8 @@ import java.sql.ResultSet;
 public class AdminProfileController {
 
     @FXML private MediaView bgMediaView;
+    @FXML private StackPane heroAvatarPane;
+    @FXML private StackPane sidebarAvatarPane;
     @FXML private Label lblInitials;
     @FXML private Label lblUsername;
     @FXML private Label lblSessionUser;
@@ -66,6 +70,31 @@ public class AdminProfileController {
         txtEmail.setText(currentUser.getEmail() != null ? currentUser.getEmail() : "");
         if (lblSessionUser != null)
             lblSessionUser.setText("Logged in as: " + uname);
+        // Load profile picture into both avatar panes
+        ProfilePictureUtil.applyToAvatar(heroAvatarPane,    currentUser.getProfilePicture());
+        ProfilePictureUtil.applyToAvatar(sidebarAvatarPane, currentUser.getProfilePicture());
+    }
+
+    // ── Change profile picture ────────────────────────────────────────────────
+
+    @FXML public void changeProfilePicture(MouseEvent e) {
+        e.consume(); // don't propagate to card toggle
+        String path = ProfilePictureUtil.chooseAndSave(
+            heroAvatarPane.getScene().getWindow(), currentUser.getUsername());
+        if (path == null) return;
+        new Thread(() -> {
+            try {
+                UserDao.updateProfilePicture(currentUser.getId(), path);
+                currentUser.setProfilePicture(path);
+                Platform.runLater(() -> {
+                    ProfilePictureUtil.applyToAvatar(heroAvatarPane,    path);
+                    ProfilePictureUtil.applyToAvatar(sidebarAvatarPane, path);
+                });
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile picture."));
+            }
+        }).start();
     }
 
     // ── Expand / Collapse ─────────────────────────────────────────────────────

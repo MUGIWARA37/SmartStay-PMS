@@ -2,6 +2,8 @@ package ma.ensa.khouribga.smartstay.profile;
 
 import ma.ensa.khouribga.smartstay.ThemeManager;
 import ma.ensa.khouribga.smartstay.VideoBackground;
+import ma.ensa.khouribga.smartstay.dao.UserDao;
+import ma.ensa.khouribga.smartstay.util.ProfilePictureUtil;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -16,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import ma.ensa.khouribga.smartstay.Navigator;
@@ -36,6 +39,7 @@ public class StaffProfileController {
     @FXML private Label lblInitials;
     @FXML private Label lblFullName;
     @FXML private Label lblRole;
+    @FXML private StackPane heroAvatarPane;
     @FXML private Label lblPosition;
     @FXML private Label lblDepartment;
     @FXML private Label lblEmpCode;
@@ -78,6 +82,21 @@ public class StaffProfileController {
         if (currentUser == null) return;
         loadStaffData();
         loadWeeklyShifts();
+        ProfilePictureUtil.applyToAvatar(heroAvatarPane, currentUser.getProfilePicture());
+    }
+
+    @FXML public void changeProfilePicture(MouseEvent e) {
+        e.consume();
+        String path = ProfilePictureUtil.chooseAndSave(
+            heroAvatarPane.getScene().getWindow(), currentUser.getUsername());
+        if (path == null) return;
+        new Thread(() -> {
+            try {
+                UserDao.updateProfilePicture(currentUser.getId(), path);
+                currentUser.setProfilePicture(path);
+                Platform.runLater(() -> ProfilePictureUtil.applyToAvatar(heroAvatarPane, path));
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }).start();
     }
 
     // ── Expand / Collapse ─────────────────────────────────────────────────────

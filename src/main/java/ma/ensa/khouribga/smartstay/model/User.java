@@ -9,6 +9,7 @@ public class User {
     private String passwordHash;
     private Role role;
     private boolean active;
+    private String profilePicture; // path to image file, null = use initials
 
     public User() {}
 
@@ -38,4 +39,7 @@ public class User {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 }

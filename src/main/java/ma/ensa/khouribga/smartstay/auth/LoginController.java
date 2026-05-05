@@ -4,6 +4,9 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.MediaView;
 
@@ -16,6 +19,7 @@ import ma.ensa.khouribga.smartstay.dao.UserDao;
 import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
+import ma.ensa.khouribga.smartstay.util.ProfilePictureUtil;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -40,6 +44,9 @@ public class LoginController {
     @FXML private Label         lblError;
 
     // ── REGISTER fields ───────────────────────────────────────────────────────
+    @FXML private StackPane regAvatarPane;
+    @FXML private Label     regAvatarInitials;
+    @FXML private Label     lblAvatarHint;
     @FXML private TextField     txtRegFirst;
     @FXML private TextField     txtRegLast;
     @FXML private TextField     txtRegUser;
@@ -77,6 +84,8 @@ public class LoginController {
     private long recoveryUserId = -1;
     /** Question ids resolved during the forgot flow */
     private long rQ1id, rQ2id, rQ3id;
+    /** Path to the chosen profile picture during registration (null = none) */
+    private String pendingPicturePath = null;
 
     // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -85,6 +94,18 @@ public class LoginController {
         VideoBackground.register(bgVideo);
         clearError(lblError);
         loadQuestionsAsync();
+        // Live initials preview in registration avatar
+        if (txtRegFirst != null) txtRegFirst.textProperty().addListener((o, ov, nv) -> updateRegInitials());
+        if (txtRegLast  != null) txtRegLast .textProperty().addListener((o, ov, nv) -> updateRegInitials());
+    }
+
+    private void updateRegInitials() {
+        if (regAvatarInitials == null || pendingPicturePath != null) return;
+        String f = txtRegFirst.getText().trim();
+        String l = txtRegLast.getText().trim();
+        String i = (f.isEmpty() ? "?" : String.valueOf(f.charAt(0)))
+                 + (l.isEmpty() ? "" : String.valueOf(l.charAt(0)));
+        regAvatarInitials.setText(i.toUpperCase());
     }
 
     private void loadQuestionsAsync() {
@@ -113,6 +134,12 @@ public class LoginController {
         show(registerPanel);
         hide(loginPanel); hide(forgotPanel); hide(recoveryPanel);
         clearError(lblRegError);
+        pendingPicturePath = null;
+        if (regAvatarPane != null) {
+            regAvatarPane.getChildren().removeIf(n -> n instanceof ImageView);
+            regAvatarPane.getChildren().forEach(n -> n.setVisible(true));
+        }
+        if (lblAvatarHint != null) lblAvatarHint.setText("Click avatar or button to choose");
     }
 
     @FXML public void showForgot() {
@@ -120,6 +147,24 @@ public class LoginController {
         hide(loginPanel); hide(registerPanel); hide(recoveryPanel);
         clearError(lblForgotError);
         txtForgotUser.clear();
+    }
+
+    // ── Avatar pick (registration) ────────────────────────────────────────────
+
+    @FXML public void chooseRegAvatar(MouseEvent e) { pickAvatar(); }
+    @FXML public void chooseRegAvatarBtn()           { pickAvatar(); }
+
+    private void pickAvatar() {
+        String username = txtRegUser.getText().trim();
+        String key = username.isEmpty() ? "new_user" : username;
+        String path = ProfilePictureUtil.chooseAndSave(
+            regAvatarPane.getScene().getWindow(), key);
+        if (path == null) return;
+        pendingPicturePath = path;
+        // Show circular preview in the avatar pane
+        ProfilePictureUtil.applyToAvatar(regAvatarPane, path);
+        if (lblAvatarHint != null)
+            lblAvatarHint.setText("✓ Photo selected");
     }
 
     private void show(VBox p) { p.setVisible(true);  p.setManaged(true);  }
@@ -208,7 +253,7 @@ public class LoginController {
                     });
                     return;
                 }
-                long userId = UserDao.insert(username, email, hash, User.Role.CLIENT);
+                long userId = UserDao.insert(username, email, hash, User.Role.CLIENT, pendingPicturePath);
                 insertGuest(userId, firstName, lastName, email);
                 // Save security answers
                 SecurityQuestionDao.saveAnswers(userId, q1id, a1, q2id, a2, q3id, a3);

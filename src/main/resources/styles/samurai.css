@@ -887,6 +887,12 @@
     -fx-background-radius: 50%;
     -fx-effect: dropshadow(gaussian, rgba(139,0,0,0.80), 20, 0, 0, 0);
 }
+.avatar-circle:hover {
+    -fx-border-color: #e8c97a;
+    -fx-effect: dropshadow(gaussian, rgba(197,160,89,0.70), 24, 0, 0, 0);
+    -fx-scale-x: 1.04;
+    -fx-scale-y: 1.04;
+}
 .light-mode .avatar-circle {
     -fx-background-color: radial-gradient(center 50% 50%, radius 60%, #f0c0d0, #e090b0);
     -fx-border-color: #c06080;

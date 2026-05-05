@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
 
@@ -32,7 +33,9 @@
                     <VBox fx:id="cardIdentity" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
                         <HBox onMouseClicked="#toggleIdentity" alignment="CENTER_LEFT" spacing="16"
                               style="-fx-padding: 6 0 6 0;">
-                            <StackPane styleClass="avatar-circle" prefWidth="64" prefHeight="64">
+                            <StackPane fx:id="heroAvatarPane" styleClass="avatar-circle"
+                                       prefWidth="64" prefHeight="64"
+                                       style="-fx-cursor:hand;" onMouseClicked="#changeProfilePicture">
                                 <Label fx:id="lblInitials" text="ST" styleClass="avatar-initials" style="-fx-font-size: 26px;"/>
                             </StackPane>
                             <VBox HBox.hgrow="ALWAYS" spacing="4">

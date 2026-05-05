@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
 
@@ -33,7 +34,8 @@
                             styleClass="btn-theme" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
                 </HBox>
                 <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10 16 8 16;">
-                    <StackPane styleClass="avatar-circle" prefWidth="34" prefHeight="34">
+                    <StackPane fx:id="sidebarAvatarPane" styleClass="avatar-circle" prefWidth="34" prefHeight="34"
+                               style="-fx-cursor:hand;" onMouseClicked="#changeProfilePicture">
                         <Label fx:id="lblInitials" text="AD" styleClass="avatar-initials" style="-fx-font-size: 14px;"/>
                     </StackPane>
                     <VBox alignment="CENTER_LEFT" spacing="1">
@@ -69,8 +71,11 @@
                     <VBox fx:id="cardProfile" styleClass="glass-box" spacing="0" style="-fx-cursor: hand;">
                         <HBox onMouseClicked="#toggleProfile" alignment="CENTER_LEFT" spacing="16"
                               style="-fx-padding: 6 0 6 0;">
-                            <StackPane styleClass="avatar-circle" prefWidth="64" prefHeight="64">
-                                <Label text="AD" styleClass="avatar-initials" style="-fx-font-size: 26px;"/>
+                            <!-- Clickable avatar -->
+                            <StackPane fx:id="heroAvatarPane"
+                                       styleClass="avatar-circle" prefWidth="64" prefHeight="64"
+                                       style="-fx-cursor:hand;" onMouseClicked="#changeProfilePicture">
+                                <Label fx:id="lblInitials" text="AD" styleClass="avatar-initials" style="-fx-font-size: 26px;"/>
                             </StackPane>
                             <VBox HBox.hgrow="ALWAYS" spacing="4">
                                 <Label text="System Admin" styleClass="card-header-text" style="-fx-font-size:18px;"/>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.media.MediaView?>
 <?import javafx.geometry.Insets?>
 
@@ -56,6 +57,25 @@
                       alignment="CENTER_LEFT" visible="false" managed="false">
                     <Label text="CREATE ACCOUNT" style="-fx-font-size:13px;-fx-font-weight:bold;
                                                          -fx-text-fill:#c5a059;-fx-letter-spacing:3;"/>
+
+                    <!-- Avatar upload -->
+                    <HBox alignment="CENTER_LEFT" spacing="16">
+                        <StackPane fx:id="regAvatarPane"
+                                   prefWidth="80" prefHeight="80" minWidth="80" minHeight="80"
+                                   styleClass="avatar-circle"
+                                   style="-fx-cursor:hand;"
+                                   onMouseClicked="#chooseRegAvatar">
+                            <Label fx:id="regAvatarInitials" text="?"
+                                   style="-fx-font-size:28px;-fx-font-weight:bold;-fx-text-fill:#c5a059;"/>
+                        </StackPane>
+                        <VBox spacing="6" alignment="CENTER_LEFT">
+                            <Label text="PROFILE PHOTO" styleClass="field-label"/>
+                            <Button text="📷  Upload Photo" onAction="#chooseRegAvatarBtn"
+                                    styleClass="btn-secondary" style="-fx-font-size:11px;"/>
+                            <Label fx:id="lblAvatarHint" text="Click avatar or button to choose"
+                                   styleClass="label-muted" style="-fx-font-size:10px;"/>
+                        </VBox>
+                    </HBox>
                     <HBox spacing="12">
                         <VBox spacing="5" HBox.hgrow="ALWAYS">
                             <Label text="FIRST NAME" styleClass="field-label"/>
