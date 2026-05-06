@@ -871,10 +871,14 @@
 .light-mode .axis-label { -fx-text-fill: #9a7080; }
 .light-mode .chart-title { -fx-text-fill: #c06080; }
 
-/* ── Bar chart deep-red bars (CSS auto — no Java override needed) ── */
-.default-color0.chart-bar { -fx-bar-fill: linear-gradient(to top, #500000, #8b0000); }
-.default-color1.chart-bar { -fx-bar-fill: linear-gradient(to top, #500000, #8b0000); }
-.default-color2.chart-bar { -fx-bar-fill: linear-gradient(to top, #500000, #8b0000); }
+/* ── Bar chart theme-matched bars ── */
+.default-color0.chart-bar { -fx-bar-fill: linear-gradient(to top, #8B0000, #FF3333); }
+.default-color1.chart-bar { -fx-bar-fill: linear-gradient(to top, #C5A059, #E8C87A); }
+.default-color2.chart-bar { -fx-bar-fill: linear-gradient(to top, #1E8449, #2ECC71); }
+.default-color3.chart-bar { -fx-bar-fill: linear-gradient(to top, #3498DB, #5DADE2); }
+
+.light-mode .default-color0.chart-bar { -fx-bar-fill: linear-gradient(to top, #A03060, #D4507A); }
+.light-mode .default-color1.chart-bar { -fx-bar-fill: linear-gradient(to top, #C06080, #D8789A); }
 
 /* ═══════════════════════════════════════════════════════════
  * AVATAR

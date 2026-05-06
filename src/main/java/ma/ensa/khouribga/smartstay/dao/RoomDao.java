@@ -80,6 +80,33 @@ public class RoomDao {
     }
 
     /**
+     * Returns rooms that are available (not occupied or maintenance) for the given date range.
+     * A room is considered available if it has no CONFIRMED or CHECKED_IN reservations
+     * that overlap with the requested [checkIn, checkOut] period.
+     */
+    public static List<Room> findAvailable(java.time.LocalDate checkIn, java.time.LocalDate checkOut) throws SQLException {
+        List<Room> list = new ArrayList<>();
+        String sql = SELECT_JOINED + """
+                WHERE r.status != 'MAINTENANCE'
+                AND r.id NOT IN (
+                    SELECT room_id FROM reservations
+                    WHERE status IN ('CONFIRMED', 'CHECKED_IN')
+                    AND (check_in_date < ? AND check_out_date > ?)
+                )
+                ORDER BY r.room_number
+                """;
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(checkOut));
+            ps.setDate(2, Date.valueOf(checkIn));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        }
+        return list;
+    }
+
+    /**
      * Returns rooms with the given status.
      */
     public static List<Room> findByStatus(Room.Status status) throws SQLException {

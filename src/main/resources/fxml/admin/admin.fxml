@@ -178,7 +178,7 @@
                                                 </HBox>
                                                 <Label fx:id="statAvailable" text="—"
                                                        style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
-                                                <Label text="100% Operational"
+                                                <Label fx:id="lblStatAvailableSub" text="—"
                                                        style="-fx-font-size:10px;-fx-text-fill:#1e8449;"/>
                                             </VBox>
                                         </HBox>
@@ -202,7 +202,7 @@
                                                 </HBox>
                                                 <Label fx:id="statOccupied" text="—"
                                                        style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
-                                                <Label text="Capacity: 65%"
+                                                <Label fx:id="lblStatOccupiedSub" text="—"
                                                        style="-fx-font-size:10px;-fx-text-fill:#888;"/>
                                             </VBox>
                                         </HBox>
@@ -226,7 +226,7 @@
                                                 </HBox>
                                                 <Label fx:id="statActiveRes" text="—"
                                                        style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
-                                                <Label text="4 remaining to arrive"
+                                                <Label fx:id="lblStatActiveResSub" text="—"
                                                        style="-fx-font-size:10px;-fx-text-fill:#888;"/>
                                             </VBox>
                                         </HBox>
@@ -250,7 +250,7 @@
                                                 </HBox>
                                                 <Label fx:id="statMaint" text="—"
                                                        style="-fx-font-size:32px;-fx-font-weight:bold;-fx-text-fill:#ffffff;"/>
-                                                <Label text="+12% vs last month"
+                                                <Label fx:id="lblStatRevenueSub" text="—"
                                                        style="-fx-font-size:10px;-fx-text-fill:#1e8449;"/>
                                             </VBox>
                                         </HBox>

@@ -158,9 +158,7 @@ public class HomeController implements Initializable {
             spinner.setVisible(false);
             lblStatus.setText("Failed to load rooms.");
         });
-        Thread t = new Thread(task);
-        t.setDaemon(true);
-        t.start();
+        ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(task);
     }
 
     private void populateTypeFilter(List<Room> rooms) {
@@ -172,6 +170,34 @@ public class HomeController implements Initializable {
 
     @FXML
     public void applyFilters() {
+        java.time.LocalDate ci = dpCheckIn.getValue();
+        java.time.LocalDate co = dpCheckOut.getValue();
+
+        if (ci != null && co != null) {
+            if (!co.isAfter(ci)) {
+                showError("Check-out must be after check-in.");
+                return;
+            }
+            spinner.setVisible(true);
+            lblStatus.setText("Searching availability…");
+            Task<List<Room>> task = new Task<>() {
+                @Override protected List<Room> call() throws Exception {
+                    return RoomDao.findAvailable(ci, co);
+                }
+            };
+            task.setOnSucceeded(e -> {
+                allRooms = task.getValue();
+                spinner.setVisible(false);
+                performLocalFiltering();
+            });
+            task.setOnFailed(e -> { spinner.setVisible(false); lblStatus.setText("Search failed."); });
+            ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(task);
+        } else {
+            performLocalFiltering();
+        }
+    }
+
+    private void performLocalFiltering() {
         if (allRooms == null) return;
         String selectedType = cbRoomType.getValue();
         double maxPrice = priceSlider.getValue();
@@ -191,69 +217,23 @@ public class HomeController implements Initializable {
             roomGrid.getChildren().add(empty);
             return;
         }
-        for (Room room : rooms) roomGrid.getChildren().add(buildRoomCard(room));
-    }
-
-    private VBox buildRoomCard(Room room) {
-        VBox card = new VBox(0);
-        card.getStyleClass().add("room-card");
-        card.setPrefWidth(300); card.setMinWidth(260); card.setMaxWidth(360);
-        card.setStyle("-fx-cursor: hand;");
-
-        // ── Header ────────────────────────────────────────────────────────────
-        HBox header = new HBox(12); header.setAlignment(Pos.CENTER_LEFT);
-        header.setStyle("-fx-padding: 16 16 12 16;");
-
-        StackPane icon = new StackPane(); icon.setPrefSize(52, 52); icon.setMinSize(52, 52);
-        icon.setStyle("-fx-background-color:rgba(197,160,89,0.15);-fx-background-radius:10;" +
-            "-fx-border-color:rgba(197,160,89,0.35);-fx-border-radius:10;-fx-border-width:1;");
-        Label iconLbl = new Label("🏨"); iconLbl.setStyle("-fx-font-size:24px;");
-        icon.getChildren().add(iconLbl);
-
-        VBox nameCol = new VBox(4); HBox.setHgrow(nameCol, Priority.ALWAYS);
-        Label title = new Label("Room " + room.getRoomNumber());
-        title.setStyle("-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#f0f0f0;");
-        Label typeBadge = new Label(room.getTypeName() != null ? room.getTypeName().toUpperCase() : "STANDARD");
-        typeBadge.setStyle("-fx-background-color:rgba(197,160,89,0.15);-fx-text-fill:#c5a059;" +
-            "-fx-font-size:10px;-fx-font-weight:bold;-fx-padding:2 8;-fx-background-radius:4;");
-        nameCol.getChildren().addAll(title, typeBadge);
-
-        // Status pill
-        Label statusPill = new Label("AVAILABLE");
-        statusPill.setStyle("-fx-background-color:rgba(30,132,73,0.20);-fx-text-fill:#1e8449;" +
-            "-fx-font-size:9px;-fx-font-weight:bold;-fx-padding:3 8;-fx-background-radius:10;");
-
-        header.getChildren().addAll(icon, nameCol, statusPill);
-
-        // ── Divider ───────────────────────────────────────────────────────────
-        Region divider = new Region(); divider.setMaxWidth(Double.MAX_VALUE); divider.setPrefHeight(1);
-        divider.setStyle("-fx-background-color:rgba(197,160,89,0.18);");
-
-        // ── Body ──────────────────────────────────────────────────────────────
-        VBox body = new VBox(9); body.setStyle("-fx-padding:14 16 6 16;");
-        body.getChildren().addAll(
-            detailRow("🏢", "Floor " + room.getFloor(), "#a0a0a0"),
-            detailRow("👥", "Max " + room.getMaxOccupancy() + " guests", "#a0a0a0"),
-            detailRow("💴", String.format("%.2f MAD / night", room.getPricePerNight()), "#c5a059"),
-            detailRow("✨", room.getAmenities() != null && !room.getAmenities().isEmpty()
-                ? room.getAmenities() : "Standard amenities", "#888")
-        );
-        if (room.getTypeDescription() != null && !room.getTypeDescription().isEmpty())
-            body.getChildren().add(detailRow("📋", room.getTypeDescription(), "#666"));
-
-        // ── Book button ───────────────────────────────────────────────────────
-        VBox footer = new VBox(); footer.setStyle("-fx-padding:12 16 16 16;");
-        Button btnBook = new Button(loggedIn ? "⚔  View & Book" : "🔑  Sign In to Book");
-        btnBook.getStyleClass().add("btn-primary");
-        btnBook.setMaxWidth(Double.MAX_VALUE);
-        btnBook.setOnAction(e -> {
-            if (!loggedIn) Navigator.goToLogin(btnBook);
-            else           openRoomDetail(room);
-        });
-        footer.getChildren().add(btnBook);
-
-        card.getChildren().addAll(header, divider, body, footer);
-        return card;
+        for (Room room : rooms) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/home/room_card.fxml"));
+                VBox card = loader.load();
+                RoomCardController ctrl = loader.getController();
+                ctrl.setRoomData(room);
+                ctrl.setOnAction(() -> {
+                    if (!loggedIn) Navigator.goToLogin(card);
+                    else           openRoomDetail(room);
+                });
+                card.setOnMouseClicked(e -> {
+                    if (!loggedIn) Navigator.goToLogin(card);
+                    else           openRoomDetail(room);
+                });
+                roomGrid.getChildren().add(card);
+            } catch (IOException e) { e.printStackTrace(); }
+        }
     }
 
     // ── Row helpers (mirror AdminController) ─────────────────────────────────

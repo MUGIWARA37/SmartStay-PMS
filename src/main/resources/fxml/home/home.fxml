@@ -131,7 +131,7 @@
                     <ScrollPane styleClass="scroll-pane" fitToWidth="true"
                                 VBox.vgrow="ALWAYS">
                         <FlowPane fx:id="roomGrid" styleClass="data-grid"
-                                  hgap="18" vgap="18" prefWrapLength="900">
+                                  hgap="20" vgap="20" prefWrapLength="1100">
                             <padding><Insets top="8" right="20" bottom="20" left="20"/></padding>
                         </FlowPane>
                     </ScrollPane>
