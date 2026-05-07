@@ -28,9 +28,11 @@ public class RoomDao {
                    rt.description     AS type_description,
                    rt.price_per_night,
                    rt.max_occupancy,
-                   rt.amenities
+                   rt.amenities,
+                   ri.image_path
             FROM rooms r
             JOIN room_types rt ON r.room_type_id = rt.id
+            LEFT JOIN room_images ri ON r.id = ri.room_id AND ri.is_primary = 1
             """;
 
     private static Room mapRow(ResultSet rs) throws SQLException {
@@ -46,6 +48,7 @@ public class RoomDao {
         room.setPricePerNight(rs.getDouble("price_per_night"));
         room.setMaxOccupancy(rs.getInt("max_occupancy"));
         room.setAmenities(rs.getString("amenities"));
+        room.setImagePath(rs.getString("image_path"));
         return room;
     }
 

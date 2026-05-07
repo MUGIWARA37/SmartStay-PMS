@@ -23,6 +23,7 @@ public class Room {
     private double pricePerNight;
     private int    maxOccupancy;
     private String amenities;
+    private String imagePath;
 
     // Constructors ────────────────────────────────────────────
 
@@ -43,6 +44,15 @@ public class Room {
         this.pricePerNight   = pricePerNight;
         this.maxOccupancy    = maxOccupancy;
         this.amenities       = amenities;
+    }
+
+    public Room(int id, String roomNumber, int roomTypeId, int floor,
+                Status status, String notes,
+                String typeName, String typeDescription,
+                double pricePerNight, int maxOccupancy, String amenities,
+                String imagePath) {
+        this(id, roomNumber, roomTypeId, floor, status, notes, typeName, typeDescription, pricePerNight, maxOccupancy, amenities);
+        this.imagePath = imagePath;
     }
 
     // Getters & Setters ───────────────────────────────────────
@@ -79,6 +89,9 @@ public class Room {
 
     public String getAmenities()              { return amenities; }
     public void setAmenities(String v)        { this.amenities = v; }
+
+    public String getImagePath()              { return imagePath; }
+    public void setImagePath(String v)        { this.imagePath = v; }
 
     @Override
     public String toString() {
