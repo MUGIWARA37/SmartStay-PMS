@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-SmartStay PMS — 3-Year Historical Seed Generator
+SmartStay PMS — Dynamic Seed Generator
 Generates a rolling dataset for:
 - the previous 3 full years, and
 - the entire current year.
-Run: python3 gen_seed.py > seed.sql
+Auto-generates seed.sql in the same directory.
+Run: python3 gen_seed.py
 """
 
 from datetime import date, datetime, timedelta
@@ -1046,5 +1047,17 @@ FROM invoices WHERE status='PAID'
 GROUP BY yr ORDER BY yr;
 """)
 
-# write output
-print('\n'.join(out))
+# ══════════════════════════════════════════════════════════════════════════════
+# AUTO-GENERATE seed.sql IN SAME DIRECTORY
+# ══════════════════════════════════════════════════════════════════════════════
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+seed_file = os.path.join(script_dir, 'seed.sql')
+
+with open(seed_file, 'w', encoding='utf-8') as f:
+    f.write('\n'.join(out))
+
+print(f"✓ seed.sql generated")
+print(f"  Location: {seed_file}")
+print(f"  Date range: {START_DATE} → {END_DATE}")
+print(f"  Reservations: {len(res_rows)}")
