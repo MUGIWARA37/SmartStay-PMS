@@ -35,65 +35,51 @@ This project is developed as an academic project at **ENSA Khouribga** and focus
 ## Project Structure
 
 ```text
-smartstay-pms/
+SmartStay-PMS/
 ├── pom.xml
 ├── README.md
 ├── docker-compose.yml
 ├── .gitignore
 └── src/
-   ├── main/
-   │  ├── java/
-   │  │  └── ma/ensa/khouribga/smartstay/
-   │  │     ├── MainApp.java
-   │  │     ├── db/
-   │  │     │  ├── Database.java
-   │  │     │  └── TxManager.java
-   │  │     ├── session/
-   │  │     │  └── SessionManager.java
-   │  │     ├── model/
-   │  │     │  ├── User.java
-   │  │     │  ├── Room.java
-   │  │     │  ├── Reservation.java
-   │  │     │  ├── Service.java
-   │  │     │  └── Payroll.java
-   │  │     ├── auth/
-   │  │     │  └── LoginController.java
-   │  │     ├── home/
-   │  │     │  └── HomeController.java
-   │  │     ├── guest/
-   │  │     │  ├── RoomDetailController.java
-   │  │     │  └── PaymentController.java
-   │  │     ├── staff/
-   │  │     │  ├── CleaningController.java
-   │  │     │  ├── MaintenanceController.java
-   │  │     │  └── ReceptionController.java
-   │  │     └── admin/
-   │  │        └── AdminController.java
-   │  └── resources/
-   │     ├── application.properties
-   │     ├── fxml/
-   │     │  ├── auth/
-   │     │  │  └── login.fxml
-   │     │  ├── home/
-   │     │  │  └── home.fxml
-   │     │  ├── guest/
-   │     │  │  ├── room_detail.fxml
-   │     │  │  └── payment.fxml
-   │     │  ├── staff/
-   │     │  │  ├── cleaning.fxml
-   │     │  │  ├── maintenance.fxml
-   │     │  │  └── reception.fxml
-   │     │  └── admin/
-   │     │     └── admin.fxml
-   │     ├── styles/
-   │     │  └── samurai.css
-   │     ├── images/
-   │     └── sql/
-   │        ├── schema.sql
-   │        └── seed.sql
-   └── test/
-      └── java/
-         └── ma/ensa/khouribga/smartstay/
+   └── main/
+      ├── java/
+      │  └── ma/ensa/khouribga/smartstay/
+      │     ├── Main.java
+      │     ├── MainApp.java
+      │     ├── Navigator.java
+      │     ├── ThemeManager.java
+      │     ├── VideoBackground.java
+      │     ├── LandingController.java
+      │     ├── admin/
+      │     ├── auth/
+      │     ├── dao/
+      │     ├── db/
+      │     ├── guest/
+      │     ├── home/
+      │     ├── model/
+      │     ├── profile/
+      │     ├── service/
+      │     ├── session/
+      │     ├── staff/
+      │     └── util/
+      └── resources/
+         ├── application.properties
+         ├── fxml/
+         │  ├── admin/
+         │  ├── auth/
+         │  ├── guest/
+         │  ├── home/
+         │  ├── profile/
+         │  ├── staff/
+         │  └── landing.fxml
+         ├── images/
+         ├── sql/
+         │  ├── schema.sql
+         │  ├── seed.sql
+         │  └── gen_seed.py
+         ├── styles/
+         │  └── style.css
+         └── videos/
 ```
 
 ---

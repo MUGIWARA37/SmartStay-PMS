@@ -249,7 +249,7 @@ public class PaymentController {
                             "Invoice saved to:\n" + pdf.getAbsolutePath(), ButtonType.OK);
                     alert.setHeaderText("📜  Invoice Exported");
                     alert.getDialogPane().getStylesheets().add(
-                            getClass().getResource("/styles/samurai.css").toExternalForm());
+                            getClass().getResource("/styles/style.css").toExternalForm());
                     alert.getDialogPane().getStyleClass().add("dialog-pane");
                     alert.showAndWait();
                     try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(pdf); }

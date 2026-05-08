@@ -55,10 +55,21 @@ public class RoomCardController {
         }
 
         if (room.getImagePath() != null && !room.getImagePath().isEmpty()) {
-            // Updated size to 320x180 to match FXML
-            Image image = new Image(room.getImagePath(), 320, 180, false, true, true);
-            roomImageView.setImage(image);
-            imagePlaceholder.setVisible(false);
+            try {
+                var resource = getClass().getResource(room.getImagePath());
+                if (resource != null) {
+                    Image image = new Image(resource.toExternalForm(), 320, 180, false, true, true);
+                    roomImageView.setImage(image);
+                    imagePlaceholder.setVisible(false);
+                } else {
+                    roomImageView.setImage(null);
+                    imagePlaceholder.setVisible(true);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                roomImageView.setImage(null);
+                imagePlaceholder.setVisible(true);
+            }
         } else {
             roomImageView.setImage(null);
             imagePlaceholder.setVisible(true);

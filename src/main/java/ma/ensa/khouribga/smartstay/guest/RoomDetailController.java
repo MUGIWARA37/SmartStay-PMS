@@ -94,7 +94,7 @@ public class RoomDetailController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/guest/payment.fxml"));
             Scene scene = new Scene(loader.load());
-            scene.getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm());
+            scene.getStylesheets().add(getClass().getResource("/styles/style.css").toExternalForm());
 
             PaymentController ctrl = loader.getController();
             ctrl.initData(room, dpCheckIn.getValue(), dpCheckOut.getValue());

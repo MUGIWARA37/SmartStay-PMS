@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="cardRoot" prefWidth="320.0" styleClass="room-card" stylesheets="@/styles/samurai.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.home.RoomCardController">
+<VBox fx:id="cardRoot" prefWidth="320.0" styleClass="room-card" stylesheets="@/styles/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ma.ensa.khouribga.smartstay.home.RoomCardController">
 
     <StackPane prefHeight="180.0" styleClass="card-image-container">
         <Label fx:id="imagePlaceholder" styleClass="image-placeholder" text="No Image Available" />

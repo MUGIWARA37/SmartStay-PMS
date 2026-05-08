@@ -878,7 +878,7 @@ public class AdminController {
 
     private void showAlert(String msg) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm());
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/style.css").toExternalForm());
         alert.getDialogPane().getStyleClass().add("dialog-pane");
         alert.showAndWait();
     }

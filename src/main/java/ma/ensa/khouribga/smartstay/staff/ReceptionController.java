@@ -421,7 +421,7 @@ public class ReceptionController {
         root.setStyle("-fx-background-color: transparent;");
 
         Scene scene = new Scene(root, 640, 700);
-        try { scene.getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm()); } catch (Exception ignored) {}
+        try { scene.getStylesheets().add(getClass().getResource("/styles/style.css").toExternalForm()); } catch (Exception ignored) {}
         ThemeManager.applyToScene(scene);
         dialog.setScene(scene);
         dialog.showAndWait();
@@ -553,7 +553,7 @@ public class ReceptionController {
     private void showAlert(Alert.AlertType type, String message) {
         Alert alert = new Alert(type, message, ButtonType.OK);
         alert.setHeaderText(null);
-        try { alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm()); } catch (Exception ignored) {}
+        try { alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/style.css").toExternalForm()); } catch (Exception ignored) {}
         alert.getDialogPane().getStyleClass().add("dialog-pane");
         alert.showAndWait();
     }

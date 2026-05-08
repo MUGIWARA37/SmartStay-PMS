@@ -4,7 +4,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.media.MediaView?>
 
-<StackPane styleClass="video-root" stylesheets="@/styles/samurai.css"
+<StackPane styleClass="video-root" stylesheets="@/styles/style.css"
            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="ma.ensa.khouribga.smartstay.staff.MaintenanceController">
     <MediaView fx:id="bgMediaView" mouseTransparent="true" preserveRatio="false"/>

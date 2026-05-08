@@ -251,7 +251,7 @@ public class HomeController implements Initializable {
                     getClass().getResource("/fxml/guest/room_detail.fxml"));
             Scene scene = new Scene(loader.load());
             scene.getStylesheets().add(
-                    getClass().getResource("/styles/samurai.css").toExternalForm());
+                    getClass().getResource("/styles/style.css").toExternalForm());
 
             ma.ensa.khouribga.smartstay.guest.RoomDetailController ctrl = loader.getController();
             ctrl.initData(room, dpCheckIn.getValue(), dpCheckOut.getValue());

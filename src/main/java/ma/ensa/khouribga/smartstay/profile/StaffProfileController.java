@@ -307,7 +307,7 @@ public class StaffProfileController {
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type, content, ButtonType.OK);
         alert.setTitle(title); alert.setHeaderText(null);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/samurai.css").toExternalForm());
+        alert.getDialogPane().getStylesheets().add(getClass().getResource("/styles/style.css").toExternalForm());
         alert.getDialogPane().getStyleClass().add("dialog-pane");
         alert.showAndWait();
     }

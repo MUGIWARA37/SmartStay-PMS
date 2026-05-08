@@ -71,7 +71,7 @@ public class MainApp extends Application {
             alert.setHeaderText("⚠  Unhandled Exception");
             try {
                 alert.getDialogPane().getStylesheets()
-                        .add(MainApp.class.getResource("/styles/samurai.css").toExternalForm());
+                        .add(MainApp.class.getResource("/styles/style.css").toExternalForm());
                 alert.getDialogPane().getStyleClass().add("dialog-pane");
             } catch (Exception ignored) {}
             alert.showAndWait();
