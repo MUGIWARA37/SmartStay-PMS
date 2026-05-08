@@ -1,6 +1,7 @@
 package ma.ensa.khouribga.smartstay;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.media.MediaView;
 import ma.ensa.khouribga.smartstay.VideoBackground;
 import ma.ensa.khouribga.smartstay.ThemeManager;
@@ -9,10 +10,12 @@ import ma.ensa.khouribga.smartstay.Navigator;
 public class LandingController {
 
     @FXML private MediaView bgVideo;
+    @FXML private Button btnThemeToggle;
 
     @FXML
     public void initialize() {
         VideoBackground.register(bgVideo);
+        refreshThemeToggleLabel();
     }
 
     /** "ENTER THE PORTAL" button — navigate to the guest browse screen. */
@@ -24,5 +27,12 @@ public class LandingController {
     @FXML
     public void handleThemeToggle() {
         ThemeManager.toggle();
+        refreshThemeToggleLabel();
+    }
+
+    private void refreshThemeToggleLabel() {
+        if (btnThemeToggle != null) {
+            btnThemeToggle.setText(ThemeManager.getToggleLabel());
+        }
     }
 }

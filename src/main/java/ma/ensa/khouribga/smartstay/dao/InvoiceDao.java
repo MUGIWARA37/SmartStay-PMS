@@ -17,13 +17,18 @@ import java.util.Optional;
  */
 public class InvoiceDao {
 
+    private record AmountColumns(String subtotal, String tax) {}
+
     // ─── Mapping ──────────────────────────────────────────────────────────────
 
     private static Invoice mapHeader(ResultSet rs) throws SQLException {
         Invoice inv = new Invoice();
+        ResultSetMetaData meta = rs.getMetaData();
         inv.setId((int) rs.getLong("id"));
         inv.setReservationId((int) rs.getLong("reservation_id"));
         inv.setInvoiceNumber(rs.getString("invoice_number"));
+        inv.setSubtotalAmount(readAmount(rs, meta, "subtotal_amount", "subtotal_ammount"));
+        inv.setTaxAmount(readAmount(rs, meta, "tax_amount", "tax_ammount"));
         inv.setTotalAmount(rs.getDouble("total_amount"));
         inv.setStatus(Invoice.Status.valueOf(rs.getString("status")));
         Timestamp issuedAt = rs.getTimestamp("issued_at");
@@ -138,16 +143,20 @@ public class InvoiceDao {
 
     public static long create(Invoice invoice) {
         return TxManager.runInTransaction(conn -> {
+            AmountColumns amountColumns = resolveAmountColumns(conn);
             String invoiceNumber = "INV-" + LocalDate.now().toString().replace("-", "")
                     + "-" + invoice.getReservationId();
             String insertHeader = """
-                    INSERT INTO invoices (reservation_id, invoice_number, total_amount, status, issued_at)
-                    VALUES (?, ?, 0.00, 'DRAFT', NOW())
-                    """;
+                    INSERT INTO invoices (reservation_id, invoice_number, %s, %s, total_amount, status, issued_at)
+                    VALUES (?, ?, ?, ?, ?, 'DRAFT', NOW())
+                    """.formatted(amountColumns.subtotal(), amountColumns.tax());
             long invoiceId;
             try (PreparedStatement ps = conn.prepareStatement(insertHeader, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, invoice.getReservationId());
                 ps.setString(2, invoiceNumber);
+                ps.setDouble(3, 0.00);
+                ps.setDouble(4, 0.00);
+                ps.setDouble(5, 0.00);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (!keys.next()) throw new SQLException("No key for invoice insert");
@@ -161,7 +170,7 @@ public class InvoiceDao {
                 }
             }
 
-            recalculateTotalInternal(conn, invoiceId);
+            recalculateTotalsInternal(conn, invoiceId);
             return invoiceId;
         });
     }
@@ -169,25 +178,19 @@ public class InvoiceDao {
     public static boolean addLine(long invoiceId, InvoiceLine line) {
         return TxManager.runInTransaction(conn -> {
             insertLineInternal(conn, invoiceId, line);
-            recalculateTotalInternal(conn, invoiceId);
+            recalculateTotalsInternal(conn, invoiceId);
             return true;
         });
     }
 
     public static boolean calculateTotals(long invoiceId) {
-        String sql = """
-                UPDATE invoices i
-                SET    i.total_amount = (
-                    SELECT COALESCE(SUM(il.line_total), 0)
-                    FROM   invoice_lines il
-                    WHERE  il.invoice_id = i.id
-                )
-                WHERE i.id = ?
-                """;
         try (Connection c = Database.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setLong(1, invoiceId);
-            return ps.executeUpdate() > 0;
+             PreparedStatement exists = c.prepareStatement("SELECT 1 FROM invoices WHERE id = ?")) {
+            recalculateTotalsInternal(c, invoiceId);
+            exists.setLong(1, invoiceId);
+            try (ResultSet rs = exists.executeQuery()) {
+                return rs.next();
+            }
         } catch (SQLException e) {
             throw new RuntimeException("InvoiceDao.calculateTotals failed", e);
         }
@@ -196,7 +199,7 @@ public class InvoiceDao {
     public static boolean updateStatus(long invoiceId, Invoice.Status newStatus) {
         String sql = switch (newStatus) {
             case ISSUED    -> "UPDATE invoices SET status='ISSUED', issued_at=NOW() WHERE id=?";
-            case PAID      -> "UPDATE invoices SET status='PAID',   paid_at=NOW()   WHERE id=?";
+            case PAID      -> "UPDATE invoices SET status='PAID'                 WHERE id=?";
             case CANCELLED -> "UPDATE invoices SET status='CANCELLED'               WHERE id=?";
             default        -> "UPDATE invoices SET status='DRAFT'                   WHERE id=?";
         };
@@ -233,20 +236,66 @@ public class InvoiceDao {
         }
     }
 
-    private static void recalculateTotalInternal(Connection conn, long invoiceId) throws SQLException {
+    private static void recalculateTotalsInternal(Connection conn, long invoiceId) throws SQLException {
+        AmountColumns amountColumns = resolveAmountColumns(conn);
         String sql = """
                 UPDATE invoices
-                SET    total_amount = (
-                    SELECT COALESCE(SUM(line_total), 0)
-                    FROM   invoice_lines
-                    WHERE  invoice_id = ?
-                )
+                SET    %s = (SELECT COALESCE(SUM(line_total), 0) FROM invoice_lines WHERE invoice_id = ?),
+                       %s = 0.00,
+                       total_amount = (SELECT COALESCE(SUM(line_total), 0) FROM invoice_lines WHERE invoice_id = ?)
                 WHERE id = ?
-                """;
+                """.formatted(amountColumns.subtotal(), amountColumns.tax());
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setLong(1, invoiceId);
             ps.setLong(2, invoiceId);
+            ps.setLong(3, invoiceId);
             ps.executeUpdate();
         }
+    }
+
+    private static AmountColumns resolveAmountColumns(Connection conn) throws SQLException {
+        String sql = """
+                SELECT COLUMN_NAME
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'invoices'
+                """;
+
+        List<String> cols = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) cols.add(rs.getString("COLUMN_NAME"));
+        }
+
+        return new AmountColumns(
+                pickColumn(cols, "subtotal_amount", "subtotal_ammount"),
+                pickColumn(cols, "tax_amount", "tax_ammount")
+        );
+    }
+
+    private static String pickColumn(List<String> existingCols, String... candidates) throws SQLException {
+        for (String candidate : candidates) {
+            for (String existing : existingCols) {
+                if (existing != null && existing.equalsIgnoreCase(candidate)) {
+                    return existing;
+                }
+            }
+        }
+        throw new SQLException("Missing required invoice column. Tried: " + String.join(", ", candidates));
+    }
+
+    private static double readAmount(ResultSet rs, ResultSetMetaData meta, String... candidates) throws SQLException {
+        for (String candidate : candidates) {
+            if (hasColumn(meta, candidate)) return rs.getDouble(candidate);
+        }
+        return 0.00;
+    }
+
+    private static boolean hasColumn(ResultSetMetaData meta, String column) throws SQLException {
+        for (int i = 1; i <= meta.getColumnCount(); i++) {
+            String label = meta.getColumnLabel(i);
+            if (label != null && label.equalsIgnoreCase(column)) return true;
+        }
+        return false;
     }
 }

@@ -111,6 +111,7 @@
     -lux-pie3: #88ca9e;
 
     -lux-notif-text: #fff5f7;
+    -lux-landing-overlay: rgba(2, 9, 24, 0.50);
 
     -fx-font-family: -lux-font-body;
     -fx-background-color: -lux-bg;
@@ -219,6 +220,7 @@
     -lux-pie3: #94d2a2;
 
     -lux-notif-text: #fff5f7;
+    -lux-landing-overlay: rgba(221, 244, 255, 0.26);
 }
 
 /* -------------------- LAYOUT ROOTS -------------------- */
@@ -233,6 +235,66 @@
 
 .content-area {
     -fx-background-color: transparent;
+}
+
+.landing-overlay {
+    -fx-background-color: -lux-landing-overlay;
+}
+
+.landing-brand-kanji {
+    -fx-font-family: -lux-font-display;
+    -fx-font-size: 80px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lux-accent;
+    -fx-opacity: 0.92;
+    -fx-effect: dropshadow(gaussian, -lux-glow, 30, 0, 0, 0);
+}
+
+.landing-brand-title {
+    -fx-font-family: -lux-font-display;
+    -fx-font-size: 48px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lux-text;
+    -fx-letter-spacing: 10px;
+    -fx-effect: dropshadow(gaussian, -lux-glow, 16, 0, 0, 0);
+}
+
+.landing-brand-subtitle {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -lux-text-soft;
+    -fx-letter-spacing: 6px;
+}
+
+.landing-tagline {
+    -fx-font-size: 14px;
+    -fx-text-fill: -lux-text-soft;
+    -fx-letter-spacing: 3px;
+}
+
+.landing-feature-pill {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2px;
+    -fx-text-fill: -lux-accent;
+    -fx-background-color: -lux-badge-accent-bg;
+    -fx-border-color: -lux-badge-accent-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 6px 16px;
+}
+
+.landing-enter-button {
+    -fx-font-size: 15px;
+    -fx-padding: 14px 44px;
+}
+
+.landing-footer {
+    -fx-font-size: 10px;
+    -fx-text-fill: -lux-muted;
+    -fx-letter-spacing: 1px;
+    -fx-padding: 0 0 18 0;
 }
 
 .glass-box,
