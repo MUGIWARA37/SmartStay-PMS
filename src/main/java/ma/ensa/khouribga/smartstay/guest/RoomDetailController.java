@@ -101,8 +101,10 @@ public class RoomDetailController {
 
             Stage stage = new Stage();
             stage.setTitle("Confirm & Pay — Room " + room.getRoomNumber());
+            stage.initOwner(btnBook.getScene().getWindow());
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
+            stage.setMaximized(true);
             stage.showAndWait();
 
             if (ctrl.isBookingConfirmed()) {

@@ -258,9 +258,10 @@ public class HomeController implements Initializable {
 
             Stage dialog = new Stage();
             dialog.setTitle("Room " + room.getRoomNumber() + " — Details");
+            dialog.initOwner(btnBrowse.getScene().getWindow());
             dialog.initModality(Modality.APPLICATION_MODAL);
             dialog.setScene(scene);
-            dialog.setResizable(false);
+            dialog.setMaximized(true);
             dialog.showAndWait();
 
             loadRooms();

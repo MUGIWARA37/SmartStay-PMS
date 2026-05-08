@@ -450,22 +450,27 @@ emit("""INSERT INTO rooms (room_number, room_type_id, floor, status, notes) VALU
 emit("-- ══════════════════════════════════════════════════════════════")
 emit("-- 5. ROOM IMAGES")
 emit("-- ══════════════════════════════════════════════════════════════")
-emit("""INSERT INTO room_images (room_id, image_path, is_primary, sort_order) VALUES
-((SELECT id FROM rooms WHERE room_number='101'), '/images/rooms/101_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='101'), '/images/rooms/101_bath.jpg',    0, 2),
-((SELECT id FROM rooms WHERE room_number='102'), '/images/rooms/102_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='201'), '/images/rooms/201_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='201'), '/images/rooms/201_bath.jpg',    0, 2),
-((SELECT id FROM rooms WHERE room_number='203'), '/images/rooms/203_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='301'), '/images/rooms/301_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='301'), '/images/rooms/301_view.jpg',    0, 2),
-((SELECT id FROM rooms WHERE room_number='401'), '/images/rooms/401_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='401'), '/images/rooms/401_jacuzzi.jpg', 0, 2),
-((SELECT id FROM rooms WHERE room_number='402'), '/images/rooms/402_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='501'), '/images/rooms/501_main.jpg',    1, 1),
-((SELECT id FROM rooms WHERE room_number='501'), '/images/rooms/501_lounge.jpg',  0, 2),
-((SELECT id FROM rooms WHERE room_number='502'), '/images/rooms/502_main.jpg',    1, 1);
-""")
+
+# Map room type to image filename (lowercase)
+TYPE_TO_IMAGE = {
+    'Single': 'single',
+    'Double': 'double',
+    'Twin': 'twin',
+    'Deluxe': 'deluxe',
+    'Suite': 'suite',
+    'Presidential': 'presidential'
+}
+
+emit("INSERT INTO room_images (room_id, image_path, is_primary, sort_order) VALUES")
+lines = []
+for i, (room_num, room_type, capacity) in enumerate(ROOMS):
+    image_filename = TYPE_TO_IMAGE.get(room_type, 'default')
+    image_path = f"/images/rooms/{image_filename}.jpg"
+    line = f"((SELECT id FROM rooms WHERE room_number='{room_num}'), '{image_path}', 1, 1)"
+    lines.append(line)
+
+emit(",\n".join(lines) + ";")
+
 
 # ─────────────── 6. SERVICES ─────────────────────────────────────────────────
 emit("-- ══════════════════════════════════════════════════════════════")

@@ -113,6 +113,44 @@
                     </placeholder>
                 </TableView>
             </VBox>
+             <!-- Payment Card Information -->
+             <VBox styleClass="card" spacing="10">
+                 <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                 <Label text="Payment Card" styleClass="section-title"/>
+
+                 <GridPane hgap="12" vgap="10">
+                     <columnConstraints>
+                         <ColumnConstraints prefWidth="60"/>
+                         <ColumnConstraints hgrow="ALWAYS"/>
+                     </columnConstraints>
+
+                     <Label text="Cardholder Name *" styleClass="form-label"
+                            GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                     <TextField fx:id="tfCardHolder" styleClass="interior-text-field" promptText="Full name on card"
+                                GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                     <Label text="Card Number *" styleClass="form-label"
+                            GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                     <TextField fx:id="tfCardNumber" styleClass="interior-text-field" promptText="1234 5678 9012 3456"
+                                GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                     <Label text="Expiry Date *" styleClass="form-label"
+                            GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                     <HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                         <TextField fx:id="tfExpMonth" styleClass="interior-text-field" prefWidth="70"
+                                    promptText="MM"/>
+                         <Label text="/" style="-fx-text-fill:#999; -fx-font-size:14px;"/>
+                         <TextField fx:id="tfExpYear" styleClass="interior-text-field" prefWidth="70"
+                                    promptText="YY"/>
+                     </HBox>
+
+                     <Label text="CVV *" styleClass="form-label"
+                            GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                     <TextField fx:id="tfCVV" styleClass="interior-text-field" promptText="123" prefWidth="100"
+                                GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                 </GridPane>
+             </VBox>
+
 
             <!-- Grand total -->
             <VBox styleClass="card" spacing="8">
@@ -140,6 +178,10 @@
             <Button fx:id="btnConfirm" text="✓  Confirm Booking"
                     styleClass="btn-success" maxWidth="Infinity"
                     onAction="#handleConfirm"/>
+             <Button fx:id="btnExportPdf" text="📜  Download Receipt (PDF)"
+                     styleClass="btn-primary" maxWidth="Infinity"
+                     onAction="#handleExportPdf"
+                     visible="false" managed="false"/>
             <Button fx:id="btnCancel"  text="← Go Back"
                     styleClass="btn-secondary" maxWidth="Infinity"
                     onAction="#handleCancel"/>

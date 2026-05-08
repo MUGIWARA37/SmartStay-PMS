@@ -56,6 +56,13 @@ public class PaymentController {
     @FXML private Button btnCancel;
     @FXML private Button btnExportPdf;
 
+    // Payment Card
+    @FXML private TextField tfCardHolder;
+    @FXML private TextField tfCardNumber;
+    @FXML private TextField tfExpMonth;
+    @FXML private TextField tfExpYear;
+    @FXML private TextField tfCVV;
+
     // State
     private Room room;
     private LocalDate checkIn;
@@ -277,6 +284,26 @@ public class PaymentController {
         }
         if (tfPassport.getText().isBlank()) {
             lblError.setText("Passport / ID number is required."); return false;
+        }
+        if (!validateCardForm()) return false;
+        return true;
+    }
+
+    private boolean validateCardForm() {
+        if (tfCardHolder.getText().isBlank()) {
+            lblError.setText("Cardholder name is required."); return false;
+        }
+        String cardNum = tfCardNumber.getText().replaceAll("\\s+", "");
+        if (cardNum.isBlank() || cardNum.length() < 13 || cardNum.length() > 19 || !cardNum.matches("\\d+")) {
+            lblError.setText("Card number must be 13-19 digits."); return false;
+        }
+        String month = tfExpMonth.getText().trim();
+        String year = tfExpYear.getText().trim();
+        if (month.isBlank() || year.isBlank() || !month.matches("\\d{2}") || !year.matches("\\d{2}")) {
+            lblError.setText("Expiry must be MM/YY format."); return false;
+        }
+        if (tfCVV.getText().isBlank() || !tfCVV.getText().matches("\\d{3,4}")) {
+            lblError.setText("CVV must be 3-4 digits."); return false;
         }
         return true;
     }
