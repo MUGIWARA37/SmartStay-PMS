@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
 SmartStay PMS — 3-Year Historical Seed Generator
-Generates ~3 years of realistic hotel data (2022-05-01 → 2025-04-30).
-Run: python3 gen_seed.py > seed_3years.sql
+Generates a rolling dataset for:
+- the previous 3 full years, and
+- the entire current year.
+Run: python3 gen_seed.py > seed.sql
 """
 
 from datetime import date, datetime, timedelta
@@ -14,9 +16,10 @@ out = []
 def emit(s=""): out.append(s)
 
 # ────────────────────────────── date helpers ─────────────────────────────────
-TODAY      = date(2025, 5, 1)
-START_DATE = date(2022, 5, 1)
-END_DATE   = date(2025, 4, 30)
+TODAY        = date.today()
+CURRENT_YEAR = TODAY.year
+START_DATE   = date(CURRENT_YEAR - 3, 1, 1)
+END_DATE     = date(CURRENT_YEAR, 12, 31)
 
 def fdate(d):  return d.strftime("'%Y-%m-%d'")
 def fdatetime(dt): return f"'{dt.strftime('%Y-%m-%d %H:%M:%S')}'"
@@ -200,11 +203,13 @@ def gen_guest(created_at_date):
     fn, ln = unique_name(used_names)
     nat, cc = random.choice(NATIONALITIES)
     num = random.randint(100000, 999999)
-    base_email = f"{fn.lower().replace(' ','')}.{ln.lower().replace(' ','').replace("'",'')}@mail.com"
+    fn_token = fn.lower().replace(" ", "")
+    ln_token = ln.lower().replace(" ", "").replace("'", "")
+    base_email = f"{fn_token}.{ln_token}@mail.com"
     email = base_email
     attempt = 1
     while email in used_emails:
-        email = f"{fn.lower().replace(' ','')}_{attempt}@mail.com"
+        email = f"{fn_token}_{attempt}@mail.com"
         attempt += 1
     used_emails.add(email)
     phone = f"+2126{random.randint(10,99)}{random.randint(100000,999999)}"
@@ -279,7 +284,7 @@ for rno, rtype, rfloor in ROOMS:
             elif ci <= TODAY <= co:
                 status = 'CHECKED_IN'
             else:
-                # Future (shouldn't happen since END_DATE < TODAY, but safe)
+                # Future reservations within the rest of the current year
                 status = 'CONFIRMED'
 
             # Pick or create a guest (reuse existing 15 seed guests ~20% of time)
@@ -325,7 +330,7 @@ print(f"Generated {len(room_reservations)} reservations, {len(guest_pool)} guest
 
 # ─── Now write the SQL ────────────────────────────────────────────────────────
 emit("-- ═══════════════════════════════════════════════════════════════════════")
-emit("--  SmartStay PMS — 3-Year Historical Seed (2022-05-01 → 2025-04-30)")
+emit(f"--  SmartStay PMS — Rolling Seed ({START_DATE.isoformat()} → {END_DATE.isoformat()})")
 emit("--  Generated with gen_seed.py  |  DO NOT EDIT MANUALLY")
 emit("--")
 emit("--  Passwords:")
@@ -334,7 +339,7 @@ emit("--    staff123  → all staff")
 emit("--    client123 → all clients")
 emit("--")
 emit("--  Run:")
-emit("--    docker exec -i smartstay-db mysql -u root -pDB_Password123! smartstay < seed_3years.sql")
+emit("--    docker exec -i smartstay-db mysql -u root -pDB_Password123! smartstay < seed.sql")
 emit("-- ═══════════════════════════════════════════════════════════════════════")
 emit()
 emit("USE smartstay;")
@@ -682,18 +687,18 @@ for i in range(0, len(res_rows), 200):
 
 # Seed current/future reservations (original 16 from the original seed)
 emit("-- Seed current/upcoming reservations (matching live room statuses)")
-emit("""INSERT INTO reservations (guest_id, room_id, booked_by_user_id, reservation_code, check_in_date, check_out_date, adults_count, children_count, status, special_requests) VALUES
-((SELECT id FROM guests WHERE email='hiro.tanaka@mail.com'),   (SELECT id FROM rooms WHERE room_number='102'), (SELECT id FROM users WHERE username='client8'),    'RES-2025-0006', DATE_SUB(CURDATE(),INTERVAL  2 DAY), DATE_ADD(CURDATE(),INTERVAL  3 DAY), 1, 0, 'CHECKED_IN',  'Early breakfast daily'),
-((SELECT id FROM guests WHERE email='farid.benali@mail.com'),  (SELECT id FROM rooms WHERE room_number='202'), (SELECT id FROM users WHERE username='client6'),    'RES-2025-0007', DATE_SUB(CURDATE(),INTERVAL  1 DAY), DATE_ADD(CURDATE(),INTERVAL  4 DAY), 2, 1, 'CHECKED_IN',  NULL),
-((SELECT id FROM guests WHERE email='lena.muller@gmail.com'),  (SELECT id FROM rooms WHERE room_number='302'), (SELECT id FROM users WHERE username='reception1'), 'RES-2025-0008', DATE_SUB(CURDATE(),INTERVAL  3 DAY), DATE_ADD(CURDATE(),INTERVAL  2 DAY), 2, 0, 'CHECKED_IN',  'City view essential'),
-((SELECT id FROM guests WHERE email='james.osei@mail.com'),    (SELECT id FROM rooms WHERE room_number='402'), (SELECT id FROM users WHERE username='client10'),   'RES-2025-0009', CURDATE(),                          DATE_ADD(CURDATE(),INTERVAL  5 DAY), 1, 0, 'CHECKED_IN',  'VIP treatment'),
-((SELECT id FROM guests WHERE email='nadia.chraibi@gmail.com'),(SELECT id FROM rooms WHERE room_number='502'), (SELECT id FROM users WHERE username='reception2'), 'RES-2025-0010', DATE_SUB(CURDATE(),INTERVAL  5 DAY), DATE_ADD(CURDATE(),INTERVAL 10 DAY), 2, 2, 'CHECKED_IN',  'Butler on call 24/7'),
-((SELECT id FROM guests WHERE email='emma.wilson@mail.com'),   (SELECT id FROM rooms WHERE room_number='203'), (SELECT id FROM users WHERE username='client5'),    'RES-2025-0011', DATE_ADD(CURDATE(),INTERVAL  2 DAY), DATE_ADD(CURDATE(),INTERVAL  6 DAY), 2, 0, 'CONFIRMED',   'Vegetarian menu'),
-((SELECT id FROM guests WHERE email='grace.okafor@mail.com'),  (SELECT id FROM rooms WHERE room_number='301'), (SELECT id FROM users WHERE username='client7'),    'RES-2025-0012', DATE_ADD(CURDATE(),INTERVAL  5 DAY), DATE_ADD(CURDATE(),INTERVAL  9 DAY), 1, 0, 'CONFIRMED',   'No feather pillows'),
-((SELECT id FROM guests WHERE email='omar.idrissi@gmail.com'), (SELECT id FROM rooms WHERE room_number='104'), (SELECT id FROM users WHERE username='reception1'), 'RES-2025-0013', DATE_ADD(CURDATE(),INTERVAL  1 DAY), DATE_ADD(CURDATE(),INTERVAL  3 DAY), 1, 0, 'CONFIRMED',   NULL),
-((SELECT id FROM guests WHERE email='alice.martin@mail.com'),  (SELECT id FROM rooms WHERE room_number='501'), (SELECT id FROM users WHERE username='client1'),    'RES-2025-0014', DATE_ADD(CURDATE(),INTERVAL 10 DAY), DATE_ADD(CURDATE(),INTERVAL 14 DAY), 2, 0, 'CONFIRMED',   'Return guest -- VIP'),
-((SELECT id FROM guests WHERE email='ines.dupont@mail.com'),   (SELECT id FROM rooms WHERE room_number='205'), (SELECT id FROM users WHERE username='client9'),    'RES-2025-0015', DATE_ADD(CURDATE(),INTERVAL  3 DAY), DATE_ADD(CURDATE(),INTERVAL  7 DAY), 2, 2, 'CANCELLED',   'Family room'),
-((SELECT id FROM guests WHERE email='bob.jones@mail.com'),     (SELECT id FROM rooms WHERE room_number='403'), (SELECT id FROM users WHERE username='client2'),    'RES-2025-0016', DATE_ADD(CURDATE(),INTERVAL  1 DAY), DATE_ADD(CURDATE(),INTERVAL  3 DAY), 1, 0, 'CANCELLED',   NULL);
+emit(f"""INSERT INTO reservations (guest_id, room_id, booked_by_user_id, reservation_code, check_in_date, check_out_date, adults_count, children_count, status, special_requests) VALUES
+((SELECT id FROM guests WHERE email='hiro.tanaka@mail.com'),   (SELECT id FROM rooms WHERE room_number='102'), (SELECT id FROM users WHERE username='client8'),    'RES-{CURRENT_YEAR}-0006', DATE_SUB(CURDATE(),INTERVAL  2 DAY), DATE_ADD(CURDATE(),INTERVAL  3 DAY), 1, 0, 'CHECKED_IN',  'Early breakfast daily'),
+((SELECT id FROM guests WHERE email='farid.benali@mail.com'),  (SELECT id FROM rooms WHERE room_number='202'), (SELECT id FROM users WHERE username='client6'),    'RES-{CURRENT_YEAR}-0007', DATE_SUB(CURDATE(),INTERVAL  1 DAY), DATE_ADD(CURDATE(),INTERVAL  4 DAY), 2, 1, 'CHECKED_IN',  NULL),
+((SELECT id FROM guests WHERE email='lena.muller@gmail.com'),  (SELECT id FROM rooms WHERE room_number='302'), (SELECT id FROM users WHERE username='reception1'), 'RES-{CURRENT_YEAR}-0008', DATE_SUB(CURDATE(),INTERVAL  3 DAY), DATE_ADD(CURDATE(),INTERVAL  2 DAY), 2, 0, 'CHECKED_IN',  'City view essential'),
+((SELECT id FROM guests WHERE email='james.osei@mail.com'),    (SELECT id FROM rooms WHERE room_number='402'), (SELECT id FROM users WHERE username='client10'),   'RES-{CURRENT_YEAR}-0009', CURDATE(),                          DATE_ADD(CURDATE(),INTERVAL  5 DAY), 1, 0, 'CHECKED_IN',  'VIP treatment'),
+((SELECT id FROM guests WHERE email='nadia.chraibi@gmail.com'),(SELECT id FROM rooms WHERE room_number='502'), (SELECT id FROM users WHERE username='reception2'), 'RES-{CURRENT_YEAR}-0010', DATE_SUB(CURDATE(),INTERVAL  5 DAY), DATE_ADD(CURDATE(),INTERVAL 10 DAY), 2, 2, 'CHECKED_IN',  'Butler on call 24/7'),
+((SELECT id FROM guests WHERE email='emma.wilson@mail.com'),   (SELECT id FROM rooms WHERE room_number='203'), (SELECT id FROM users WHERE username='client5'),    'RES-{CURRENT_YEAR}-0011', DATE_ADD(CURDATE(),INTERVAL  2 DAY), DATE_ADD(CURDATE(),INTERVAL  6 DAY), 2, 0, 'CONFIRMED',   'Vegetarian menu'),
+((SELECT id FROM guests WHERE email='grace.okafor@mail.com'),  (SELECT id FROM rooms WHERE room_number='301'), (SELECT id FROM users WHERE username='client7'),    'RES-{CURRENT_YEAR}-0012', DATE_ADD(CURDATE(),INTERVAL  5 DAY), DATE_ADD(CURDATE(),INTERVAL  9 DAY), 1, 0, 'CONFIRMED',   'No feather pillows'),
+((SELECT id FROM guests WHERE email='omar.idrissi@gmail.com'), (SELECT id FROM rooms WHERE room_number='104'), (SELECT id FROM users WHERE username='reception1'), 'RES-{CURRENT_YEAR}-0013', DATE_ADD(CURDATE(),INTERVAL  1 DAY), DATE_ADD(CURDATE(),INTERVAL  3 DAY), 1, 0, 'CONFIRMED',   NULL),
+((SELECT id FROM guests WHERE email='alice.martin@mail.com'),  (SELECT id FROM rooms WHERE room_number='501'), (SELECT id FROM users WHERE username='client1'),    'RES-{CURRENT_YEAR}-0014', DATE_ADD(CURDATE(),INTERVAL 10 DAY), DATE_ADD(CURDATE(),INTERVAL 14 DAY), 2, 0, 'CONFIRMED',   'Return guest -- VIP'),
+((SELECT id FROM guests WHERE email='ines.dupont@mail.com'),   (SELECT id FROM rooms WHERE room_number='205'), (SELECT id FROM users WHERE username='client9'),    'RES-{CURRENT_YEAR}-0015', DATE_ADD(CURDATE(),INTERVAL  3 DAY), DATE_ADD(CURDATE(),INTERVAL  7 DAY), 2, 2, 'CANCELLED',   'Family room'),
+((SELECT id FROM guests WHERE email='bob.jones@mail.com'),     (SELECT id FROM rooms WHERE room_number='403'), (SELECT id FROM users WHERE username='client2'),    'RES-{CURRENT_YEAR}-0016', DATE_ADD(CURDATE(),INTERVAL  1 DAY), DATE_ADD(CURDATE(),INTERVAL  3 DAY), 1, 0, 'CANCELLED',   NULL);
 """)
 
 # ─────────────── 13. RESERVATION SERVICES ────────────────────────────────────
@@ -831,12 +836,12 @@ for i in range(0, len(pay_rows), BATCH):
 
 # Seed invoices / payments (original 5 paid ones)
 emit("-- Seed invoices (original paid stays)")
-emit("""INSERT INTO invoices (reservation_id, invoice_number, issued_at, subtotal_amount, tax_amount, total_amount, status, notes) VALUES
-((SELECT id FROM reservations WHERE reservation_code='RES-2025-0006'), 'INV-SEED-0001', DATE_SUB(NOW(),INTERVAL 2 DAY),  1305.00, 130.50, 1435.50, 'ISSUED', NULL),
-((SELECT id FROM reservations WHERE reservation_code='RES-2025-0007'), 'INV-SEED-0002', DATE_SUB(NOW(),INTERVAL 1 DAY),  1650.00, 165.00, 1815.00, 'ISSUED', NULL),
-((SELECT id FROM reservations WHERE reservation_code='RES-2025-0008'), 'INV-SEED-0003', DATE_SUB(NOW(),INTERVAL 3 DAY),  2850.00, 285.00, 3135.00, 'ISSUED', 'City view supplement'),
-((SELECT id FROM reservations WHERE reservation_code='RES-2025-0009'), 'INV-SEED-0004', NOW(),                            2400.00, 240.00, 2640.00, 'ISSUED', 'VIP late checkout'),
-((SELECT id FROM reservations WHERE reservation_code='RES-2025-0010'), 'INV-SEED-0005', DATE_SUB(NOW(),INTERVAL 5 DAY), 12500.00,1250.00,13750.00, 'ISSUED', 'Presidential long-stay');
+emit(f"""INSERT INTO invoices (reservation_id, invoice_number, issued_at, subtotal_amount, tax_amount, total_amount, status, notes) VALUES
+((SELECT id FROM reservations WHERE reservation_code='RES-{CURRENT_YEAR}-0006'), 'INV-SEED-0001', DATE_SUB(NOW(),INTERVAL 2 DAY),  1305.00, 130.50, 1435.50, 'ISSUED', NULL),
+((SELECT id FROM reservations WHERE reservation_code='RES-{CURRENT_YEAR}-0007'), 'INV-SEED-0002', DATE_SUB(NOW(),INTERVAL 1 DAY),  1650.00, 165.00, 1815.00, 'ISSUED', NULL),
+((SELECT id FROM reservations WHERE reservation_code='RES-{CURRENT_YEAR}-0008'), 'INV-SEED-0003', DATE_SUB(NOW(),INTERVAL 3 DAY),  2850.00, 285.00, 3135.00, 'ISSUED', 'City view supplement'),
+((SELECT id FROM reservations WHERE reservation_code='RES-{CURRENT_YEAR}-0009'), 'INV-SEED-0004', NOW(),                            2400.00, 240.00, 2640.00, 'ISSUED', 'VIP late checkout'),
+((SELECT id FROM reservations WHERE reservation_code='RES-{CURRENT_YEAR}-0010'), 'INV-SEED-0005', DATE_SUB(NOW(),INTERVAL 5 DAY), 12500.00,1250.00,13750.00, 'ISSUED', 'Presidential long-stay');
 """)
 
 # ─────────────── 15. CLEANING REQUESTS (historical) ──────────────────────────
@@ -875,7 +880,7 @@ for i in range(0, len(cr_rows), BATCH):
     emit()
 
 # Seed current cleaning requests
-emit("""-- Seed current cleaning requests (matching live room statuses)
+emit(f"""-- Seed current cleaning requests (matching live room statuses)
 INSERT INTO cleaning_requests (room_id, requested_by_user_id, assigned_to_staff_id, reservation_id, priority, status, request_note, created_at, started_at, completed_at) VALUES
 ((SELECT id FROM rooms WHERE room_number='104'),
  (SELECT id FROM users WHERE username='reception2'),
@@ -889,7 +894,7 @@ INSERT INTO cleaning_requests (room_id, requested_by_user_id, assigned_to_staff_
 ((SELECT id FROM rooms WHERE room_number='102'),
  (SELECT id FROM users WHERE username='reception2'),
  (SELECT id FROM staff_profiles WHERE employee_code='EMP-CLN-001'),
- (SELECT id FROM reservations WHERE reservation_code='RES-2025-0006'),
+ (SELECT id FROM reservations WHERE reservation_code='RES-{CURRENT_YEAR}-0006'),
  'MEDIUM', 'NEW', 'Daily service', NOW(), NULL, NULL);
 """)
 

@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * Manages looping cinematic video backgrounds across all scenes.
  *
- * Dark  mode → bloodborne.mp4  ("Bloody Samurai")
- * Light mode → sakura.mp4      ("Pink Blossom")
+ * Dark  mode → full-moon.mp4  ("Bloody Samurai")
+ * Light mode → endless-sky.mp4      ("Pink Blossom")
  *
  * Usage — in each controller's initialize():
  *   VideoBackground.register(bgMediaView);
@@ -23,8 +23,8 @@ import java.util.List;
  */
 public class VideoBackground {
 
-    private static final String DARK_VIDEO  = "/videos/bloodborne.mp4";
-    private static final String LIGHT_VIDEO = "/videos/sakura.mp4";
+    private static final String DARK_VIDEO  = "/videos/full-moon.mp4";
+    private static final String LIGHT_VIDEO = "/videos/endless-sky.mp4";
 
     private static final List<MediaView> views = new ArrayList<>();
 
@@ -62,7 +62,7 @@ public class VideoBackground {
         String path = darkMode ? DARK_VIDEO : LIGHT_VIDEO;
         URL url = VideoBackground.class.getResource(path);
         if (url == null) {
-            // Fallback: if bloodborne.mp4 not found yet, always use sakura
+            // Fallback: if full-moon.mp4 not found yet, always use endless-sky
             url = VideoBackground.class.getResource(LIGHT_VIDEO);
         }
         if (url == null) return;

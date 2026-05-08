@@ -8,8 +8,8 @@ import java.util.List;
 
 /**
  * Global theme manager for SmartStay PMS.
- * Dark  = "Bloody Samurai" — bloodborne.mp4  (default)
- * Light = "Pink Blossom"   — sakura.mp4
+ * Dark  = "Nightly Blue"       — full-moon.mp4  (default)
+ * Light = "Sky Blue & Green"   — endless-sky.mp4
  */
 public class ThemeManager {
 
