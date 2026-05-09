@@ -32,6 +32,7 @@ import ma.ensa.khouribga.smartstay.model.Room;
 import ma.ensa.khouribga.smartstay.model.Service;
 import ma.ensa.khouribga.smartstay.profile.StaffProfileController;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
+import ma.ensa.khouribga.smartstay.util.SidebarToggleUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,6 +46,8 @@ public class ReceptionController {
 
     // ── FXML Bindings ─────────────────────────────────────────────────────────
     @FXML private MediaView bgMediaView;
+    @FXML private VBox sidebar;
+    @FXML private Button btnSidebarToggle;
     @FXML private FlowPane  resGrid;
     @FXML private Label     lblSelectedRes;
     @FXML private TextField txtSearch;
@@ -57,12 +60,14 @@ public class ReceptionController {
     private Reservation selectedRes;
     private VBox        selectedResCard;
     private List<Reservation> allReservations = List.of();
+    private boolean sidebarCollapsed = false;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     // ── Init ──────────────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
         VideoBackground.register(bgMediaView);
+        SidebarToggleUtil.initialize(sidebar, btnSidebarToggle);
         if (cmbMaintCategory != null) {
             cmbMaintCategory.setItems(FXCollections.observableArrayList(
                 "PLUMBING / WATER",
@@ -548,6 +553,9 @@ public class ReceptionController {
     }
 
     @FXML public void handleThemeToggle() { ThemeManager.toggle(); }
+    @FXML public void toggleSidebar() {
+        sidebarCollapsed = SidebarToggleUtil.toggle(sidebar, btnSidebarToggle, sidebarCollapsed);
+    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
     private void showAlert(Alert.AlertType type, String message) {

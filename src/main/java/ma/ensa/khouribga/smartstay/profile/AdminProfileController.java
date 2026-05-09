@@ -22,6 +22,7 @@ import ma.ensa.khouribga.smartstay.db.Database;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
 import ma.ensa.khouribga.smartstay.util.ProfilePictureUtil;
+import ma.ensa.khouribga.smartstay.util.SidebarToggleUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
@@ -31,6 +32,8 @@ import java.sql.ResultSet;
 public class AdminProfileController {
 
     @FXML private MediaView bgMediaView;
+    @FXML private VBox sidebar;
+    @FXML private Button btnSidebarToggle;
     @FXML private StackPane heroAvatarPane;
     @FXML private StackPane sidebarAvatarPane;
     @FXML private Label lblInitials;
@@ -54,10 +57,12 @@ public class AdminProfileController {
     @FXML private Label arrowSession;
 
     private User currentUser;
+    private boolean sidebarCollapsed = false;
 
     @FXML
     public void initialize() {
         VideoBackground.register(bgMediaView);
+        SidebarToggleUtil.initialize(sidebar, btnSidebarToggle);
         currentUser = SessionManager.getCurrentUser();
         if (currentUser == null) {
             Platform.runLater(() -> Navigator.goToLogin(lblUsername));
@@ -259,6 +264,10 @@ public class AdminProfileController {
 
     @FXML public void handleThemeToggle() {
         ThemeManager.toggle();
+    }
+
+    @FXML public void toggleSidebar() {
+        sidebarCollapsed = SidebarToggleUtil.toggle(sidebar, btnSidebarToggle, sidebarCollapsed);
     }
 
     @FXML public void handleLogout(ActionEvent event) {

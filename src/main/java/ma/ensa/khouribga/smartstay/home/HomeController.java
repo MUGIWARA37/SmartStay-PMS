@@ -22,6 +22,7 @@ import ma.ensa.khouribga.smartstay.dao.RoomDao;
 import ma.ensa.khouribga.smartstay.model.Reservation;
 import ma.ensa.khouribga.smartstay.model.Room;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
+import ma.ensa.khouribga.smartstay.util.SidebarToggleUtil;
 
 import java.io.IOException;
 import java.net.URL;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 public class HomeController implements Initializable {
 
     @FXML private MediaView bgMediaView;
+    @FXML private VBox sidebar;
+    @FXML private Button btnSidebarToggle;
 
     // Sidebar
     @FXML private Button btnBrowse;
@@ -64,11 +67,13 @@ public class HomeController implements Initializable {
 
     private List<Room> allRooms;
     private boolean loggedIn = false;
+    private boolean sidebarCollapsed = false;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         VideoBackground.register(bgMediaView);
+        SidebarToggleUtil.initialize(sidebar, btnSidebarToggle);
 
         // ── Determine login state ─────────────────────────────────────────────
         loggedIn = SessionManager.getCurrentUser() != null;
@@ -389,6 +394,11 @@ public class HomeController implements Initializable {
     @FXML
     public void handleThemeToggle() {
         ThemeManager.toggle();
+    }
+
+    @FXML
+    public void toggleSidebar() {
+        sidebarCollapsed = SidebarToggleUtil.toggle(sidebar, btnSidebarToggle, sidebarCollapsed);
     }
 
     private void showError(String msg) {

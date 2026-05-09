@@ -17,6 +17,7 @@ import ma.ensa.khouribga.smartstay.VideoBackground;
 import ma.ensa.khouribga.smartstay.dao.*;
 import ma.ensa.khouribga.smartstay.model.*;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
+import ma.ensa.khouribga.smartstay.util.SidebarToggleUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,6 +34,8 @@ import java.util.Map;
 public class AdminController {
 
     @FXML private MediaView bgMediaView;
+    @FXML private VBox sidebar;
+    @FXML private Button btnSidebarToggle;
     @FXML private Label statAvailable;
     @FXML private Label statOccupied;
     @FXML private Label statCleaning;
@@ -96,13 +99,16 @@ public class AdminController {
     private Reservation selectedRes; private VBox selectedResCard;
     private Payroll selectedPayroll; private VBox selectedPayrollCard;
     private User selectedStaff; private VBox selectedStaffCard;
+    private boolean sidebarCollapsed = false;
 
     @FXML
     public void initialize() {
         VideoBackground.register(bgMediaView);
+        SidebarToggleUtil.initialize(sidebar, btnSidebarToggle);
         try { SessionManager.requireRole(User.Role.ADMIN); }
         catch (Exception e) { Platform.runLater(() -> Navigator.goToLogin(statAvailable)); return; }
         updateThemeButton();
+        configureChartStyles();
         setupFilters();
         loadOverview();
         loadLiveReservations();
@@ -166,6 +172,9 @@ public class AdminController {
     @FXML public void handleThemeToggleClick(javafx.scene.input.MouseEvent e) { handleThemeToggle(); }
     private void updateThemeButton() {
         if (btnThemeToggle != null) btnThemeToggle.setText(ThemeManager.getToggleLabel());
+    }
+    @FXML public void toggleSidebar() {
+        sidebarCollapsed = SidebarToggleUtil.toggle(sidebar, btnSidebarToggle, sidebarCollapsed);
     }
 
     // ── Overview + Dashboard Charts ──────────────────────────────────────────
@@ -247,15 +256,7 @@ public class AdminController {
             new PieChart.Data("Cleaning ("    + cleaning    + ")", Math.max(cleaning,     0.001)),
             new PieChart.Data("Maintenance (" + maintenance + ")", Math.max(maintenance,  0.001))
         );
-        String[] colors = {"#2ecc71", "#e74c3c", "#3498db", "#f1c40f"};
-        Platform.runLater(() -> {
-            var list = roomStatusChart.getData();
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).getNode() != null)
-                    list.get(i).getNode().setStyle("-fx-pie-color: " + colors[i] + ";");
-            }
-            styleChart(roomStatusChart);
-        });
+        Platform.runLater(() -> styleChart(roomStatusChart));
     }
 
     private void buildClientChart(Map<String, Integer> data) {
@@ -265,15 +266,7 @@ public class AdminController {
         series.setName("Check-ins");
         data.forEach((k, v) -> series.getData().add(new XYChart.Data<>(k, v)));
         clientChart.getData().add(series);
-        Platform.runLater(() -> {
-            for (var d : series.getData()) {
-                if (d.getNode() != null)
-                    d.getNode().setStyle(
-                        "-fx-bar-fill: linear-gradient(to top, #8b0000, #c0392b);" +
-                        "-fx-background-radius: 4; -fx-border-radius: 4;");
-            }
-            styleChart(clientChart);
-        });
+        Platform.runLater(() -> styleChart(clientChart));
     }
 
     private void buildStaffStatusChart(List<User> users) {
@@ -285,18 +278,34 @@ public class AdminController {
             new PieChart.Data("Active ("   + active   + ")", Math.max(active,   0.001)),
             new PieChart.Data("Inactive (" + inactive + ")", Math.max(inactive,  0.001))
         );
-        Platform.runLater(() -> {
-            var list = staffStatusChart.getData();
-            if (list.size() >= 2) {
-                if (list.get(0).getNode() != null) list.get(0).getNode().setStyle("-fx-pie-color: #2ecc71;");
-                if (list.get(1).getNode() != null) list.get(1).getNode().setStyle("-fx-pie-color: #e74c3c;");
-            }
-            styleChart(staffStatusChart);
-        });
+        Platform.runLater(() -> styleChart(staffStatusChart));
     }
 
-    private void styleChart(Chart c) { if (c != null) c.setStyle("-fx-background-color: transparent;"); }
+    private void styleChart(Chart c) { if (c != null) c.setStyle(""); }
     private void refreshChartStyles() { styleChart(roomStatusChart); styleChart(clientChart); styleChart(staffStatusChart); styleChart(revenueChart); }
+
+    private void configureChartStyles() {
+        addChartStyleClasses(roomStatusChart, "admin-chart", "admin-room-chart");
+        addChartStyleClasses(clientChart, "admin-chart", "admin-checkins-chart");
+        addChartStyleClasses(staffStatusChart, "admin-chart", "admin-staff-chart");
+        addChartStyleClasses(revenueChart, "admin-chart", "admin-revenue-chart", "revenue-chart");
+
+        if (clientChart != null) {
+            clientChart.setCategoryGap(14);
+            clientChart.setBarGap(4);
+        }
+        if (revenueChart != null) {
+            revenueChart.setCategoryGap(16);
+            revenueChart.setBarGap(5);
+        }
+    }
+
+    private void addChartStyleClasses(Chart chart, String... classes) {
+        if (chart == null) return;
+        for (String cls : classes) {
+            if (!chart.getStyleClass().contains(cls)) chart.getStyleClass().add(cls);
+        }
+    }
 
     private void loadLiveReservations() {
         if (liveResRows == null) return;
@@ -387,7 +396,7 @@ public class AdminController {
         if (resDateTo   != null) { resDateTo.setValue(LocalDate.now().withMonth(12).withDayOfMonth(31)); resDateTo.setOnAction(e -> filterReservations()); }
         if (payPeriodStart   != null) payPeriodStart.setValue(LocalDate.now().withDayOfMonth(1));
         if (payPeriodEnd     != null) payPeriodEnd.setValue(LocalDate.now());
-        if (staffRoleFilter  != null) { staffRoleFilter.setItems(FXCollections.observableArrayList("ALL","STAFF","ADMIN","CLIENT")); staffRoleFilter.setValue("ALL"); staffRoleFilter.setOnAction(e -> filterStaff()); }
+        if (staffRoleFilter  != null) { staffRoleFilter.setItems(FXCollections.observableArrayList("ALL","STAFF","ADMIN")); staffRoleFilter.setValue("ALL"); staffRoleFilter.setOnAction(e -> filterStaff()); }
         if (staffStatusFilter != null) { staffStatusFilter.setItems(FXCollections.observableArrayList("ALL","ACTIVE","INACTIVE")); staffStatusFilter.setValue("ALL"); staffStatusFilter.setOnAction(e -> filterStaff()); }
         if (shiftDatePicker != null) shiftDatePicker.setValue(LocalDate.now());
         if (shiftPicker != null) ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(() -> {
@@ -612,12 +621,18 @@ public class AdminController {
     }
 
     // ── Staff ────────────────────────────────────────────────────────────────
-    @FXML public void loadAllStaff() { ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(() -> { try { List<User> users = UserDao.findAll(); Platform.runLater(() -> populateStaffGrid(users)); } catch (Exception ex) { ex.printStackTrace(); } }); }
+    @FXML public void loadAllStaff() { ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(() -> { try { List<User> users = filterOutClients(UserDao.findAll()); Platform.runLater(() -> populateStaffGrid(users)); } catch (Exception ex) { ex.printStackTrace(); } }); }
 
     @FXML public void filterStaff() {
         String role = staffRoleFilter != null ? staffRoleFilter.getValue() : "ALL";
         String status = staffStatusFilter != null ? staffStatusFilter.getValue() : "ALL";
-        ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(() -> { try { List<User> filtered = UserDao.findAll().stream().filter(u -> "ALL".equals(role) || u.getRole().name().equals(role)).filter(u -> "ALL".equals(status) || ("ACTIVE".equals(status) && u.isActive()) || ("INACTIVE".equals(status) && !u.isActive())).toList(); Platform.runLater(() -> populateStaffGrid(filtered)); } catch (Exception ex) { ex.printStackTrace(); } });
+        ma.ensa.khouribga.smartstay.util.ServiceExecutor.submit(() -> { try { List<User> filtered = filterOutClients(UserDao.findAll()).stream().filter(u -> "ALL".equals(role) || u.getRole().name().equals(role)).filter(u -> "ALL".equals(status) || ("ACTIVE".equals(status) && u.isActive()) || ("INACTIVE".equals(status) && !u.isActive())).toList(); Platform.runLater(() -> populateStaffGrid(filtered)); } catch (Exception ex) { ex.printStackTrace(); } });
+    }
+
+    private List<User> filterOutClients(List<User> users) {
+        return users.stream()
+            .filter(u -> u.getRole() != User.Role.CLIENT)
+            .toList();
     }
 
     private void populateStaffGrid(List<User> users) {
@@ -857,11 +872,9 @@ public class AdminController {
         data.forEach((k, v) -> { series.getData().add(new XYChart.Data<>(k, v)); total[0] += v; });
         revenueChart.getData().add(series);
         Platform.runLater(() -> {
-            for (var d : series.getData()) { if (d.getNode() != null) d.getNode().setStyle("-fx-bar-fill: #c5a059; -fx-background-radius: 6; -fx-border-radius: 6; -fx-border-color: rgba(255,255,255,0.15);"); }
             if (revenueTotalLabel != null) revenueTotalLabel.setText(String.format("Annual Total: %.2f MAD", total[0]));
             styleChart(revenueChart);
         });
-        revenueChart.setStyle("-fx-background-color: transparent; -fx-plot-background-color: rgba(20,20,24,0.7);");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

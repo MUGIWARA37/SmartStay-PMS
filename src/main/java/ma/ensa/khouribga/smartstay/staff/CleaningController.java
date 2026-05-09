@@ -8,11 +8,13 @@ import javafx.fxml.FXML;
 import javafx.scene.media.MediaView;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import ma.ensa.khouribga.smartstay.Navigator;
 import ma.ensa.khouribga.smartstay.dao.CleaningDao;
 import ma.ensa.khouribga.smartstay.model.CleaningRequest;
 import ma.ensa.khouribga.smartstay.model.User;
 import ma.ensa.khouribga.smartstay.session.SessionManager;
+import ma.ensa.khouribga.smartstay.util.SidebarToggleUtil;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +23,8 @@ import java.util.List;
 public class CleaningController {
 
     @FXML private MediaView bgMediaView;
+    @FXML private VBox sidebar;
+    @FXML private Button btnSidebarToggle;
     @FXML private Label welcomeLabel;
     @FXML private ComboBox<String> statusFilter;
     @FXML private TableView<CleaningRequest> taskTable;
@@ -32,11 +36,13 @@ public class CleaningController {
     @FXML private TableColumn<CleaningRequest, LocalDateTime>         colCompleted;
 
     private int staffProfileId = -1;
+    private boolean sidebarCollapsed = false;
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("dd MMM HH:mm");
 
     @FXML
     public void initialize() {
         VideoBackground.register(bgMediaView);
+        SidebarToggleUtil.initialize(sidebar, btnSidebarToggle);
         try { SessionManager.requireRole(User.Role.STAFF); }
         catch (Exception e) { Navigator.goToLogin(welcomeLabel); return; }
 
@@ -143,5 +149,8 @@ public class CleaningController {
 
     @FXML public void handleThemeToggle() {
         ThemeManager.toggle();
+    }
+    @FXML public void toggleSidebar() {
+        sidebarCollapsed = SidebarToggleUtil.toggle(sidebar, btnSidebarToggle, sidebarCollapsed);
     }
 }

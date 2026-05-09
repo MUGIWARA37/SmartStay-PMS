@@ -14,7 +14,7 @@
 
         <!-- SIDEBAR -->
         <left>
-            <VBox styleClass="sidebar" prefWidth="250" spacing="0">
+            <VBox fx:id="sidebar" styleClass="sidebar" prefWidth="300" spacing="0">
                 <VBox styleClass="sidebar-header" alignment="CENTER" spacing="4"
                       style="-fx-padding: 28 16 24 16;">
                     <Label text="侍" styleClass="sidebar-logo"/>
@@ -212,4 +212,8 @@
             </ScrollPane>
         </center>
     </BorderPane>
+    <Button fx:id="btnSidebarToggle" text="⇤" onAction="#toggleSidebar"
+            styleClass="sidebar-toggle-button"
+            StackPane.alignment="TOP_LEFT"
+            style="-fx-translate-x: 14; -fx-translate-y: 14;"/>
 </StackPane>
