@@ -1,0 +1,316 @@
+/* ================================================================
+   CARD / PANEL BASE
+   ================================================================ */
+.glass-box,
+.card,
+.section-box {
+    -fx-background-color: -ss-bg-elevated;
+    -fx-border-color: -ss-border-soft;
+    -fx-border-width: 1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian, -ss-shadow-card, 0, 0, 0, 12);
+    -fx-padding: 20px;
+}
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+.app-title {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-gold;
+    -fx-letter-spacing: 3px;
+}
+
+.app-subtitle {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-tertiary;
+    -fx-letter-spacing: 3px;
+}
+
+.section-title {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-primary;
+}
+
+.welcome-label {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 18px;
+    -fx-text-fill: -ss-text-primary;
+}
+
+.label-muted,
+.card-label-muted {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-text-secondary;
+}
+
+.field-label,
+.form-label {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-gold;
+    -fx-letter-spacing: 1.5px;
+}
+
+.breadcrumb-label,
+.sidebar-sub-kanji {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-gold;
+    -fx-letter-spacing: 2px;
+}
+
+.card-subtitle {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-gold;
+    -fx-letter-spacing: 1px;
+}
+
+.error-label,
+.label-red {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-danger;
+    -fx-font-weight: bold;
+}
+
+.card-title,
+.card-header-text {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-primary;
+}
+
+.card-detail-text {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-text-secondary;
+    -fx-font-size: 12px;
+}
+
+/* ================================================================
+   SIDEBAR
+   ================================================================ */
+.sidebar {
+    -fx-background-color: -ss-sidebar-bg;
+    -fx-border-color: transparent -ss-sidebar-border transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, -ss-shadow-deep, 0, 0, 6, 0);
+}
+
+.sidebar-header {
+    -fx-background-color: transparent;
+    -fx-padding: 32px 20px 24px 20px;
+    -fx-border-color: transparent transparent -ss-border-soft transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.sidebar-logo {
+    -fx-font-family: -ss-font-display;
+    -fx-text-fill: -ss-gold;
+    -fx-font-size: 40px;
+}
+
+.sidebar .sidebar-logo   { -fx-font-size: 44px; }
+.sidebar .app-title      { -fx-font-size: 20px; -fx-letter-spacing: 4px; }
+.sidebar .app-subtitle   { -fx-font-size: 9px;  -fx-letter-spacing: 2px; }
+.sidebar .sidebar-sub-kanji { -fx-font-size: 10px; }
+
+/* Sidebar toggle button */
+.sidebar-toggle-button {
+    -fx-background-color: -ss-bg-raised;
+    -fx-border-color: -ss-border;
+    -fx-border-width: 1px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-text-fill: -ss-gold;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 12px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -ss-shadow-card, 0, 0, 2, 2);
+}
+
+.sidebar-toggle-button:hover {
+    -fx-background-color: -ss-gold-bg;
+    -fx-border-color: -ss-border-hard;
+    -fx-effect: dropshadow(gaussian, -ss-gold-glow, 10, 0, 0, 0);
+}
+
+/* ================================================================
+   TOOLBARS / PANELS
+   ================================================================ */
+.toolbar-bar {
+    -fx-background-color: -ss-toolbar-bg;
+    -fx-border-color: transparent transparent -ss-border-soft transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 12px 20px;
+}
+
+/* ================================================================
+   TABLE VIEW
+   ================================================================ */
+.table-view {
+    -fx-background-color: -ss-table-bg;
+    -fx-border-color: -ss-border-soft;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 4px;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: -ss-table-header-bg;
+    -fx-background-radius: 6px 6px 0 0;
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -ss-border-soft transparent;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.table-view .column-header .label {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-gold;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 1px;
+}
+
+.table-row-cell {
+    -fx-background-color: transparent;
+    -fx-table-cell-border-color: -ss-table-row-border;
+}
+
+.table-row-cell:filled:hover {
+    -fx-background-color: -ss-table-row-hover;
+}
+
+.table-row-cell:filled:selected {
+    -fx-background-color: -ss-table-row-sel;
+}
+
+.table-cell {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-text-secondary;
+    -fx-font-size: 13px;
+    -fx-padding: 10px 14px;
+}
+
+/* ================================================================
+   AVATAR
+   ================================================================ */
+.avatar-circle {
+    -fx-background-color: -ss-avatar-bg;
+    -fx-border-color: -ss-avatar-border;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 999px;
+    -fx-background-radius: 999px;
+    -fx-effect: dropshadow(gaussian, -ss-gold-glow, 10, 0, 0, 0);
+}
+
+.avatar-initials {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-avatar-text;
+}
+
+/* ================================================================
+   SHIFT / SCHEDULE WIDGETS
+   ================================================================ */
+.shift-day-card {
+    -fx-background-color: -ss-bg-elevated;
+    -fx-border-color: -ss-border-soft;
+    -fx-border-width: 1px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-padding: 10px;
+}
+
+.shift-day-today {
+    -fx-border-color: -ss-gold;
+    -fx-effect: dropshadow(gaussian, -ss-gold-glow, 8, 0, 0, 0);
+}
+
+.shift-day-name {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-tertiary;
+    -fx-letter-spacing: 1px;
+}
+
+.shift-day-num {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-primary;
+}
+
+.shift-name-label {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-gold;
+}
+
+.shift-time-label {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 10px;
+    -fx-text-fill: -ss-text-tertiary;
+}
+
+/* ================================================================
+   NOTIFICATION / DIALOG
+   ================================================================ */
+.notif-badge {
+    -fx-background-color: -ss-danger;
+    -fx-background-radius: 999px;
+    -fx-text-fill: #ffffff;
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-min-width: 16px;
+    -fx-min-height: 16px;
+    -fx-padding: 1px 5px;
+}
+
+.dialog-pane {
+    -fx-background-color: -ss-bg-elevated;
+    -fx-border-color: -ss-border-soft;
+    -fx-border-width: 1px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: transparent;
+}
+
+.dialog-pane .content.label {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-text-secondary;
+}
+
+.dialog-pane .button {
+    -fx-background-color: -ss-gold;
+    -fx-border-color: -ss-gold-muted;
+    -fx-text-fill: #0c0d0f;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+}
+

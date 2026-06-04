@@ -74,12 +74,17 @@ public class VideoBackground {
             old.dispose();
         }
 
-        Media media = new Media(url.toExternalForm());
-        MediaPlayer player = new MediaPlayer(media);
-        player.setAutoPlay(true);
-        player.setMute(true);
-        player.setCycleCount(MediaPlayer.INDEFINITE);
-        view.setMediaPlayer(player);
-        view.setPreserveRatio(false);
+        try {
+            Media media = new Media(url.toExternalForm());
+            MediaPlayer player = new MediaPlayer(media);
+            player.setAutoPlay(true);
+            player.setMute(true);
+            player.setCycleCount(MediaPlayer.INDEFINITE);
+            view.setMediaPlayer(player);
+            view.setPreserveRatio(false);
+        } catch (Exception e) {
+            System.err.println("WARNING: Could not initialize video background: " + e.getMessage());
+            // Application continues without video — will fall back to CSS background
+        }
     }
 }

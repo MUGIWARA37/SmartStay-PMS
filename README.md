@@ -15,7 +15,7 @@ SmartStay PMS centralises every aspect of hotel management into a single, role-a
 
 | Layer         | Technology                        |
 |---------------|-----------------------------------|
-| Language      | Java 17                           |
+| Language      | Java 17 / 21                      |
 | UI Framework  | JavaFX 21 (FXML + CSS)            |
 | Database      | MySQL 8 (Docker Compose)          |
 | Build         | Maven 3.9                         |
@@ -139,7 +139,7 @@ Connection settings live in `src/main/resources/application.properties`.
 
 ## Running the Application
 
-**Prerequisites:** Java 17 · Maven 3.9+ · Docker
+**Prerequisites:** Java 17 or 21 · Maven 3.9+ · Docker
 
 ```bash
 # 1 — Start the database

@@ -7,11 +7,11 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: smartstay
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - smartstay-data:/var/lib/mysql
-      - ./src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./src/main/resources/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ./src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:Z
+      - ./src/main/resources/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:Z
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s

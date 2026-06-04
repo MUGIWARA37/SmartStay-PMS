@@ -1,0 +1,63 @@
+/* ================================================================
+   FORM INPUTS
+   ================================================================ */
+.text-field,
+.password-field,
+.text-area,
+.combo-box,
+.date-picker,
+.form-field,
+.interior-text-field {
+    -fx-font-family: -ss-font-body;
+    -fx-background-color: -ss-input-bg;
+    -fx-border-color: -ss-input-border;
+    -fx-border-width: 1px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-padding: 10px 14px;
+    -fx-text-fill: -ss-input-text;
+    -fx-prompt-text-fill: -ss-input-placeholder;
+    -fx-font-size: 13px;
+}
+
+.text-field:focused,
+.password-field:focused,
+.text-area:focused,
+.combo-box:focused,
+.date-picker:focused {
+    -fx-border-color: -ss-input-focus;
+    -fx-effect: dropshadow(gaussian, -ss-gold-glow, 8, 0, 0, 0);
+}
+
+.combo-box .list-cell {
+    -fx-font-family: -ss-font-body;
+    -fx-text-fill: -ss-input-text;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -ss-bg-elevated;
+    -fx-border-color: -ss-border;
+    -fx-border-width: 1px;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-effect: dropshadow(gaussian, -ss-shadow-deep, 16, 0, 0, 4);
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ss-text-secondary;
+    -fx-font-size: 13px;
+    -fx-padding: 8px 14px;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: -ss-gold-bg;
+    -fx-text-fill: -ss-gold;
+}
+
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: -ss-table-row-sel;
+    -fx-text-fill: -ss-gold-bright;
+}
+

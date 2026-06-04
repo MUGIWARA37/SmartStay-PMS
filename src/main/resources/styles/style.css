@@ -226,7 +226,7 @@
    ================================================================ */
 .samurai-root,
 .video-root {
-    -fx-background-color: transparent;
+    -fx-background-color: -ss-bg-base;
 }
 
 .interior-root {

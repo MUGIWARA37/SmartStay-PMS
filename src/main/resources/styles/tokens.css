@@ -1,0 +1,209 @@
+/* ================================================================
+ * SMARTSTAY PMS — DESIGN TOKENS
+ * ================================================================ */
+
+.root {
+    /* Font stacks */
+    -ss-font-display: "Playfair Display", "Georgia", "Times New Roman", serif;
+    -ss-font-body:    "DM Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+    -ss-font-mono:    "JetBrains Mono", "Consolas", monospace;
+
+    /* ── Background scale ── */
+    -ss-bg-base:      #0c0d0f;   /* deepest — video layer */
+    -ss-bg-surface:   #13141a;   /* main app background   */
+    -ss-bg-elevated:  #1a1c24;   /* cards, panels         */
+    -ss-bg-raised:    #21232e;   /* toolbar, header       */
+    -ss-bg-overlay:   rgba(12, 13, 18, 0.88);
+    -ss-bg-glass:     rgba(26, 28, 36, 0.94);
+    -ss-bg-glass-soft:rgba(33, 35, 46, 0.90);
+
+    /* ── Text scale ── */
+    -ss-text-primary:   #f0ebe0; /* warm ivory — headings */
+    -ss-text-secondary: #b8b0a0; /* muted body            */
+    -ss-text-tertiary:  #6e6860; /* placeholders, hints   */
+
+    /* ── Brand accent: Champagne Gold ── */
+    -ss-gold:         #c9a84c;
+    -ss-gold-bright:  #e8c96e;
+    -ss-gold-muted:   #8a6f30;
+    -ss-gold-bg:      rgba(201, 168, 76, 0.12);
+    -ss-gold-glow:    rgba(201, 168, 76, 0.22);
+
+    /* ── Semantic colors ── */
+    -ss-success:      #4caf7d;
+    -ss-success-bg:   rgba(76, 175, 125, 0.14);
+    -ss-success-text: #a8f0cc;
+    -ss-danger:       #e05a6b;
+    -ss-danger-bg:    rgba(224, 90, 107, 0.14);
+    -ss-danger-text:  #ffc0c8;
+    -ss-info:         #5b9cf6;
+    -ss-info-bg:      rgba(91, 156, 246, 0.14);
+    -ss-info-text:    #b8d6ff;
+    -ss-warning:      #f0a640;
+    -ss-warning-bg:   rgba(240, 166, 64, 0.14);
+    -ss-warning-text: #ffd9a0;
+
+    /* ── Borders ── */
+    -ss-border:       rgba(201, 168, 76, 0.22);
+    -ss-border-soft:  rgba(201, 168, 76, 0.10);
+    -ss-border-hard:  rgba(201, 168, 76, 0.44);
+    -ss-border-subtle:rgba(255, 255, 255, 0.06);
+
+    /* ── Shadows / effects ── */
+    -ss-shadow-deep:  rgba(0, 0, 0, 0.85);
+    -ss-shadow-card:  rgba(0, 0, 0, 0.55);
+    -ss-shadow-glow:  rgba(201, 168, 76, 0.18);
+
+    /* ── Sidebar ── */
+    -ss-sidebar-bg:       #10111a;
+    -ss-sidebar-border:   rgba(201, 168, 76, 0.18);
+
+    /* ── Navigation ── */
+    -ss-nav-text:         #7a7264;
+    -ss-nav-hover-bg:     rgba(201, 168, 76, 0.08);
+    -ss-nav-hover-text:   #d4b96a;
+    -ss-nav-active-bg:    rgba(201, 168, 76, 0.14);
+    -ss-nav-active-text:  #e8c96e;
+    -ss-nav-active-bar:   #c9a84c;
+
+    /* ── Header / toolbar ── */
+    -ss-header-bg:        #141520;
+    -ss-toolbar-bg:       rgba(18, 19, 26, 0.96);
+
+    /* ── Inputs ── */
+    -ss-input-bg:         rgba(10, 11, 16, 0.95);
+    -ss-input-border:     rgba(201, 168, 76, 0.20);
+    -ss-input-focus:      rgba(201, 168, 76, 0.50);
+    -ss-input-text:       #e8e0d0;
+    -ss-input-placeholder:#5a5248;
+
+    /* ── Tables ── */
+    -ss-table-bg:         rgba(16, 17, 24, 0.96);
+    -ss-table-header-bg:  rgba(201, 168, 76, 0.10);
+    -ss-table-row-hover:  rgba(201, 168, 76, 0.07);
+    -ss-table-row-sel:    rgba(201, 168, 76, 0.15);
+    -ss-table-row-border: rgba(255, 255, 255, 0.04);
+
+    /* ── Charts ── */
+    -ss-chart-gold-a:  #c9a84c;
+    -ss-chart-gold-b:  #f0d080;
+    -ss-chart-teal-a:  #2eb88a;
+    -ss-chart-teal-b:  #72e5b8;
+    -ss-chart-blue-a:  #5b9cf6;
+    -ss-chart-blue-b:  #a8ccff;
+    -ss-chart-red-a:   #e05a6b;
+    -ss-chart-red-b:   #ffa0b0;
+    -ss-chart-grid:    rgba(201, 168, 76, 0.10);
+    -ss-chart-axis:    rgba(201, 168, 76, 0.25);
+    -ss-chart-surface: rgba(16, 17, 24, 0.80);
+    -ss-chart-label:   #7a7264;
+
+    /* ── Scrollbar ── */
+    -ss-scroll-thumb:  rgba(201, 168, 76, 0.35);
+    -ss-scroll-track:  transparent;
+
+    /* ── Avatar ── */
+    -ss-avatar-bg:     rgba(201, 168, 76, 0.22);
+    -ss-avatar-border: #c9a84c;
+    -ss-avatar-text:   #e8c96e;
+
+    /* ── Landing ── */
+    -ss-landing-overlay: rgba(8, 9, 14, 0.72);
+
+    /* JavaFX base override */
+    -fx-font-family: -ss-font-body;
+    -fx-background-color: -ss-bg-surface;
+}
+
+/* ================================================================
+   LIGHT MODE TOKENS
+   ================================================================ */
+.light-mode {
+    -ss-bg-base:      #f4f0e8;
+    -ss-bg-surface:   #faf7f0;
+    -ss-bg-elevated:  #ffffff;
+    -ss-bg-raised:    #f0ece0;
+    -ss-bg-overlay:   rgba(244, 240, 232, 0.88);
+    -ss-bg-glass:     rgba(255, 253, 248, 0.96);
+    -ss-bg-glass-soft:rgba(247, 243, 233, 0.94);
+
+    -ss-text-primary:   #1c1810;
+    -ss-text-secondary: #5a5040;
+    -ss-text-tertiary:  #9a8e78;
+
+    -ss-gold:         #8a6020;
+    -ss-gold-bright:  #a07828;
+    -ss-gold-muted:   #c8a460;
+    -ss-gold-bg:      rgba(138, 96, 32, 0.10);
+    -ss-gold-glow:    rgba(138, 96, 32, 0.16);
+
+    -ss-success:      #1a7a50;
+    -ss-success-bg:   rgba(26, 122, 80, 0.12);
+    -ss-success-text: #0f5236;
+    -ss-danger:       #c0304a;
+    -ss-danger-bg:    rgba(192, 48, 74, 0.10);
+    -ss-danger-text:  #8a1c2e;
+    -ss-info:         #1a60c0;
+    -ss-info-bg:      rgba(26, 96, 192, 0.10);
+    -ss-info-text:    #0f3a80;
+    -ss-warning:      #b06010;
+    -ss-warning-bg:   rgba(176, 96, 16, 0.10);
+    -ss-warning-text: #7a3e06;
+
+    -ss-border:       rgba(100, 76, 36, 0.30);
+    -ss-border-soft:  rgba(100, 76, 36, 0.14);
+    -ss-border-hard:  rgba(100, 76, 36, 0.55);
+    -ss-border-subtle:rgba(0, 0, 0, 0.06);
+
+    -ss-shadow-deep:  rgba(80, 60, 20, 0.20);
+    -ss-shadow-card:  rgba(80, 60, 20, 0.12);
+    -ss-shadow-glow:  rgba(138, 96, 32, 0.14);
+
+    -ss-sidebar-bg:       #f0ece0;
+    -ss-sidebar-border:   rgba(100, 76, 36, 0.22);
+
+    -ss-nav-text:         #8a7a60;
+    -ss-nav-hover-bg:     rgba(138, 96, 32, 0.08);
+    -ss-nav-hover-text:   #7a5018;
+    -ss-nav-active-bg:    rgba(138, 96, 32, 0.14);
+    -ss-nav-active-text:  #5a3a10;
+    -ss-nav-active-bar:   #8a6020;
+
+    -ss-header-bg:        #f7f3e8;
+    -ss-toolbar-bg:       rgba(242, 238, 226, 0.96);
+
+    -ss-input-bg:         rgba(255, 253, 248, 0.98);
+    -ss-input-border:     rgba(100, 76, 36, 0.25);
+    -ss-input-focus:      rgba(138, 96, 32, 0.45);
+    -ss-input-text:       #1c1810;
+    -ss-input-placeholder:#9a8e78;
+
+    -ss-table-bg:         rgba(255, 253, 248, 0.98);
+    -ss-table-header-bg:  rgba(138, 96, 32, 0.08);
+    -ss-table-row-hover:  rgba(138, 96, 32, 0.06);
+    -ss-table-row-sel:    rgba(138, 96, 32, 0.12);
+    -ss-table-row-border: rgba(0, 0, 0, 0.04);
+
+    -ss-chart-gold-a:  #8a6020;
+    -ss-chart-gold-b:  #c8a450;
+    -ss-chart-teal-a:  #1a7a50;
+    -ss-chart-teal-b:  #4ab480;
+    -ss-chart-blue-a:  #1a60c0;
+    -ss-chart-blue-b:  #5090e0;
+    -ss-chart-red-a:   #c0304a;
+    -ss-chart-red-b:   #e06070;
+    -ss-chart-grid:    rgba(100, 76, 36, 0.10);
+    -ss-chart-axis:    rgba(100, 76, 36, 0.25);
+    -ss-chart-surface: rgba(242, 238, 226, 0.70);
+    -ss-chart-label:   #7a6a50;
+
+    -ss-scroll-thumb:  rgba(138, 96, 32, 0.30);
+
+    -ss-avatar-bg:     rgba(138, 96, 32, 0.14);
+    -ss-avatar-border: #8a6020;
+    -ss-avatar-text:   #5a3a10;
+
+    -ss-landing-overlay: rgba(244, 240, 232, 0.50);
+
+    -fx-background-color: -ss-bg-surface;
+}

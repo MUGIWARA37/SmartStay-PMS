@@ -1,0 +1,94 @@
+/* ================================================================
+   ROOT CONTAINERS
+   ================================================================ */
+.samurai-root,
+.video-root {
+    -fx-background-color: transparent;
+}
+
+.interior-root {
+    -fx-background-color: -ss-bg-surface;
+}
+
+.content-area {
+    -fx-background-color: transparent;
+}
+
+/* ================================================================
+   LANDING PAGE
+   ================================================================ */
+.landing-overlay {
+    -fx-background-color: radial-gradient(center 50% 50%, radius 70%, transparent 0%, -ss-landing-overlay 100%);
+}
+
+/* Large serif logo mark */
+.landing-brand-kanji {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 72px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-gold;
+    -fx-effect: dropshadow(gaussian, -ss-gold-glow, 28, 0, 0, 0);
+}
+
+/* "SMARTSTAY" wordmark */
+.landing-brand-title {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 52px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-primary;
+    -fx-letter-spacing: 10px;
+    -fx-effect: dropshadow(gaussian, -ss-shadow-deep, 12, 0, 0, 5);
+}
+
+.landing-brand-subtitle {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ss-text-tertiary;
+    -fx-letter-spacing: 6px;
+}
+
+.landing-tagline {
+    -fx-font-family: -ss-font-display;
+    -fx-font-size: 14px;
+    -fx-font-style: italic;
+    -fx-text-fill: -ss-text-secondary;
+}
+
+.landing-feature-pill {
+    -fx-font-family: -ss-font-body;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2px;
+    -fx-text-fill: -ss-gold;
+    -fx-background-color: -ss-gold-bg;
+    -fx-border-color: -ss-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 40px;
+    -fx-background-radius: 40px;
+    -fx-padding: 6px 18px;
+}
+
+.landing-enter-button {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 3px;
+    -fx-padding: 16px 52px;
+}
+
+.landing-footer {
+    -fx-font-size: 10px;
+    -fx-text-fill: -ss-text-tertiary;
+    -fx-letter-spacing: 2px;
+    -fx-padding: 0 0 20 0;
+}
+
+/* Thin gold divider line */
+.gold-divider {
+    -fx-background-color: linear-gradient(to right,
+        transparent, -ss-gold, transparent);
+    -fx-min-height: 1px;
+    -fx-pref-height: 1px;
+    -fx-opacity: 0.55;
+}
+
